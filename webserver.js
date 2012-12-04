@@ -13,6 +13,7 @@ var gmUtil = require('util');
 var gmHttp = require('http');
 var gmFs   = require('fs');
 var gmUrl  = require('url');
+var gmQS   = require('querystring');
 
 /*
 	external modules
@@ -31,7 +32,7 @@ gcConnect.use( gmConnect.query() );
 gcConnect.use( gmConnect.logger('dev') );
 gcConnect.use( gmConnect.bodyParser() );
 gcConnect.use( gmConnect.cookieParser() );
-gcConnect.use( gmConnect.cookieSession( {secret:'some secret'}) );
+gcConnect.use( gmConnect.cookieSession( {secret:'some secret'/*, cookie: { maxAge: 60000 1min. }*/ }) );
 
 gcConnect.use( onWebServerRequest );
 //gcConnect.use( gmConnect.errorHandler({message:true}) );
@@ -54,11 +55,15 @@ function onWebServerRequest( _req, _res )
 	console.log('Request On');
 
 	console.log('method:', _req.method);
+	console.log('headers:', JSON.stringify(_req.headers));
+	//console.log('headers(user-agent):', _req.headers('user-agent'));
+	//console.log('headers.accept:', _req.headers.accept);
+	
 	console.log('gmConnect.query:', _req.query);
 	console.log('gmConnect.bodyParser:', _req.body);
 	console.log('gmConnect.cookies:', _req.cookies);
 	//console.log('gmConnect.session:', _req.session);
-	//console.log('_req.url:', _req.url);
+	//console.log('gmUrl.url:', _req.url);
 
 	//
 	var oUrl = gmUrl.parse(_req.url);
