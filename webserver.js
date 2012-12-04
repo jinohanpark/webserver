@@ -7,21 +7,33 @@ var gnhttpport = 3000;
 var gszbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www';
 
 /*
+	internal modules
 */
 var gmUtil = require('util');
 var gmHttp = require('http');
 var gmFs   = require('fs');
 var gmUrl  = require('url');
+
+/*
+	external modules
+*/
 var gmConnect = require('connect');
+
+/*
+	my modules
+*/
+
+
 
 /*
 */
 var gcConnect = gmConnect();
 gcConnect.use( gmConnect.query() );
 gcConnect.use( gmConnect.logger('dev') );
+
+gcConnect.use( gmConnect.bodyParser() );
 gcConnect.use( gmConnect.cookieParser() );
-//gcConnect.use( gmConnect.bodyParser() );
-//gcConnect.use( gmConnect.cookieSession({secret:'some'}) );
+gcConnect.use( gmConnect.cookieSession( {secret:'some secret'}) );
 
 gcConnect.use( onWebServerRequest );
 //gcConnect.use( gmConnect.errorHandler({message:true}) );
@@ -29,6 +41,7 @@ gcConnect.use( onWebServerRequest );
 /*
 */
 var gcWebS = gmHttp.createServer(gcConnect);
+
 //gcWebS.on( 'request', onWebServerRequest );
 gcWebS.on( 'connection', onWebServerConnection );
 gcWebS.on( 'close', onWebServerClose );
@@ -42,39 +55,49 @@ function onWebServerRequest( _req, _res )
 	
 	console.log('Request On');
 
-	var oUrl = gmUrl.parse(_req.url);
-	if( '/' == oUrl.pathname ) {
-		oUrl.pathname = '/index.html';
-		var szUrl = gmUrl.format(oUrl);
-		_res.writeHead( 302, { 'Location' : szUrl } );
-		_res.end();
-		return;
-	}
+	//
+	if( true == _fnRedirect_INDEX_HTML(_req, _res) ) return;
 
 	//
 	var szcontenttype = 'text/html';
-	var opagefile = oUrl.pathname.split('.');
-	switch( opagefile[opagefile.length-1] ) {
-	case 'html':	szcontenttype = 'text/html'; break;
-	case 'css':		szcontenttype = 'text/css'; break;
-	case 'js':		szcontenttype = 'application/javascript'; break;
-	case 'png':		szcontenttype = 'image/png'; break;
-	case 'gif':		szcontenttype = 'image/gif'; break;
-	case 'ico':		szcontenttype = 'image/x-icon'; break;
-	default:
-		//var err = new Error('aaaaa');
-		//err.number = 7;
-		//throw err;
-		console.log('@@@@ OnRequest - NOT FOUND FILETYPE(CONTENT-TYPE) : ', opagefile);
-		break;
-	}
+	if( false == _fnGetRequestContentType(_req, szcontenttype) ) return;
 
 	//
 	//console.log('method:', _req.method);
 	console.log('gmConnect.query:', _req.query);
-	//console.log('get-cookies:', _req.cookies);
+	console.log('gmConnect.bodyParser:', _req.body);
+	console.log('gmConnect.cookies:', _req.cookies);
+	console.log('gmConnect.session:', _req.session);
+
+	if( '/clear' == _req.url ) {
+		_req.session = null;
+		
+		_res.statusCode = 302;
+		_res.setHeader( 'Location:', '/index.html' );
+		_res.end();
+		return;		
+	}
+
+	if( 'POST' == _req.method ) {
+		_req.session.name = _req.body.name;
+	}
+
+	_req.session.count = _req.session.count || 0;
+	var n = _req.session.count++;
+	var name = _req.session.name || 'Enter your name';
+	_res.end( '<p>hits: ' + n + '</p>'
+			 +'<form method="post">'
+			 +'<p>'
+			 +'<input type="text" name="name" value="' + name + '"/>'
+			 +'<input type="submit" value="Save" />'
+			 +'</p>'
+			 +'</form>'
+			 +'<p><a href="/clear">clear session</a></p>'
+			 );
+	return;			 
 
 	//
+	var oUrl = gmUrl.parse(_req.url);
 	var szpagefile = gszbasedir + oUrl.pathname;
 	gmFs.readFile( szpagefile, 'utf8', callbackReadPageFile );
 
@@ -93,7 +116,7 @@ function onWebServerRequest( _req, _res )
 			date.setDate(date.getDate() + 7);
 			_res.writeHead( 200, {
 							'Content-Type': szcontenttype,
-							'Set-Cookie': [ 'breakfast = toast;Expires = ' + date.toUTCString(),
+							'Set-Cookie': [ //'breakfast = toast;Expires = ' + date.toUTCString(),
 											'dinner = chicken',
 											'testkey = testvalue'
 										  ]
@@ -119,6 +142,49 @@ function callbackWebServerListen()
 	console.log('callbackWebServerListen 192.168.0.2:3000');
 	//console.log( gmHttp.STATUS_CODES );
 }
+
+
+/*
+
+*/
+function _fnRedirect_INDEX_HTML( _req, _res )
+{
+	var oUrl = gmUrl.parse(_req.url);
+	if( '/' == oUrl.pathname ) {
+		oUrl.pathname = '/index.html';
+		var szUrl = gmUrl.format(oUrl);
+		_res.writeHead( 302, { 'Location' : szUrl } );
+		_res.end();
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+function _fnGetRequestContentType( _req, _szcontenttype )
+{
+	var oUrl = gmUrl.parse(_req.url);
+	var opagefile = oUrl.pathname.split('.');
+
+	switch( opagefile[opagefile.length-1] ) {
+	case '/clear':	_szcontenttype = 'text/html'; break;
+	case 'html':	_szcontenttype = 'text/html'; break;
+	case 'css':		_szcontenttype = 'text/css'; break;
+	case 'js':		_szcontenttype = 'application/javascript'; break;
+	case 'png':		_szcontenttype = 'image/png'; break;
+	case 'gif':		_szcontenttype = 'image/gif'; break;
+	case 'ico':		_szcontenttype = 'image/x-icon'; break;
+	default:
+		//var err = new Error('aaaaa');
+		//err.number = 7;
+		//throw err;
+		console.log('@@@@ OnRequest - NOT FOUND FILETYPE(CONTENT-TYPE) : ', opagefile);
+		return false;
+	}
+	
+	return true;
+}	
 
 /*
 var modConnect = require('connect');
