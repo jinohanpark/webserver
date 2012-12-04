@@ -37,6 +37,8 @@ function showSubmenu( sztype )
 function showSubmenu_Selected()
 {
 	var szhref = window.location.href.split('?');
+	if( null == szhref[1] ) return;
+	
 	var sztag = szhref[1].split('&');
 	var sz;
 	for( i=0; i < sztag.length; i++ ) {
