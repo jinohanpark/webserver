@@ -52,27 +52,62 @@ function onWebServerRequest( _req, _res )
 	this._res = _res;
 	
 	console.log('Request On');
-	//console.log('method:', _req.method);
+
+	console.log('method:', _req.method);
 	console.log('gmConnect.query:', _req.query);
 	console.log('gmConnect.bodyParser:', _req.body);
 	console.log('gmConnect.cookies:', _req.cookies);
-	console.log('gmConnect.session:', _req.session);
+	//console.log('gmConnect.session:', _req.session);
+	//console.log('_req.url:', _req.url);
 
 	//
-	if( true == _fnRedirect_INDEX_HTML(_req, _res) ) return;
-	
-	//
-	if( false == _fnIsLogin(_req, _res) ) {
-		_fnRedirect_LOGIN_HTML(_req, _res);
+	var oUrl = gmUrl.parse(_req.url);
+	if( '/' == oUrl.pathname ) {
+		_fnRedirectPage(_req, _res, '/index.html');
 		return;
 	}
-	
-	//
-	if( null == (obj = _fnGetRequestContentType(_req)) ) return;
+
+	if( null == (obj = _fnGetRequestContentType(_req)) ) {
+		_res.writeHead( 404,
+					    { 'Content-Type': 'text/html' } );
+		_res.end();
+		return;
+	}
 	var szcontenttype = obj.szcontenttype;
 	
 	//
-	var oUrl = gmUrl.parse(_req.url);
+	if( ('text/html' == szcontenttype) ) {
+		var flogin = gmLogin.islogin(_req, _res);
+
+		if( false == flogin ) {
+			if( ('/login.html' != oUrl.pathname) ) {
+				_fnRedirectPage(_req, _res, '/login.html');
+				return;
+			}
+		}
+		else {
+			if( ('/login.html' == oUrl.pathname) ) {
+				// already login, logout? or switch user?
+			}
+		}
+	}
+
+	if( 'application/cgi' == szcontenttype ) {
+		if( '/cgi-bin/login.cgi' == oUrl.pathname ) {
+
+			var fok = gmLogin.authen(_req);
+
+			if( false == fok ) {
+				_fnRedirectPage(_req, _res, '/login.html');
+			}
+			else {
+				_fnRedirectPage(_req, _res, '/index.html');
+			}
+		}
+		return;
+	}
+
+	//
 	var szpagefile = gszbasedir + oUrl.pathname;
 	gmFs.readFile( szpagefile, 'utf8', callbackReadPageFile );
 
@@ -80,10 +115,8 @@ function onWebServerRequest( _req, _res )
 	{
 		if( error ) {
 			console.log( error );
-			_res.writeHead( 404, {
-							'Content-Type': 'text/html'
-						   }
-						 );
+			_res.writeHead( 404,
+							{ 'Content-Type': 'text/html' } );
 			_res.end();
 		}
 		else {
@@ -118,61 +151,6 @@ function callbackWebServerListen()
 	//console.log( gmHttp.STATUS_CODES );
 }
 
-
-/*
-
-*/
-function _fnIsLogin(_req, _res)
-{
-	var sess = _req.session;
-	console.log('gmConnect.session:', sess);
-
-	if( undefined == sess.fauthen ) {
-		sess.ncount = 1;
-		sess.szusername = 'anonymous_zXcsa1wjk';
-		sess.fauthen = false;
-		return false;
-	}
-	
-	
-
-	/*
-	sess.count = sess.count || 0;
-	var n = sess.count++;
-	var name = sess.username || 'anonymous_zXcsa1wjk';
-	var authen = sess.authen || 'false';
-	
-	if( 'POST' != _req.method ) return false;
-	
-	if( '/clear' == _req.url ) {
-		_req.session = null;
-		
-		_res.statusCode = 302;
-		_res.setHeader( 'Location:', '/index.html' );
-		_res.end();
-		return;		
-	}
-
-	if( 'POST' == _req.method ) {
-		_req.session.name = _req.body.name;
-	}
-
-	_req.session.count = _req.session.count || 0;
-	var n = _req.session.count++;
-	var name = _req.session.name || 'Enter your name';
-	_res.end( '<p>hits: ' + n + '</p>'
-			 +'<form method="post">'
-			 +'<p>'
-			 +'<input type="text" name="name" value="' + name + '"/>'
-			 +'<input type="submit" value="Save" />'
-			 +'</p>'
-			 +'</form>'
-			 +'<p><a href="/clear">clear session</a></p>'
-			 );
-	return;			 
-	*/
-}
-
 function _fnRedirect_LOGIN_HTML( _req, _res )
 {
 	var oUrl = gmUrl.parse(_req.url);
@@ -185,19 +163,12 @@ function _fnRedirect_LOGIN_HTML( _req, _res )
 	return true;
 }
 
-function _fnRedirect_INDEX_HTML( _req, _res )
+function _fnRedirectPage( _req, _res, _szredirectpage )
 {
-	var oUrl = gmUrl.parse(_req.url);
-	if( '/' == oUrl.pathname ) {
-		oUrl.pathname = '/index.html';
-		var szUrl = gmUrl.format(oUrl);
-		_res.writeHead( 302, { 'Location' : szUrl } );
-		_res.end();
-		return true;
-	}
-	else {
-		return false;
-	}
+	var oUrl = gmUrl.parse(_req.url).pathname = _szredirectpage;
+
+	_res.writeHead( 302, { 'Location' : gmUrl.format(oUrl) } );
+	_res.end();
 }
 
 function _fnGetRequestContentType( _req )
@@ -216,6 +187,8 @@ function _fnGetRequestContentType( _req )
 	case 'png':		szretcontenttype = 'image/png'; break;
 	case 'gif':		szretcontenttype = 'image/gif'; break;
 	case 'ico':		szretcontenttype = 'image/x-icon'; break;
+	case 'ico':		szretcontenttype = 'image/x-icon'; break;
+	case 'cgi':		szretcontenttype = 'application/cgi'; break;
 	default:
 		//var err = new Error('aaaaa');
 		//err.number = 7;
