@@ -72,6 +72,18 @@
 				RelativePath="..\webserver.js"
 				>
 			</File>
+			<Filter
+				Name="my_modules"
+				>
+				<Filter
+					Name="login"
+					>
+					<File
+						RelativePath="..\my_modules\login\index.js"
+						>
+					</File>
+				</Filter>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -94,6 +106,10 @@
 			</File>
 			<File
 				RelativePath="..\www\index.html"
+				>
+			</File>
+			<File
+				RelativePath="..\www\login.html"
 				>
 			</File>
 			<File
