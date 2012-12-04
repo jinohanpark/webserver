@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="/default.css">
 
 <script src="/include/jquery-1.8.2.js"></script>
-<script src="/submenu_nav.js"></script>
 
 <script>
 	Init_jQuery();
@@ -20,11 +19,21 @@
 		<td class="normal">
 			<div class="normal">
 
-				<h3>Instructions</h3>
-				<p>
-					These demos showcase some common uses of each jQuery UI plugin. Simply copy and paste code from the demos to get started. Have fun playing with them.
-				</p>
-
+				<h3>Login</h3>
+				
+				<form method = "post">
+					<table>
+						<tr>
+							<td><label> Username </label></td>
+							<td><input type="text" name="username" /></td>
+						</tr>
+						<tr>
+							<td><label> Password </label></td>
+							<td><input type="text" name="password" /></td>
+						</tr>
+					</table>
+					<input type="submit" name="" value="LOGIN" />
+				</form>
 			</div>
 		</td>
 	</tr>
@@ -32,7 +41,7 @@
 </body>
 
 <script>
-	showSubmenu_Selected();
+
 </script>
 
 </html>
