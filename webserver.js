@@ -55,11 +55,12 @@ function onWebServerRequest( _req, _res )
 	console.log('Request On');
 
 	console.log('method:', _req.method);
-	console.log('headers:', JSON.stringify(_req.headers));
-	//console.log('headers(user-agent):', _req.headers('user-agent'));
-	//console.log('headers.accept:', _req.headers.accept);
 	
-	console.log('gmConnect.query:', _req.query);
+	//console.log('headers:', JSON.stringify(_req.headers));
+	//var objH = gmQS.parse(JSON.stringify(_req.headers), ',', ':');
+	//console.log('headers:', objH);
+
+	console.log('gmConnect.query:', _req.query);		//console.log('gmConnect.query.key:', _req.query.key);
 	console.log('gmConnect.bodyParser:', _req.body);
 	console.log('gmConnect.cookies:', _req.cookies);
 	//console.log('gmConnect.session:', _req.session);
