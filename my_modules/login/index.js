@@ -1,4 +1,7 @@
 
+var objType = new myLogin();
+exports = module.exports = objType;
+
 function myLogin( _name )
 {
 	var self = this;
@@ -11,26 +14,37 @@ function myLogin( _name )
 
 myLogin.prototype.authen = function( _req )
 {
-	var fret;
+	var szusername = '';
+	var szpassword = '';
+	var fret = false;
 
-	//console.log('method:', _req.method);
-	//console.log('gmConnect.bodyParser:', _req.body);
-	//console.log('_req.body.username :', _req.body.username);
-	//console.log('_req.body.password :', _req.body.password);
-	
-	fret = false;
-	
-	// basic authentication
-	if( 'root' == _req.body.username && 'pass' == _req.body.password ) {
-		fret = true;
+	//console.log('authen.method:', _req.method);
+	if( 'POST' == _req.method ) {
+		szusername = _req.body.username;
+		szpassword = _req.body.password;
+	}
+	else
+	if( 'GET' == _req.method ) {
+		szusername = _req.query.username;
+		szpassword = _req.query.password;
+	}
+	else {
+		console.log('\u001b[1m', '\u001b[30m', '\u001b[41m');
+		console.log('authen.method:', _req.method);
+		console.log('\u001b[0m');
 	}
 
+	// basic authentication
+	if( 'root' == szusername && 'pass' == szpassword ) {
+		fret = true;
+	}
+	
 	//
 	var sess = _req.session;
 	if( true == fret ) {
 		sess.ncount = sess.ncount || 0;
 		sess.ncount++;
-		sess.szusername = _req.body.username;
+		sess.szusername = szusername;
 		sess.fauthen = true;
 	}
 	else {
@@ -110,6 +124,3 @@ myLogin.prototype.setvalue = function( _num, _value )
 	if( 2 == _num ) this.ntest2 = _value;
 	if( 3 == _num ) this.sztest3 = _value;
 };
-
-var objType = new myLogin();
-exports = module.exports = objType;

@@ -3,6 +3,8 @@
 	based on node.js v0.8.14
 */
 
+
+
 var gnhttpport = 3000;
 var gszbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www';
 
@@ -19,10 +21,12 @@ var gmQS   = require('querystring');
 	external modules
 */
 var gmConnect = require('connect');
+var gmWsIO = require('socket.io');
 
 /*
 	my modules
 */
+var gmMisc = require('./misc.js');
 var gmLogin = require('./my_modules/login');
 
 /*
@@ -39,14 +43,29 @@ gcConnect.use( onWebServerRequest );
 
 /*
 */
-var gcWebS = gmHttp.createServer(gcConnect);
+var gcWebServer = gmHttp.createServer(gcConnect);
 
-//gcWebS.on( 'request', onWebServerRequest );
-gcWebS.on( 'connection', onWebServerConnection );
-gcWebS.on( 'close', onWebServerClose );
-gcWebS.on( 'checkContinue', onWebServerClose );
-gcWebS.listen( gnhttpport, callbackWebServerListen );
+//gcWebServer.on( 'request', onWebServerRequest );
+gcWebServer.on( 'connection', onWebServerConnection );
+gcWebServer.on( 'close', onWebServerClose );
+gcWebServer.on( 'checkContinue', onWebServerClose );
+gcWebServer.listen( gnhttpport, callbackWebServerListen );
 
+/*
+*/
+var gcWsIO = gmWsIO.listen(gcWebServer);
+gcWsIO.set('log level', 2);
+gcWsIO.sockets.on( 'connection', onWsIOConnection );
+
+/*
+*/
+function onWsIOConnection( _socket )
+{
+	console.log('onWsIOConnection - _socket : ', _socket);
+}
+
+/*
+*/
 function onWebServerRequest( _req, _res )
 {
 	this._req = _req;
