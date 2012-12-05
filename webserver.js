@@ -56,12 +56,60 @@ gcWebServer.listen( gnhttpport, callbackWebServerListen );
 var gcWsIO = gmWsIO.listen(gcWebServer);
 gcWsIO.set('log level', 2);
 gcWsIO.sockets.on( 'connection', onWsIOConnection );
+gcWsIO.sockets.on( 'message', onWsIOMessage );
+gcWsIO.sockets.on( 'anything', onWsIOAnything );
+gcWsIO.sockets.on( 'disconnect', onWsIODisconnect );
 
 /*
 */
 function onWsIOConnection( _socket )
 {
-	console.log('onWsIOConnection - _socket : ', _socket);
+	console.log('onWsIOConnection - _socket : ');//console.log('onWsIOConnection - _socket : ', _socket);
+	
+	_socket.on( '_mymsg',
+			    function(_data) {
+					console.log('ClientID(', _socket.id, ')', ' sent data:', _data);
+
+					var sz = '접속된 모든 클라이언트에게 바이러스를 심습니다.\n' +
+							 '"확인" 버튼을 누르시면 고객님에 소중한 정보를 쪽쪽 빨아갑니다.\n\n' + 
+							 '감사합니다.';
+
+					if( 'private' == _data ) {
+						var id = _socket.id;
+						gcWsIO.sockets.sockets[id].emit( '_mymsgack', sz );
+					}
+					else
+					if( 'broadcast' == _data ) {
+						_socket.broadcast.emit( '_mymsgack', sz );
+					}
+					else
+					if( 'public' == _data ) {
+						gcWsIO.sockets.emit( '_mymsgack', sz );
+					}
+					else {
+						_socket.emit( '_mymsgack', _data );
+					}
+			    });	
+}
+
+function onWsIODisconnect()
+{
+	console.log('onWsIODisconnect : ');
+}
+
+function onWsIOMessage( _message, callbackWsIOMessageACK )
+{
+	console.log('onWsIOMessage - _message : ', _message);
+}
+
+function callbackWsIOMessageACK()
+{
+	console.log('callbackWsIOMessageACK : ');
+}
+
+function onWsIOAnything( _data )
+{
+	console.log('onWsIOAnything - _data : ', _data);
 }
 
 /*
@@ -73,15 +121,15 @@ function onWebServerRequest( _req, _res )
 	
 	console.log('Request On');
 
-	console.log('method:', _req.method);
-	
+	//console.log('method:', _req.method);
+
 	//console.log('headers:', JSON.stringify(_req.headers));
 	//var objH = gmQS.parse(JSON.stringify(_req.headers), ',', ':');
 	//console.log('headers:', objH);
 
-	console.log('gmConnect.query:', _req.query);		//console.log('gmConnect.query.key:', _req.query.key);
-	console.log('gmConnect.bodyParser:', _req.body);
-	console.log('gmConnect.cookies:', _req.cookies);
+	//console.log('gmConnect.query:', _req.query);		//console.log('gmConnect.query.key:', _req.query.key);
+	//console.log('gmConnect.bodyParser:', _req.body);
+	//console.log('gmConnect.cookies:', _req.cookies);
 	//console.log('gmConnect.session:', _req.session);
 	//console.log('gmUrl.url:', _req.url);
 
