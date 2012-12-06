@@ -7,6 +7,7 @@
 
 var gnhttpport = 3000;
 var gszbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www';
+var gszbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload';
 
 /*
 	internal modules
@@ -37,6 +38,7 @@ gcConnect.use( gmConnect.logger('dev') );
 gcConnect.use( gmConnect.bodyParser() );
 gcConnect.use( gmConnect.cookieParser() );
 gcConnect.use( gmConnect.cookieSession( {secret:'some secret'/*, cookie: { maxAge: 60000 1min. }*/ }) );
+gcConnect.use( gmConnect.multipart({uploadDir:path});
 
 gcConnect.use( onWebServerRequest );
 //gcConnect.use( gmConnect.errorHandler({message:true}) );
@@ -65,7 +67,7 @@ gcWsIO.sockets.on( 'disconnect', onWsIODisconnect );
 function onWsIOConnection( _socket )
 {
 	console.log('onWsIOConnection - _socket : ');//console.log('onWsIOConnection - _socket : ', _socket);
-	
+
 	_socket.on( '_mymsg',
 			    function(_data) {
 					console.log('ClientID(', _socket.id, ')', ' sent data:', _data);
@@ -121,17 +123,17 @@ function onWebServerRequest( _req, _res )
 	
 	console.log('Request On');
 
-	//console.log('method:', _req.method);
-
-	//console.log('headers:', JSON.stringify(_req.headers));
+	console.log('method:', _req.method);
+	
+	console.log('headers:', JSON.stringify(_req.headers));
 	//var objH = gmQS.parse(JSON.stringify(_req.headers), ',', ':');
 	//console.log('headers:', objH);
 
-	//console.log('gmConnect.query:', _req.query);		//console.log('gmConnect.query.key:', _req.query.key);
-	//console.log('gmConnect.bodyParser:', _req.body);
+	console.log('gmConnect.query:', _req.query);		//console.log('gmConnect.query.key:', _req.query.key);
+	console.log('gmConnect.bodyParser:', _req.body);
 	//console.log('gmConnect.cookies:', _req.cookies);
 	//console.log('gmConnect.session:', _req.session);
-	//console.log('gmUrl.url:', _req.url);
+	console.log('gmUrl.url:', _req.url);
 
 	//
 	var oUrl = gmUrl.parse(_req.url);
@@ -140,13 +142,13 @@ function onWebServerRequest( _req, _res )
 		return;
 	}
 
+	var szcontenttype;
 	if( null == (obj = _fnGetRequestContentType(_req)) ) {
-		_res.writeHead( 404,
-					    { 'Content-Type': 'text/html' } );
+		_res.writeHead( 404, { 'Content-Type': 'text/html' } );
 		_res.end();
 		return;
 	}
-	var szcontenttype = obj.szcontenttype;
+	szcontenttype = obj.szcontenttype;
 	
 	//
 	if( ('text/html' == szcontenttype) ) {
