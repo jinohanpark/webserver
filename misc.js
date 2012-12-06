@@ -111,3 +111,52 @@ onWsIOConnection - _socket :  { id: 'agdDKt8IgdMVftJP__GI',
      data: {} },
   _events: { error: [Function] } }
 */
+
+
+
+
+
+
+
+/*
+var express = require('express')
+  , format = require('util').format;
+
+var app = module.exports = express()
+var fs = require('fs');
+
+// bodyParser in connect 2.x uses node-formidable to parse 
+// the multipart form data.
+// 업로드파일의 임시저장위치 지정
+app.use(express.bodyParser({uploadDir:'D:/temp'}));
+
+app.get('/', function(req, res){
+  res.send('<form method="post" enctype="multipart/form-data">'
+    + '<p>Title: <input type="text" name="title" /></p>'
+    + '<p>Image: <input type="file" name="image" /></p>'
+    + '<p><input type="submit" value="Upload" /></p>'
+    + '</form>');
+});
+
+app.post('/', function(req, res, next){  
+	//console.log(req.files);
+   	var tmp_path = req.files.image.path;
+   	// set where the file should actually exists - in this case it is in the "images" directory
+   	var target_path = './upload/' + req.files.image.name;
+   	// move the file from the temporary location to the intended location
+   	fs.rename(tmp_path, target_path, function(err) {
+    	if (err) throw err;
+       	// delete the temporary file, so that the explicitly set temporary upload dir does not get filled with unwanted files
+       	fs.unlink(tmp_path, function() {
+        	if (err) throw err;
+           	res.send('File uploaded to: ' + target_path + ' - ' + req.files.image.size + ' bytes');
+       	});
+   	});
+    
+});
+
+if (!module.parent) {
+	app.listen(3000);
+  	console.log('Express started on port 3000');
+}
+*/

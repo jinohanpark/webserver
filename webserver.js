@@ -7,7 +7,7 @@
 
 var gnhttpport = 3000;
 var gszbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www';
-var gszbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload';
+var gszuploadbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload';
 
 /*
 	internal modules
@@ -23,6 +23,7 @@ var gmQS   = require('querystring');
 */
 var gmConnect = require('connect');
 var gmWsIO = require('socket.io');
+//var gmFormidable = require('formidable');
 
 /*
 	my modules
@@ -35,11 +36,9 @@ var gmLogin = require('./my_modules/login');
 var gcConnect = gmConnect();
 gcConnect.use( gmConnect.query() );
 gcConnect.use( gmConnect.logger('dev') );
-gcConnect.use( gmConnect.bodyParser() );
+gcConnect.use( gmConnect.bodyParser({uploadDir:gszuploadbasedir, defer:true}) );
 gcConnect.use( gmConnect.cookieParser() );
 gcConnect.use( gmConnect.cookieSession( {secret:'some secret'/*, cookie: { maxAge: 60000 1min. }*/ }) );
-gcConnect.use( gmConnect.multipart({uploadDir:path});
-
 gcConnect.use( onWebServerRequest );
 //gcConnect.use( gmConnect.errorHandler({message:true}) );
 
@@ -124,13 +123,14 @@ function onWebServerRequest( _req, _res )
 	console.log('Request On');
 
 	console.log('method:', _req.method);
-	
-	console.log('headers:', JSON.stringify(_req.headers));
+
+	//console.log('headers:', JSON.stringify(_req.headers));
 	//var objH = gmQS.parse(JSON.stringify(_req.headers), ',', ':');
 	//console.log('headers:', objH);
 
 	console.log('gmConnect.query:', _req.query);		//console.log('gmConnect.query.key:', _req.query.key);
 	console.log('gmConnect.bodyParser:', _req.body);
+	console.log('gmConnect.multipart:', _req.files);
 	//console.log('gmConnect.cookies:', _req.cookies);
 	//console.log('gmConnect.session:', _req.session);
 	console.log('gmUrl.url:', _req.url);
@@ -142,16 +142,16 @@ function onWebServerRequest( _req, _res )
 		return;
 	}
 
-	var szcontenttype;
-	if( null == (obj = _fnGetRequestContentType(_req)) ) {
+	var szreqfiletype;
+	if( null == (obj = _fnGetRequestFileType(_req)) ) {
 		_res.writeHead( 404, { 'Content-Type': 'text/html' } );
 		_res.end();
 		return;
 	}
-	szcontenttype = obj.szcontenttype;
+	szreqfiletype = obj.szreqfiletype;
 	
 	//
-	if( ('text/html' == szcontenttype) ) {
+	if( ('text/html' == szreqfiletype) ) {
 		var flogin = gmLogin.islogin(_req, _res);
 
 		if( false == flogin ) {
@@ -167,17 +167,63 @@ function onWebServerRequest( _req, _res )
 		}
 	}
 
-	if( 'application/cgi' == szcontenttype ) {
-		if( '/cgi-bin/login.cgi' == oUrl.pathname ) {
-
+	if( 'application/node' == szreqfiletype ) {
+		if( 'post' != _req.method.toLowerCase() ) {
+			gmMisc.dbgerr( 'MISMATCH method(only "post") - ' + oUrl.pathname );
+			return;
+		}
+		
+		switch( oUrl.pathname ) {
+		case '/cgi-bin/login.node':
 			var fok = gmLogin.authen(_req);
-
 			if( false == fok ) {
 				_fnRedirectPage(_req, _res, '/login.html');
 			}
 			else {
 				_fnRedirectPage(_req, _res, '/index.html');
 			}
+			break;
+			
+		case '/cgi-bin/upload.node':
+			console.log('-> /cgi-bin/upload.node');
+			console.log(_req.form);
+
+			var form = _req.form;
+			var files = [];
+			var fields = [];
+
+			form.on( 'progress',
+				function(bytesReceived, bytesExpected) {
+					console.log('progress ', bytesReceived, bytesExpected);
+				} );
+			form.on( 'field', 
+				function(_field, _value) {
+					console.log(_field, _value);
+					fields.push([_field, _value]);
+					
+					gcWsIO.sockets.emit( '_mymsgack', 'aaaa' );
+				} );
+			form.on( 'file',
+				function(_file, _value) {
+					console.log(_file, _value);
+					files.push([_file, _value]);
+				} );
+			form.on( 'end',
+				function() {
+					console.log('-> upload done');
+					_res.writeHead( 200, {'content-type': 'text/plain'} );
+					_res.write('received fields: \n\n' + gmUtil.inspect(fields));
+					_res.write('\n\n');
+					_res.write('received files: \n\n' + gmUtil.inspect(files));
+					_res.end();
+				} );
+
+			console.log('BBBBBBBBBBBBB');
+			break;
+						
+		default:
+			gmMisc.dbgerr( 'FILE NOT FOUND - ' + oUrl.pathname );
+			break;		
 		}
 		return;
 	}
@@ -190,15 +236,14 @@ function onWebServerRequest( _req, _res )
 	{
 		if( error ) {
 			console.log( error );
-			_res.writeHead( 404,
-							{ 'Content-Type': 'text/html' } );
+			_res.writeHead( 404, { 'Content-Type': 'text/html' } );
 			_res.end();
 		}
 		else {
 			var date = new Date();
 			date.setDate(date.getDate() + 7);
 			_res.writeHead( 200, {
-							'Content-Type': szcontenttype,
+							'Content-Type': szreqfiletype,
 							'Set-Cookie': [ //'breakfast = toast;Expires = ' + date.toUTCString(),
 											'dinner = chicken',
 											'testkey = testvalue'
@@ -246,24 +291,25 @@ function _fnRedirectPage( _req, _res, _szredirectpage )
 	_res.end();
 }
 
-function _fnGetRequestContentType( _req )
+function _fnGetRequestFileType( _req )
 {
 	//
-	var szretcontenttype = 'text/html';
+	var szretfiletype = 'text/html';
 	
 	//
 	var oUrl = gmUrl.parse(_req.url);
 	var opagefile = oUrl.pathname.split('.');
 
 	switch( opagefile[opagefile.length-1] ) {
-	case 'html':	szretcontenttype = 'text/html'; break;
-	case 'css':		szretcontenttype = 'text/css'; break;
-	case 'js':		szretcontenttype = 'application/javascript'; break;
-	case 'png':		szretcontenttype = 'image/png'; break;
-	case 'gif':		szretcontenttype = 'image/gif'; break;
-	case 'ico':		szretcontenttype = 'image/x-icon'; break;
-	case 'ico':		szretcontenttype = 'image/x-icon'; break;
-	case 'cgi':		szretcontenttype = 'application/cgi'; break;
+	case 'html':	szretfiletype = 'text/html'; break;
+	case 'css':		szretfiletype = 'text/css'; break;
+	case 'js':		szretfiletype = 'application/javascript'; break;
+	case 'png':		szretfiletype = 'image/png'; break;
+	case 'gif':		szretfiletype = 'image/gif'; break;
+	case 'ico':		szretfiletype = 'image/x-icon'; break;
+	case 'ico':		szretfiletype = 'image/x-icon'; break;
+	case 'cgi':		szretfiletype = 'application/cgi'; break;
+	case 'node':	szretfiletype = 'application/node'; break;
 	default:
 		//var err = new Error('aaaaa');
 		//err.number = 7;
@@ -272,5 +318,5 @@ function _fnGetRequestContentType( _req )
 		return null;
 	}
 	
-	return { 'szcontenttype' : szretcontenttype };
+	return { 'szreqfiletype' : szretfiletype };
 }	
