@@ -7,7 +7,7 @@ function Init_jQuery()
 			function(ev) {
 				var atag = $(this).text();
 				var szhref = $(this).attr('href');
-				var str = szhref+'&submenuid='+atag;
+				var str = szhref+'&submenutext='+atag;
 				$(this).attr('href', str);
 			}
 		);
@@ -20,39 +20,70 @@ function showSubmenu( sztype )
 	
 	szhtml = '';
 	szhtml += '<dl class="submenu_nav">';
-	
-	szhtml +=	'<dt>Getting Start</dt>';
-	szhtml +=		'<dd><a href=/submenu/account.html?id=zzz1>Account</a></dd>';
-	szhtml +=		'<dd><a href=/submenu/profile.html?id=zzz2>Profile</a></dd>';
-	szhtml +=	'<dt>Streaming</dt>';
-	szhtml +=		'<dd><a href=/submenu/camera.html?id=zzz3>Camera</a></dd>';
-	szhtml +=		'<dd><a href=/submenu/avcodec.html?id=zzz4>A/V Codec</a></dd>';
-	szhtml +=		'<dd><a href=/submenu/videoout.html?id=zzz5>Video Out</a></dd>';
 
+	szhtml +=	'<dt>시작하기</dt>';
+	szhtml +=		'<dd><a href=/submenu/account.html?submenuid=idaccount>계정</a></dd>';
+	szhtml +=		'<dd><a href=/submenu/profile.html?submenuid=idprofile>프로파일</a></dd>';
+	szhtml +=	'<dt>유지보수</dt>';
+	szhtml +=		'<dd><a href=/submenu/firmwareupdate.html?submenuid=idfirmup>소프트웨어 업데이트</a></dd>';
 	szhtml += '</dl>';
-	
+
 	document.write(szhtml);
+}
+
+function _myfindquerystring_rvalue( _szquerystring, _szlvalue )
+{
+	var szrvalue = '';
+
+	var sz1 = _szquerystring.split('?');
+	if( null == sz1[1] ) return szrvalue;
+	
+	var sz2 = sz1[1].split('&');
+	var sz;
+	for( var i=0; i < sz2.length; i++ ) {
+		sz = sz2[i].split("=");
+		if( _szlvalue == sz[0] ) {
+			szrvalue = sz[1];
+			break;
+		}
+	}
+	return szrvalue;
 }
 
 function showSubmenu_Selected()
 {
-	var szhref = window.location.href.split('?');
-	if( null == szhref[1] ) return;
-	
-	var sztag = szhref[1].split('&');
-	var sz;
-	for( i=0; i < sztag.length; i++ ) {
-		sz = sztag[i].split("=");
-		if( "submenuid" == sz[0] ) {
+	var szsubmenuid1 = '';
+	szsubmenuid1 = _myfindquerystring_rvalue( window.location.href, "submenuid" );
+
+	//
+	var szsubmenuid2 = '';
+	var obj = $('.submenu_nav').find('a');
+	for( var i=0; i<obj.length; i++ ) {
+		szsubmenuid2 = _myfindquerystring_rvalue( obj[i].href, "submenuid" );
+		if( szsubmenuid1 == szsubmenuid2 ) {
+			$(obj[i]).addClass('selected');
+			break;
+		}
+	}
+}	
+
+function getSubmenuText()
+{
+	var szhtml = '';
+
+	var szsubmenuid1 = '';
+	szsubmenuid1 = _myfindquerystring_rvalue( window.location.href, "submenuid" );
+
+	//
+	var szsubmenuid2 = '';
+	var obj = $('.submenu_nav').find('a');
+	for( var i=0; i<obj.length; i++ ) {
+		szsubmenuid2 = _myfindquerystring_rvalue( obj[i].href, "submenuid" );
+		if( szsubmenuid1 == szsubmenuid2 ) {
+			szhtml = obj[i].innerHTML;
 			break;
 		}
 	}
 
-	var szsubmenuid = sz[1];
-	var obj = $('.submenu_nav').find('a');
-	for( i=0; i<obj.length; i++ ) {
-		if( szsubmenuid == obj[i].innerText ) {
-			$(obj[i]).addClass('selected');
-		}
-	}
-}	
+	document.write(szhtml);
+}

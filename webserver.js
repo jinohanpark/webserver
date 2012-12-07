@@ -23,7 +23,6 @@ var gmQS   = require('querystring');
 */
 var gmConnect = require('connect');
 var gmWsIO = require('socket.io');
-//var gmFormidable = require('formidable');
 
 /*
 	my modules
@@ -40,7 +39,7 @@ gcConnect.use( gmConnect.bodyParser({uploadDir:gszuploadbasedir, defer:true}) );
 gcConnect.use( gmConnect.cookieParser() );
 gcConnect.use( gmConnect.cookieSession( {secret:'some secret'/*, cookie: { maxAge: 60000 1min. }*/ }) );
 gcConnect.use( onWebServerRequest );
-//gcConnect.use( gmConnect.errorHandler({message:true}) );
+gcConnect.use( gmConnect.errorHandler({message:true}) );
 
 /*
 */
@@ -61,36 +60,55 @@ gcWsIO.sockets.on( 'message', onWsIOMessage );
 gcWsIO.sockets.on( 'anything', onWsIOAnything );
 gcWsIO.sockets.on( 'disconnect', onWsIODisconnect );
 
+var gszSubscribeID_Firmup = 'subscribe_firmup';
+
 /*
 */
 function onWsIOConnection( _socket )
 {
 	console.log('onWsIOConnection - _socket : ');//console.log('onWsIOConnection - _socket : ', _socket);
+	
+	_socket.on( gszSubscribeID_Firmup,
+		function(_data) {
+			console.log('subscribe_firmup - ClientID(', _socket.id, ')', ' received data:', _data);
+			switch(_data) {
+			case 'subscribe':
+				console.log('subscribe_firmup - subscribe join OK');
 
+				_socket.join(gszSubscribeID_Firmup);
+				_socket.set(gszSubscribeID_Firmup, gszSubscribeID_Firmup);
+
+				gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'subscribe', state:'ok' } );
+				break;
+			}
+		}
+	);
+	
 	_socket.on( '_mymsg',
-			    function(_data) {
-					console.log('ClientID(', _socket.id, ')', ' sent data:', _data);
+	    function(_data) {
+			console.log('ClientID(', _socket.id, ')', ' sent data:', _data);
 
-					var sz = '접속된 모든 클라이언트에게 바이러스를 심습니다.\n' +
-							 '"확인" 버튼을 누르시면 고객님에 소중한 정보를 쪽쪽 빨아갑니다.\n\n' + 
-							 '감사합니다.';
+			var sz = '접속된 모든 클라이언트에게 바이러스를 심습니다.\n' +
+					 '"확인" 버튼을 누르시면 고객님에 소중한 정보를 쪽쪽 빨아갑니다.\n\n' + 
+					 '감사합니다.';
 
-					if( 'private' == _data ) {
-						var id = _socket.id;
-						gcWsIO.sockets.sockets[id].emit( '_mymsgack', sz );
-					}
-					else
-					if( 'broadcast' == _data ) {
-						_socket.broadcast.emit( '_mymsgack', sz );
-					}
-					else
-					if( 'public' == _data ) {
-						gcWsIO.sockets.emit( '_mymsgack', sz );
-					}
-					else {
-						_socket.emit( '_mymsgack', _data );
-					}
-			    });	
+			if( 'private' == _data ) {
+				var id = _socket.id;
+				gcWsIO.sockets.sockets[id].emit( '_mymsgack', sz );
+			}
+			else
+			if( 'broadcast' == _data ) {
+				_socket.broadcast.emit( '_mymsgack', sz );
+			}
+			else
+			if( 'public' == _data ) {
+				gcWsIO.sockets.emit( '_mymsgack', sz );
+			}
+			else {
+				_socket.emit( '_mymsgack', _data );
+			}
+	    }
+	);	
 }
 
 function onWsIODisconnect()
@@ -172,7 +190,7 @@ function onWebServerRequest( _req, _res )
 			gmMisc.dbgerr( 'MISMATCH method(only "post") - ' + oUrl.pathname );
 			return;
 		}
-		
+
 		switch( oUrl.pathname ) {
 		case '/cgi-bin/login.node':
 			var fok = gmLogin.authen(_req);
@@ -183,44 +201,93 @@ function onWebServerRequest( _req, _res )
 				_fnRedirectPage(_req, _res, '/index.html');
 			}
 			break;
-			
+
 		case '/cgi-bin/upload.node':
 			console.log('-> /cgi-bin/upload.node');
-			console.log(_req.form);
 
-			var form = _req.form;
-			var files = [];
+			var form   = _req.form;
+			var files  = [];
 			var fields = [];
 
 			form.on( 'progress',
-				function(bytesReceived, bytesExpected) {
-					console.log('progress ', bytesReceived, bytesExpected);
+				function(_bytesReceived, _bytesExpected) {
+					//console.log('on.progress ', bytesReceived, bytesExpected);
+					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'progress', bytesReceived:_bytesReceived, bytesExpected:_bytesExpected } );
 				} );
+
 			form.on( 'field', 
 				function(_field, _value) {
-					console.log(_field, _value);
+					console.log('on.field', _field, _value);
 					fields.push([_field, _value]);
-					
-					gcWsIO.sockets.emit( '_mymsgack', 'aaaa' );
 				} );
+
+			form.on( 'fileBegin', 
+				function(_tagname, _file) {
+					console.log('on.fileBegin', _tagname, _file);
+
+					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'fileBegin', name:_file.name } );
+				} );
+
 			form.on( 'file',
-				function(_file, _value) {
-					console.log(_file, _value);
-					files.push([_file, _value]);
+				function(_tagname, _file) {
+					console.log('on.file', _tagname, _file);
+					files.push([_tagname, _file]);
+
+					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'file', name:_file.name } );
 				} );
+
+			form.on( 'error',
+				function(_err) {
+					console.log('on.error', _err);
+
+					gmFs.unlinkSync( tmp_path );
+					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'error' } );
+				} );
+
+			form.on( 'aborted',
+				function(_err) {
+					console.log('on.aborted');
+
+					gmFs.unlinkSync( tmp_path );
+					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'aborted' } );
+				} );
+
 			form.on( 'end',
 				function() {
 					console.log('-> upload done');
-					_res.writeHead( 200, {'content-type': 'text/plain'} );
-					_res.write('received fields: \n\n' + gmUtil.inspect(fields));
-					_res.write('\n\n');
-					_res.write('received files: \n\n' + gmUtil.inspect(files));
-					_res.end();
-				} );
 
-			console.log('BBBBBBBBBBBBB');
+					var tmp_path = files[0][1].path;
+					var target_path = gszuploadbasedir + '/' + files[0][1].name;
+					//console.log('-> tmp_path', tmp_path);
+					//console.log('-> target_path', target_path);
+					
+					try {
+						// move the file from the temporary location to the intended location
+						gmFs.renameSync( tmp_path, target_path );
+					} catch(e) {
+						gmMisc.dbgerr( 'error upload - ' + tmp_path + ',' + target_path );
+						// delete the temporary file, so that the explicitly set temporary upload dir does not get filled with unwanted files
+						gmFs.unlinkSync( tmp_path );
+					}
+
+					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'end' } );
+				} );
+				
+			form.on( 'field', 
+				function(_field, _value) {
+					console.log('on.field', _field, _value);
+					fields.push([_field, _value]);
+				} );
+				
+
+			if( 'referer' == _req.query.retpage ) {
+				_fnRedirectPage(_req, _res, gmUrl.parse(_req.form.headers.referer).path);
+			}
+			else {
+				_fnRedirectPage(_req, _res, _req.query.retpage);
+			}
 			break;
-						
+
 		default:
 			gmMisc.dbgerr( 'FILE NOT FOUND - ' + oUrl.pathname );
 			break;		
@@ -269,18 +336,6 @@ function callbackWebServerListen()
 {
 	console.log('callbackWebServerListen 192.168.0.2:3000');
 	//console.log( gmHttp.STATUS_CODES );
-}
-
-function _fnRedirect_LOGIN_HTML( _req, _res )
-{
-	var oUrl = gmUrl.parse(_req.url);
-
-	oUrl.pathname = '/login.html';
-	var szUrl = gmUrl.format(oUrl);
-	_res.writeHead( 302, { 'Location' : szUrl } );
-	_res.end();
-
-	return true;
 }
 
 function _fnRedirectPage( _req, _res, _szredirectpage )

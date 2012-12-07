@@ -140,6 +140,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\www\submenu\firmwareupdate.html"
+					>
+				</File>
+				<File
 					RelativePath="..\www\submenu\profile.html"
 					>
 				</File>

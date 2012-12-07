@@ -24,7 +24,8 @@
 
 		<td class="normal">
 			<div class="normal">
-				<h3>ACCOUNT</h3>
+				
+				<h3><script>getSubmenuText();</script></h3>
 				<p>
 					사용자 계정을 설정할 수 있다.
 				</p>
@@ -38,19 +39,7 @@
 				<input type="text", id="text" />
 				<input type="button", id="button" value="echo" />
 			</div>
-			
-			<div class="normal">
-				<p>
-					upload function을 테스트 합니다.
-				</p>
 
-				<form method="post" enctype="multipart/form-data" action="/cgi-bin/upload.node?ret=1&aaa=bbb">
-					<input type="hidden" name="retpage" value="aaaaaaaaaaaaa" />
-					<input type="file" name="filelist" multiple="multiple" />
-					<input type="submit" value="Upload" />
-				</form>
-			</div>
-			
 		</td>
 	</tr>
 </table>
