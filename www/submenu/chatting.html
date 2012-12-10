@@ -1,0 +1,137 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>IP CAMERA</title>
+<link rel="stylesheet" href="/default.css">
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/include/jquery-1.8.2.js"></script>
+<script src="/submenu_nav.js"></script>
+
+<script>
+var gsocket_chat;
+</script>
+
+<script>
+
+	Init_jQuery();
+	
+	$(document).ready( 
+		function() {
+			;
+		}
+	);
+
+	function init_socket( _socket ) {
+		_socket.on( 'event_chatting',
+			function(_data) {
+				switch( _data.action ) {
+				case 'chatmessage':
+					var sz = '';
+					sz += '<li>';
+					sz += '<p>' + _data.nickname + '</p>';
+					sz += '<p>' + _data.msg + '</p>';					
+					sz += '</li>';
+					$(sz).prependTo('#idul_chatmessage');
+					break;
+
+				case 'subscriber_list':
+					console.log( 'event_chatting - ', _data.action, ',', _data.state, ',', _data.nickname );
+					
+					var sz = '';
+					for( var i=0; i<_data.nickname.length; i++ ) {
+						sz += '<li>';
+						sz += '<p>' + _data.nickname[i] + '</p>';
+						sz += '</li>';
+					}
+					$('#idul_subscriberlist').html(sz);
+					break;
+				}
+			}
+		);
+	}
+
+</script>
+</head>
+
+<body>
+<table class="layout_grid" cellspacing="0" cellpadding="0">
+	<tr>
+		<td class="left_nav">
+			<script>showSubmenu('submenu_nav');</script>
+		</td>
+
+		<td class="normal">
+			<div class="normal">
+				<h3><script>getSubmenuText();</script></h3>
+				<p>
+					WEB.SOCKET을 통한 서버와의 이밴트 주고받기 그리고 P2P 기능을 테스트 합니다.
+				</p>
+			</div>
+			
+			<div class="normal">
+				<p>
+					한 가지 예제로 채팅 구현.
+				</p>
+			</div>
+
+			<div class="normal">
+				<p>
+				<br>
+				채팅에 참여한 사용자(들) 입니다.
+				</p>
+				<ul id="idul_subscriberlist"></ul>
+			
+				<p>
+				<br>
+				서버와 상대방에 표시 될 사용자 별명(NICKNAME)을 입력하세요.
+				</p>
+				<input type="text", id="idtext_nickname" size='39' />
+				<input type="button", id="idbutton_join" value="참여" />
+			
+				<p>
+				<br>
+				메시지를 입력하세요.
+				</p>
+				<input type="text", id="idtext_chatmessage" size='60' />
+				<input type="button", id="idbutton_chat" value="보내기" />
+				<ul id="idul_chatmessage"></ul>
+	
+			</div>
+		</td>
+	</tr>
+</table>
+</body>
+</html>
+
+<script>
+	showSubmenu_Selected();
+
+	window.onload = function() {
+		
+		gsocket_chat = io.connect();
+		init_socket( gsocket_chat );
+		
+		//
+		gsocket_chat.emit('subscribe_chatting', { action:'subscriber_list' });
+
+		//
+		document.getElementById('idbutton_chat').onclick = function() {
+			var text = document.getElementById('idtext_chatmessage').value;
+			gsocket_chat.emit('subscribe_chatting', { action:'chatmessage', msg:text });
+		}
+		document.getElementById('idtext_chatmessage').onkeypress = function() {
+			if( 13 !== event.keyCode ) return;
+			var text = document.getElementById('idtext_chatmessage').value;
+			gsocket_chat.emit('subscribe_chatting', { action:'chatmessage', msg:text });
+		}
+		document.getElementById('idbutton_join').onclick = function() {
+			var sznickname = document.getElementById('idtext_nickname').value;
+			gsocket_chat.emit('subscribe_chatting', { action:'join', nickname:sznickname });
+			gsocket_chat.emit('subscribe_chatting', { action:'subscriber_list' });
+		}
+	}
+
+</script>
