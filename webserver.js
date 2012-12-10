@@ -60,7 +60,8 @@ gcWsIO.sockets.on( 'message', onWsIOMessage );
 gcWsIO.sockets.on( 'anything', onWsIOAnything );
 gcWsIO.sockets.on( 'disconnect', onWsIODisconnect );
 
-var gszSubscribeID_Firmup = 'subscribe_firmup';
+var gszIDSubscribe_Firmup = 'subscribe_firmup';
+var gszIDSubscribe_Chatting = 'subscribe_chatting';
 
 /*
 */
@@ -68,17 +69,70 @@ function onWsIOConnection( _socket )
 {
 	console.log('onWsIOConnection - _socket : ');//console.log('onWsIOConnection - _socket : ', _socket);
 	
-	_socket.on( gszSubscribeID_Firmup,
+	_socket.on( gszIDSubscribe_Chatting,
+		function(_data) {
+			console.log('subscribe_chatting - ClientID(', _socket.id, ')', ' received data:', _data);
+			
+			switch(_data.action) {
+			case 'chatmessage':
+				var asznickname = [];
+				_socket.get('nickname', function(_err, _name) { asznickname.push(_name); } );
+
+				gcWsIO.sockets.in(gszIDSubscribe_Chatting).emit('event_chatting', { action:'chatmessage', msg:_data.msg, nickname:asznickname } );
+				break;
+
+			case 'join':
+				console.log('subscribe_chatting - join OK');
+
+				_socket.join(gszIDSubscribe_Chatting);
+				_socket.set('nickname', _data.nickname);
+				
+				var asznickname = [];
+				var objsocket = gcWsIO.sockets.clients(gszIDSubscribe_Chatting);
+				for( var i=0; i<objsocket.length; i++ ) {
+					var socket = objsocket[i];
+					socket.get('nickname', function(_err, _name) { asznickname.push(_name); } );
+				}
+
+				gcWsIO.sockets.in(gszIDSubscribe_Chatting).emit('event_chatting', { action:'subscriber_list', state:'ok', nickname:asznickname } );
+				break;
+				
+			case 'subscriber_list':
+				//console.log('Getting All rooms :', gcWsIO.sockets.manager.rooms);
+				//console.log('Getting Clients in a room :', gcWsIO.sockets.clients(gszIDSubscribe_Chatting));
+				//console.log('Getting Rooms a client has joined :', gcWsIO.sockets.manager.roomClients[_socket.id]);
+				
+				var asznickname = [];
+				var objsocket = gcWsIO.sockets.clients(gszIDSubscribe_Chatting);
+
+				if( 0 == objsocket.length ) {
+					asznickname.push('참여한 사용자가 없습니다.');
+				}
+				else {
+					for( var i=0; i<objsocket.length; i++ ) {
+						var socket = objsocket[i];
+						socket.get('nickname', function(_err, _name) { asznickname.push(_name); } );
+					}
+				}
+				
+				//
+				_socket.emit('event_chatting', { action:'subscriber_list', state:'ok', nickname:asznickname } );
+				break;
+			}
+		}
+	);
+	
+	_socket.on( gszIDSubscribe_Firmup,
 		function(_data) {
 			console.log('subscribe_firmup - ClientID(', _socket.id, ')', ' received data:', _data);
 			switch(_data) {
 			case 'subscribe':
 				console.log('subscribe_firmup - subscribe join OK');
 
-				_socket.join(gszSubscribeID_Firmup);
-				_socket.set(gszSubscribeID_Firmup, gszSubscribeID_Firmup);
+				_socket.join(gszIDSubscribe_Firmup);
+				_socket.set(gszIDSubscribe_Firmup, gszIDSubscribe_Firmup);
 
-				gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'subscribe', state:'ok' } );
+				gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'subscribe', state:'ok' } );
 				break;
 			}
 		}
@@ -212,7 +266,7 @@ function onWebServerRequest( _req, _res )
 			form.on( 'progress',
 				function(_bytesReceived, _bytesExpected) {
 					//console.log('on.progress ', bytesReceived, bytesExpected);
-					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'progress', bytesReceived:_bytesReceived, bytesExpected:_bytesExpected } );
+					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'progress', bytesReceived:_bytesReceived, bytesExpected:_bytesExpected } );
 				} );
 
 			form.on( 'field', 
@@ -225,7 +279,7 @@ function onWebServerRequest( _req, _res )
 				function(_tagname, _file) {
 					console.log('on.fileBegin', _tagname, _file);
 
-					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'fileBegin', name:_file.name } );
+					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'fileBegin', name:_file.name } );
 				} );
 
 			form.on( 'file',
@@ -233,7 +287,7 @@ function onWebServerRequest( _req, _res )
 					console.log('on.file', _tagname, _file);
 					files.push([_tagname, _file]);
 
-					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'file', name:_file.name } );
+					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'file', name:_file.name } );
 				} );
 
 			form.on( 'error',
@@ -241,7 +295,7 @@ function onWebServerRequest( _req, _res )
 					console.log('on.error', _err);
 
 					gmFs.unlinkSync( tmp_path );
-					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'error' } );
+					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'error' } );
 				} );
 
 			form.on( 'aborted',
@@ -249,7 +303,7 @@ function onWebServerRequest( _req, _res )
 					console.log('on.aborted');
 
 					gmFs.unlinkSync( tmp_path );
-					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'aborted' } );
+					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'aborted' } );
 				} );
 
 			form.on( 'end',
@@ -270,7 +324,7 @@ function onWebServerRequest( _req, _res )
 						gmFs.unlinkSync( tmp_path );
 					}
 
-					gcWsIO.sockets.in(gszSubscribeID_Firmup).emit('event_firmup', { action:'end' } );
+					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'end' } );
 				} );
 				
 			form.on( 'field', 
