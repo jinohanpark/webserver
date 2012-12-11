@@ -69,6 +69,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\onvifserver.js"
+				>
+			</File>
+			<File
 				RelativePath="..\webserver.js"
 				>
 			</File>
