@@ -69,10 +69,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\onvifserver.js"
-				>
-			</File>
-			<File
 				RelativePath="..\webserver.js"
 				>
 			</File>
@@ -84,6 +80,14 @@
 					>
 					<File
 						RelativePath="..\my_modules\login\index.js"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="webservice"
+					>
+					<File
+						RelativePath="..\my_modules\webservice\webservice.js"
 						>
 					</File>
 				</Filter>
