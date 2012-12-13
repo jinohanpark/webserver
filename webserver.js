@@ -29,6 +29,7 @@ var gmWsIO = require('socket.io');
 */
 var gmMisc = require('./misc.js');
 var gmLogin = require('./my_modules/login');
+var gmWebService = require('./my_modules/webservice/webservice.js');
 
 /*
 */
