@@ -28,8 +28,14 @@ var gmWsIO = require('socket.io');
 	my modules
 */
 var gmMisc = require('./misc.js');
-var gmLogin = require('./my_modules/login');
+var gmLogin = require('./my_modules/login/login.js');
 var gmWebService = require('./my_modules/webservice/webservice.js');
+
+
+/*
+*/
+var gcWebServiceServer = gmWebService.createSocket();
+//console.log('gcWebServiceServer:', gcWebServiceServer);
 
 /*
 */

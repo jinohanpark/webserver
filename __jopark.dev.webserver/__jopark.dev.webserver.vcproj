@@ -79,7 +79,7 @@
 					Name="login"
 					>
 					<File
-						RelativePath="..\my_modules\login\index.js"
+						RelativePath="..\my_modules\login\login.js"
 						>
 					</File>
 				</Filter>
