@@ -182,3 +182,84 @@ port 54962, 33533, 58622, 49994
 		</d:Hello>
 	</SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
+
+
+/*
+[REQUEST] testtool(check http) -> server
+*/
+POST /onvif/device_service HTTP/1.1
+Host: 192.168.0.230
+Content-Type: application/soap+xml; charset=utf-8
+Content-Length: 299
+
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">
+	<s:Body xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+			xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+		<GetDeviceInformation xmlns="http://www.onvif.org/ver10/device/wsdl"/>
+	</s:Body>
+</s:Envelope>
+
+<?xml version='1.0' encoding='utf-8'?>
+<soap:Envelope
+ xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+ xmlns:tds="http://www.onvif.org/ver10/device/wsdl"
+ xmlns:tt="http://www.onvif.org/ver10/schema">
+	<soap:Body>
+		<tds:GetDeviceInformation/>
+	</soap:Body>
+</soap:Envelope>
+
+
+HTTP/1.1 200 OK
+Status: 200 OK
+Server: gSOAP/2.7
+Content-Type: application/soap+xml; charset=utf-8
+Content-Length: 2116
+Connection: close
+Date: Fri, 14 Dec 2012 08:32:25 GMT
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope" 
+				   xmlns:SOAP-ENC="http://www.w3.org/2003/05/soap-encoding" 
+				   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+				   xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+				   xmlns:wsa5="http://www.w3.org/2005/08/addressing" 
+				   xmlns:c14n="http://www.w3.org/2001/10/xml-exc-c14n#" 
+				   xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" 
+				   xmlns:ds="http://www.w3.org/2000/09/xmldsig#" 
+				   xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" 
+				   xmlns:xop="http://www.w3.org/2004/08/xop/include" 
+				   xmlns:tns1="http://www.onvif.org/ver10/topics" 
+				   xmlns:tt="http://www.onvif.org/ver10/schema" 
+				   xmlns:xmime="http://www.w3.org/2005/05/xmlmime" 
+				   xmlns:wstop="http://docs.oasis-open.org/wsn/t-1" 
+				   xmlns:wsrf-bf="http://docs.oasis-open.org/wsrf/bf-2" 
+				   xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" 
+				   xmlns:wsrf-r="http://docs.oasis-open.org/wsrf/r-2" 
+				   xmlns:tds="http://www.onvif.org/ver10/device/wsdl" 
+				   xmlns:tev1="http://www.onvif.org/ver10/events/wsdl/NotificationProducerBinding" 
+				   xmlns:tev2="http://www.onvif.org/ver10/events/wsdl/EventBinding" 
+				   xmlns:tev3="http://www.onvif.org/ver10/events/wsdl/SubscriptionManagerBinding" 
+				   xmlns:tev4="http://www.onvif.org/ver10/events/wsdl/PullPointSubscriptionBinding" 
+				   xmlns:tev="http://www.onvif.org/ver10/events/wsdl" 
+				   xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" 
+				   xmlns:timg="http://www.onvif.org/ver20/imaging/wsdl" 
+				   xmlns:tmd="http://www.onvif.org/ver10/deviceIO/wsdl" 
+				   xmlns:tptz="http://www.onvif.org/ver20/ptz/wsdl" 
+				   xmlns:trt="http://www.onvif.org/ver10/media/wsdl" 
+				   xmlns:ter="http://www.onvif.org/ver10/error" 
+				   xmlns:tnssamsung="http://www.samsungcctv.com/2011/event/topics">
+	<SOAP-ENV:Body>
+		<tds:GetDeviceInformationResponse>
+			<tds:Manufacturer>Samsung Techwin</tds:Manufacturer>
+			<tds:Model>SNP-6200</tds:Model>
+			<tds:FirmwareVersion>1.02_121119</tds:FirmwareVersion>
+			<tds:SerialNumber>7000</tds:SerialNumber>
+			<tds:HardwareId>SNP-6200</tds:HardwareId>
+		</tds:GetDeviceInformationResponse>
+	</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+/*
+*/

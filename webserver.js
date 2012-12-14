@@ -200,52 +200,67 @@ function onWebServerRequest( _req, _res )
 	this._res = _res;
 	
 	console.log('Request On');
+	
+	//console.log('_req.headers:', _req.headers);
+	//console.log('_req.headers.host:', _req.headers.host);
+	//console.log('_req.headers.content-type:', _req.headers['content-type']);
+	//console.log('_req.headers.content-length:', _req.headers['content-length']);
 
-	console.log('method:', _req.method);
-
-	//console.log('headers:', JSON.stringify(_req.headers));
-	//var objH = gmQS.parse(JSON.stringify(_req.headers), ',', ':');
-	//console.log('headers:', objH);
-
-	console.log('gmConnect.query:', _req.query);		//console.log('gmConnect.query.key:', _req.query.key);
-	console.log('gmConnect.bodyParser:', _req.body);
-	console.log('gmConnect.multipart:', _req.files);
+	//console.log('gmConnect.query:', _req.query);		//console.log('gmConnect.query.key:', _req.query.key);
+	//console.log('gmConnect.body:', _req.body);
+	//console.log('gmConnect.multipart:', _req.files);
 	//console.log('gmConnect.cookies:', _req.cookies);
 	//console.log('gmConnect.session:', _req.session);
 	console.log('gmUrl.url:', _req.url);
 
 	//
-	var oUrl = gmUrl.parse(_req.url);
+	var szreqfiletype;
+
+	var oUrl = gmUrl.parse(_req.url);//console.log('oUrl.pathname:', oUrl.pathname);
 	if( '/' == oUrl.pathname ) {
 		_fnRedirectPage(_req, _res, '/index.html');
 		return;
 	}
+	else
+	if( '/onvif/device_service' == oUrl.pathname ) {
+		szreqfiletype = 'application/soap+xml';
+	}
+	else {
+		var obj;
+		if( null == (obj = _fnGetRequestFileType(_req)) ) {
+			_res.writeHead( 404, { 'Content-Type': 'text/html' } );
+			_res.end();
+			return;
+		}
+		szreqfiletype = obj.szreqfiletype;
+	}
 
-	var szreqfiletype;
-	if( null == (obj = _fnGetRequestFileType(_req)) ) {
-		_res.writeHead( 404, { 'Content-Type': 'text/html' } );
-		_res.end();
+	///////////////////////////////////////////////////////////////////////////////////
+	//
+	if( ('application/soap+xml' == szreqfiletype) ) {
+		if( 'post' != _req.method.toLowerCase() ) {
+			gmMisc.dbgerr( 'MISMATCH method(only "post") - ' + oUrl.pathname );
+			return;
+		}
+		
+		switch( oUrl.pathname ) {
+		case '/onvif/device_service':
+			console.log('-> /onvif/device_service');
+
+			_req.on('data',
+				function(_data) {
+					//console.log('-> /onvif/device_service post data:', _data);
+					var retcode = gmWebService.onWebServiceHTTPMessage( _req, _res, _data );
+				}
+			);
+			break;
+		}
+
 		return;
 	}
-	szreqfiletype = obj.szreqfiletype;
 	
+	///////////////////////////////////////////////////////////////////////////////////
 	//
-	if( ('text/html' == szreqfiletype) ) {
-		var flogin = gmLogin.islogin(_req, _res);
-
-		if( false == flogin ) {
-			if( ('/login.html' != oUrl.pathname) ) {
-				_fnRedirectPage(_req, _res, '/login.html');
-				return;
-			}
-		}
-		else {
-			if( ('/login.html' == oUrl.pathname) ) {
-				// already login, logout? or switch user?
-			}
-		}
-	}
-
 	if( 'application/node' == szreqfiletype ) {
 		if( 'post' != _req.method.toLowerCase() ) {
 			gmMisc.dbgerr( 'MISMATCH method(only "post") - ' + oUrl.pathname );
@@ -353,7 +368,26 @@ function onWebServerRequest( _req, _res )
 			gmMisc.dbgerr( 'FILE NOT FOUND - ' + oUrl.pathname );
 			break;		
 		}
+		
 		return;
+	}
+	
+	///////////////////////////////////////////////////////////////////////////////////	
+	//
+	if( ('text/html' == szreqfiletype) ) {
+		var flogin = gmLogin.islogin(_req, _res);
+
+		if( false == flogin ) {
+			if( ('/login.html' != oUrl.pathname) ) {
+				_fnRedirectPage(_req, _res, '/login.html');
+				return;
+			}
+		}
+		else {
+			if( ('/login.html' == oUrl.pathname) ) {
+				// already login, logout? or switch user?
+			}
+		}
 	}
 
 	//
@@ -371,16 +405,19 @@ function onWebServerRequest( _req, _res )
 			var date = new Date();
 			date.setDate(date.getDate() + 7);
 			_res.writeHead( 200, {
+							'Server': 'node.js-jinohan.park',
 							'Content-Type': szreqfiletype,
 							'Set-Cookie': [ //'breakfast = toast;Expires = ' + date.toUTCString(),
 											'dinner = chicken',
 											'testkey = testvalue'
 										  ]
-						   }
-						 );
+						    }
+						  );
 			_res.end( data );
 		}
 	}
+
+	return;
 }
 
 function onWebServerConnection()

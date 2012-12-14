@@ -16,6 +16,7 @@ var gmBuffer	= require('buffer');
 */
 var gmXml = require('node-xml');
 var gmXml2Json = require('xml2json');
+//var gmXml2Js = require('xml2js');
 
 /*
 	my modules
@@ -33,7 +34,6 @@ function myWebService( _name )
 	this.nWebService_UDPport = 3702;
 	this.nWebService_MulticastIP = '239.255.255.250';
 
-	
 }
 
 myWebService.prototype.createSocket = function()
@@ -75,10 +75,64 @@ myWebService.prototype.fireWebServiceMessage = function( _szwhat )
 	}
 }
 
+myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
+{
+	var retcode = 0;
+	
+if(1) {
+	gmFs.writeFileSync('req_http.xml', _msg, 'utf8');
+}
+
+	var json;
+if(0) {
+	var xmlfile = gmFs.readFileSync('req_http.xml', 'utf8');
+	var xmldata = new Buffer(xmlfile, 'utf8');
+	json = gmXml2Json.toJson(xmldata, {reversible:true});
+	delete xmldata;
+} else {
+	json = gmXml2Json.toJson(_msg/*xmldata*/, {reversible:true});
+}
+	//console.log('json', json);
+
+	var xmlobj = JSON.parse(json); //console.log('xmlobj xml2json', gmUtil.inspect(xmlobj, false, null));
+	//console.log('xmlobj :', xmlobj['s:Envelope']['s:Body']);
+
+/*
+xmlobj { 'soap:Envelope':
+   { 'xmlns:soap': 'http://www.w3.org/2003/05/soap-envelope',
+     'xmlns:tds': 'http://www.onvif.org/ver10/device/wsdl',
+     'xmlns:tt': 'http://www.onvif.org/ver10/schema',
+     'soap:Body': { 'tds:GetDeviceInformation': {} } } }
+     
+xmlobj { 's:Envelope':
+   { 'xmlns:s': 'http://www.w3.org/2003/05/soap-envelope',
+     's:Body':
+      { 'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+        'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
+        GetDeviceInformation: { xmlns: 'http://www.onvif.org/ver10/device/wsdl' } } } }
+*/
+	var szresmsg = null;
+	//if( true == gcmyWebService._is_onvif(xmlobj) ) {
+	//	szresmsg = gcmyWebService._makeres_probematch(xmlobj); //console.log('gcmyWebService._makeres_probematch : \r\n', szresmsg, '\r\n');
+	//}
+
+	szresmsg = '';
+	if( null != szresmsg ) {
+		var data = new Buffer(szresmsg, 'utf8');
+		
+		_res.writeHead( 404, { 'Content-Type': 'text/html' } );
+		_res.end();
+	
+		delete data;
+	}
+	
+	return retcode;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /*
 LOCAL function definition 
 */
-
 myWebService.prototype._onWebServiceMessage = function(_msg, _rinfo)
 {
 	console.log('<_onWebServiceMessage>');
@@ -100,7 +154,7 @@ if(0) {
 }
 	//console.log('json', json);
 	
-	var xmlobj = JSON.parse(json); //console.log('xmlobj', xmlobj);
+	var xmlobj = JSON.parse(json); //console.log('xmlobj xml2json', gmUtil.inspect(xmlobj, false, null));
 
 	var szresmsg = null;
 	if( true == gcmyWebService._is_probe(xmlobj) ) {
@@ -136,8 +190,6 @@ myWebService.prototype._onWebServiceListening = function()
 	
 	gcmyWebService.fireWebServiceMessage('broad_hello');
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
