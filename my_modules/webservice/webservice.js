@@ -78,51 +78,62 @@ myWebService.prototype.fireWebServiceMessage = function( _szwhat )
 myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 {
 	var retcode = 0;
-	
-if(1) {
-	gmFs.writeFileSync('req_http.xml', _msg, 'utf8');
-}
 
-	var json;
-if(0) {
-	var xmlfile = gmFs.readFileSync('req_http.xml', 'utf8');
-	var xmldata = new Buffer(xmlfile, 'utf8');
-	json = gmXml2Json.toJson(xmldata, {reversible:true});
-	delete xmldata;
-} else {
-	json = gmXml2Json.toJson(_msg/*xmldata*/, {reversible:true});
-}
-	//console.log('json', json);
+	var xmlobj = {};
+	var parser = new gmXml.SaxParser(
+	function(cb) {
+		cb.onStartDocument(function() { });
+		cb.onEndDocument(function() { });
+		cb.onStartElementNS(function(elem, attrs, prefix, uri, namespaces) {
+			//console.log("=> Started: " + elem + " uri="+uri +" (Attributes: " + JSON.stringify(attrs) + " )");
+			if( ('Envelope' == elem) && ('http://www.w3.org/2003/05/soap-envelope' == uri) ) { xmlobj.soap = 'yes'; }
+			if( ('Body' == elem) &&	('http://www.w3.org/2003/05/soap-envelope' == uri) ) { xmlobj.body = 'yes'; }
+		});
+		cb.onEndElementNS(function(elem, prefix, uri) {
+			//console.log("<= End: " + elem + " uri="+uri + " prefix="+prefix + "\n");
+			//elem.toLowerCase()
+			if( ('http://www.onvif.org/ver10/device/wsdl' == uri) ) { 
+				if( ('yes' == xmlobj.body) && ('yes' == xmlobj.soap) ) {
+					xmlobj.req = elem;
+				}
+			}
+		});
+		cb.onCharacters(function(chars) { console.log('<CHARS>'+chars+"</CHARS>"); });
+		cb.onCdata(function(cdata) { console.log('<CDATA>'+cdata+"</CDATA>"); });
+		cb.onComment(function(msg) { console.log('<COMMENT>'+msg+"</COMMENT>"); });
+		cb.onWarning(function(msg) { console.log('<WARNING>'+msg+"</WARNING>"); });
+		cb.onError(function(msg) { console.log('<ERROR>'+JSON.stringify(msg)+"</ERROR>"); });
+	});
+	parser.parseString(_msg);
 
-	var xmlobj = JSON.parse(json); //console.log('xmlobj xml2json', gmUtil.inspect(xmlobj, false, null));
-	//console.log('xmlobj :', xmlobj['s:Envelope']['s:Body']);
-
-/*
-xmlobj { 'soap:Envelope':
-   { 'xmlns:soap': 'http://www.w3.org/2003/05/soap-envelope',
-     'xmlns:tds': 'http://www.onvif.org/ver10/device/wsdl',
-     'xmlns:tt': 'http://www.onvif.org/ver10/schema',
-     'soap:Body': { 'tds:GetDeviceInformation': {} } } }
-     
-xmlobj { 's:Envelope':
-   { 'xmlns:s': 'http://www.w3.org/2003/05/soap-envelope',
-     's:Body':
-      { 'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-        'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
-        GetDeviceInformation: { xmlns: 'http://www.onvif.org/ver10/device/wsdl' } } } }
-*/
+	//
 	var szresmsg = null;
-	//if( true == gcmyWebService._is_onvif(xmlobj) ) {
-	//	szresmsg = gcmyWebService._makeres_probematch(xmlobj); //console.log('gcmyWebService._makeres_probematch : \r\n', szresmsg, '\r\n');
-	//}
+	
+	if( xmlobj.req ) {
+		console.log('onvif-req:', xmlobj.req);
+		
+		switch( xmlobj.req ) {
+		case 'GetDeviceInformation':
+			szresmsg = this._makeres_getdeviceinformation(xmlobj);
+			break;
+			
+		default:
+			console.log('??? onvif-req:', xmlobj.req);
+			break;			
+		}
+	}
+	else {
+		;
+	}
 
-	szresmsg = '';
 	if( null != szresmsg ) {
 		var data = new Buffer(szresmsg, 'utf8');
-		
-		_res.writeHead( 404, { 'Content-Type': 'text/html' } );
-		_res.end();
-	
+
+		_res.writeHead( 200, { 'Server': 'node.js-jinohan.park',
+							   'Content-Length': data.length,
+							   'Content-Type': 'application/soap+xml; charset=utf-8' } );
+		_res.end(data);
+
 		delete data;
 	}
 	
@@ -139,7 +150,7 @@ myWebService.prototype._onWebServiceMessage = function(_msg, _rinfo)
 	//console.log('_msg:', _msg);
 	console.log('_rinfo:', _rinfo);
 
-if(0) {
+if(1) {
 	gmFs.writeFileSync('req.xml', _msg, 'utf8');
 }
 
@@ -153,7 +164,7 @@ if(0) {
 	json = gmXml2Json.toJson(_msg/*xmldata*/, {reversible:true});
 }
 	//console.log('json', json);
-	
+
 	var xmlobj = JSON.parse(json); //console.log('xmlobj xml2json', gmUtil.inspect(xmlobj, false, null));
 
 	var szresmsg = null;
@@ -217,8 +228,9 @@ myWebService.prototype._is_probe = function(_xmlobj)
 myWebService.prototype._makemsg_soap_envelope = function( _sz )
 {
 	_sz += 
-	'<?xml version="1.0" encoding="UTF-8"?>'
-			 +'<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope" '
+	'<?xml version="1.0" encoding="UTF-8"?>\n'
+			 +'<SOAP-ENV:Envelope '
+			 +'xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope" '
 			 +'xmlns:SOAP-ENC="http://www.w3.org/2003/05/soap-encoding" '
 			 +'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
 			 +'xmlns:xsd="http://www.w3.org/2001/XMLSchema" '
@@ -234,6 +246,7 @@ myWebService.prototype._makemsg_soap_envelope = function( _sz )
 			 +'xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" '
 			 +'xmlns:tt="http://www.onvif.org/ver10/schema" '
 			 +'xmlns:wsrfbf="http://docs.oasis-open.org/wsrf/bf-2" '
+			 //+'xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" '
 			 +'xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" '
 			 +'xmlns:wstop="http://docs.oasis-open.org/wsn/t-1" '
 			 +'xmlns:d="http://schemas.xmlsoap.org/ws/2005/04/discovery" '
@@ -304,6 +317,18 @@ myWebService.prototype._makemsg_soap_body = function( _objres, _sz, _szwhat )
 	;
 	
 	switch( _szwhat ) {
+	case 'res_getdeviceinformation':
+		_sz += ''
+		+'<tds:GetDeviceInformationResponse>'
+		+'<tds:Manufacturer>'+_objres.manufacturer+'</tds:Manufacturer>'	// Samsung Techwin
+		+'<tds:Model>'+_objres.model+'</tds:Model>'					// SNP-6200
+		+'<tds:FirmwareVersion>'+_objres.fwversion+'</tds:FirmwareVersion>'	// 1.02_121119
+		+'<tds:SerialNumber>'+_objres.serialno+'</tds:SerialNumber>'	// 7000
+		+'<tds:HardwareId>'+_objres.hwid+'</tds:HardwareId>'	// SNP-6200
+		+'</tds:GetDeviceInformationResponse>'
+		;
+		break;
+		
 	case 'res_probematch':
 		_sz += ''
 		+'<d:ProbeMatches>'
@@ -427,5 +452,24 @@ myWebService.prototype._makebroad_hello = function()
 	szresmsg = this._makemsg_soap_header( objres, szresmsg, 'broad_hello' );
 	szresmsg = this._makemsg_soap_body( objres, szresmsg, 'broad_hello' );
 	
+	return szresmsg;
+}
+
+myWebService.prototype._makeres_getdeviceinformation = function(_xmlobj)
+{
+	var objres = {};
+
+	objres.manufacturer = 'my_manufacturer';
+	objres.model = 'my_modelname';
+	objres.fwversion = 'my_fwversion';
+	objres.serialno = 'my_serialno';
+	objres.hwid = 'my_hwid';
+
+	////////////////////////////////////////////////////////////////////////////
+	var szresmsg = '';
+	
+	szresmsg = this._makemsg_soap_envelope( szresmsg );
+	szresmsg = this._makemsg_soap_body( objres, szresmsg, 'res_getdeviceinformation' );
+
 	return szresmsg;
 }

@@ -245,7 +245,7 @@ function onWebServerRequest( _req, _res )
 		
 		switch( oUrl.pathname ) {
 		case '/onvif/device_service':
-			console.log('-> /onvif/device_service');
+			//console.log('-> /onvif/device_service');
 
 			_req.on('data',
 				function(_data) {
