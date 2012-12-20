@@ -91,6 +91,14 @@
 						>
 					</File>
 				</Filter>
+				<Filter
+					Name="database"
+					>
+					<File
+						RelativePath="..\my_modules\database\database.js"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter

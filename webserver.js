@@ -30,7 +30,12 @@ var gmWsIO = require('socket.io');
 var gmMisc = require('./misc.js');
 var gmLogin = require('./my_modules/login/login.js');
 var gmWebService = require('./my_modules/webservice/webservice.js');
+var gmDataBase = require('./my_modules/database/database.js');
 
+/*
+*/
+var gcDBClient = gmDataBase.init();
+//console.log('gcDBClient:', gcDBClient);
 
 /*
 */
