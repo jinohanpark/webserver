@@ -110,11 +110,17 @@ myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 		cb.onComment(function(msg) { console.log('<COMMENT>'+msg+"</COMMENT>"); });
 		cb.onWarning(function(msg) { console.log('<WARNING>'+msg+"</WARNING>"); });
 		cb.onError(function(msg) { console.log('<ERROR>'+JSON.stringify(msg)+"</ERROR>"); });
-		cb.onEndDocument(function() { });
+
+		cb.onEndDocument( function() {
+			//console.log('############# gmXml.SaxParser onEndDocument:');
+			//parser.pause();
+			//setTimeout( function() { parser.resume(); console.log('pppppppppppppppppppppp'); }, 5000 );
+		});
+		
 	});
-
+ 
 	parser.parseString(_msg);
-
+	
 	//
 	var szresmsg = null;
 	
@@ -135,6 +141,7 @@ myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 		;
 	}
 	
+	///////////////////////////////////////////////////////////////////////////////////////
 	function _callbackHttpResponse( _szresmsg ) {
 		var data = new Buffer(_szresmsg, 'utf8');
 		_res.writeHead( 200, { 'Server': 'node.js-jinohan.park',
@@ -455,29 +462,46 @@ myWebService.prototype._makebroad_hello = function()
 	
 	////////////////////////////////////////////////////////////////////////////
 	var szresmsg = '';
-	szresmsg = this._makemsg_soap_envelope( szresmsg );
-	szresmsg = this._makemsg_soap_header( objres, szresmsg, 'broad_hello' );
-	szresmsg = this._makemsg_soap_body( objres, szresmsg, 'broad_hello' );
+	szresmsg = gcmyWebService._makemsg_soap_envelope( szresmsg );
+	szresmsg = gcmyWebService._makemsg_soap_header( objres, szresmsg, 'broad_hello' );
+	szresmsg = gcmyWebService._makemsg_soap_body( objres, szresmsg, 'broad_hello' );
 	
 	return szresmsg;
 }
 
 myWebService.prototype._makeres_getdeviceinformation = function(_xmlobj, _callback)
 {
-	var objres = {};
+	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "system.deviceinfo.%"';
+	gmDataBase.getquery_ipcam_config( query, function(_result) {
 
-	//gmDataBase.getquery_ipcam_config();
+		var objres = {};
+		for( var i=0; i<_result.length; i++ ) {
+			console.log('getquery_ipcam_config result:', _result[i].lvalue);
+			
+			switch(_result[i].lvalue) {
+			case 'system.deviceinfo.manufacturer':
+				objres.manufacturer = _result[i].rvalue;
+				break;
+			case 'system.deviceinfo.model':
+				objres.model = _result[i].rvalue;
+				break;
+			case 'system.deviceinfo.fwversion':
+				objres.fwversion = _result[i].rvalue;
+				break;
+			case 'system.deviceinfo.serialno':
+				objres.serialno = _result[i].rvalue;
+				break;
+			case 'system.deviceinfo.hwid':
+				objres.hwid = _result[i].rvalue;
+				break;
+			}
+		}
 
-	objres.manufacturer = 'my_manufacturer';
-	objres.model = 'my_modelname';
-	objres.fwversion = 'my_fwversion';
-	objres.serialno = 'my_serialno';
-	objres.hwid = 'my_hwid';
+		////////////////////////////////////////////////////////////////////////////
+		var szresmsg = '';
+		szresmsg = gcmyWebService._makemsg_soap_envelope( szresmsg );
+		szresmsg = gcmyWebService._makemsg_soap_body( objres, szresmsg, 'res_getdeviceinformation' );
 
-	////////////////////////////////////////////////////////////////////////////
-	var szresmsg = '';
-	szresmsg = this._makemsg_soap_envelope( szresmsg );
-	szresmsg = this._makemsg_soap_body( objres, szresmsg, 'res_getdeviceinformation' );
-
-	_callback(szresmsg);
+		_callback(szresmsg);
+	});
 }

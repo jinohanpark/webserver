@@ -69,33 +69,34 @@ myDataBase.prototype.makedefault_ipcam_database = function()
 	});
 }
 
-myDataBase.prototype.getquery_ipcam_config = function( _callback )
+myDataBase.prototype.getquery_ipcam_config = function( _query, _callback )
 {
 	console.log('->> myDataBase.prototype.getquery_ipcam_config');
 	
-	/*
-	var query = gcmyDataBase.connect.query('select * from configuration');
-	query
-	.on('error', function(_err) {
+	var ajresult = [{}];
+	var query = gcmyDataBase.connect.query(_query);
+	
+	query.on('error', function(_err) {
 		// Handle error, an 'end' event will be emitted after this as well
-		console.log('getquery_ipcam_config error:', _err);
+		//console.log('getquery_ipcam_config error:', _err);
 	})
 	.on('fields', function(_fields) {
 		// the field packets for the rows to follow
-		console.log('getquery_ipcam_config fields:', _fields);
+		//console.log('getquery_ipcam_config fields:', _fields);
 	})
 	.on('result', function(_row) {
 		// Pausing the connnection is useful if your processing involves I/O
-		console.log('getquery_ipcam_config result:', _row);
-		
-		var json = eval('(' + _row.type + ')');
-		console.log('json:', json);
+		//console.log('getquery_ipcam_config result:', _row);
+
+		//var json = eval('(' + _row.type + ')');
+		//console.log('json:', json);
+		ajresult.push(_row);
 	})
 	.on('end', function() {
 		// all rows have been received
-		console.log('getquery_ipcam_config end:');
+		//console.log('getquery_ipcam_config end:');
+		_callback(ajresult);
 	})
-	*/
 }
 
 /*
@@ -121,18 +122,18 @@ myDataBase.prototype._makedefault_ipcam_config = function()
 			var sql = 'INSERT INTO configuration (lvalue, rvalue, type, privilige, syntax) VALUES (?,?,?,?,?)';
 			var val = 
 [
-['system.deviceinfo.manufacturer',	'', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['system.deviceinfo.model',			'', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['system.deviceinfo.fwversion',		'', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['system.deviceinfo.serialno',		'', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['system.deviceinfo.hwid',			'', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
+['system.deviceinfo.manufacturer',	'manufacturer', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
+['system.deviceinfo.model',			'model',		'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
+['system.deviceinfo.fwversion',		'fwversion',	'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
+['system.deviceinfo.serialno',		'serialno',		'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
+['system.deviceinfo.hwid',			'hwid',			'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
 
-['security.account.user',			'', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['security.account.privilige',		'', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
+['security.account.user',			'root',		'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
+['security.account.privilige',		'pass',		'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
 
-['network.eth0.mac',				'', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['network.eth0.ipv4',				'', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['network.eth0.subnet',				'', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64']
+['network.eth0.mac',				'00:11:22:33:44:55',	'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
+['network.eth0.ipv4',				'192.168.0.2',			'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
+['network.eth0.subnet',				'255.255.255.0',		'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64']
 
 ];
 			//console.log('val.length :', val.length);
