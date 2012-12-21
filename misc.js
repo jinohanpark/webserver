@@ -5,6 +5,14 @@ exports = module.exports = objType;
 function myMisc( _name )
 {
 	var self = this;
+
+	/*	
+	this.ttttt = 'xxxxxxxxxxxxxxxxx';
+	this.event = new process.EventEmitter();
+	setInterval( function() {
+		objType.event.emit('aaa', 'xxxxxx');
+	}, 1000);
+	*/
 }
 
 myMisc.prototype.dbgerr = function( _sz )

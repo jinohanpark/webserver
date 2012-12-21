@@ -22,6 +22,14 @@ var gmXml2Json = require('xml2json');
 	my modules
 */
 var gmMisc = require('../../misc.js');
+/*
+gmMisc.event.on('aaa', function(_param) {
+	console.log('gmMisc.event.on _param:', _param);
+});
+*/
+var gmDataBase = require('../../my_modules/database/database.js');
+var gcDBClient = gmDataBase.init();
+
 
 /*
 PUBLIC function definition 
@@ -80,10 +88,9 @@ myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 	var retcode = 0;
 
 	var xmlobj = {};
-	var parser = new gmXml.SaxParser(
+	var parser = new gmXml.SaxParser( 
 	function(cb) {
 		cb.onStartDocument(function() { });
-		cb.onEndDocument(function() { });
 		cb.onStartElementNS(function(elem, attrs, prefix, uri, namespaces) {
 			//console.log("=> Started: " + elem + " uri="+uri +" (Attributes: " + JSON.stringify(attrs) + " )");
 			if( ('Envelope' == elem) && ('http://www.w3.org/2003/05/soap-envelope' == uri) ) { xmlobj.soap = 'yes'; }
@@ -103,7 +110,9 @@ myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 		cb.onComment(function(msg) { console.log('<COMMENT>'+msg+"</COMMENT>"); });
 		cb.onWarning(function(msg) { console.log('<WARNING>'+msg+"</WARNING>"); });
 		cb.onError(function(msg) { console.log('<ERROR>'+JSON.stringify(msg)+"</ERROR>"); });
+		cb.onEndDocument(function() { });
 	});
+
 	parser.parseString(_msg);
 
 	//
@@ -111,12 +120,12 @@ myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 	
 	if( xmlobj.req ) {
 		console.log('onvif-req:', xmlobj.req);
-		
+
 		switch( xmlobj.req ) {
 		case 'GetDeviceInformation':
-			szresmsg = this._makeres_getdeviceinformation(xmlobj);
+			this._makeres_getdeviceinformation(xmlobj, _callbackHttpResponse);
 			break;
-			
+
 		default:
 			console.log('??? onvif-req:', xmlobj.req);
 			break;			
@@ -125,18 +134,16 @@ myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 	else {
 		;
 	}
-
-	if( null != szresmsg ) {
-		var data = new Buffer(szresmsg, 'utf8');
-
+	
+	function _callbackHttpResponse( _szresmsg ) {
+		var data = new Buffer(_szresmsg, 'utf8');
 		_res.writeHead( 200, { 'Server': 'node.js-jinohan.park',
 							   'Content-Length': data.length,
 							   'Content-Type': 'application/soap+xml; charset=utf-8' } );
 		_res.end(data);
-
 		delete data;
 	}
-	
+		
 	return retcode;
 }
 
@@ -455,9 +462,11 @@ myWebService.prototype._makebroad_hello = function()
 	return szresmsg;
 }
 
-myWebService.prototype._makeres_getdeviceinformation = function(_xmlobj)
+myWebService.prototype._makeres_getdeviceinformation = function(_xmlobj, _callback)
 {
 	var objres = {};
+
+	//gmDataBase.getquery_ipcam_config();
 
 	objres.manufacturer = 'my_manufacturer';
 	objres.model = 'my_modelname';
@@ -467,9 +476,8 @@ myWebService.prototype._makeres_getdeviceinformation = function(_xmlobj)
 
 	////////////////////////////////////////////////////////////////////////////
 	var szresmsg = '';
-	
 	szresmsg = this._makemsg_soap_envelope( szresmsg );
 	szresmsg = this._makemsg_soap_body( objres, szresmsg, 'res_getdeviceinformation' );
 
-	return szresmsg;
+	_callback(szresmsg);
 }
