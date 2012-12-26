@@ -14,16 +14,21 @@ var gmBuffer	= require('buffer');
 	external modules
 */
 var gmWsIO = require('socket.io');
+var gcWsIO;
 
 /*
 	my modules
 */
+var gmDataBase = require('../../my_modules/database/database.js');
+var gcDBClient = gmDataBase.init();
 
+/*
+	global variable
+*/
 var gszIDSubscribe_Firmup   = 'subscribe_firmup';
 var gszIDSubscribe_Chatting = 'subscribe_chatting';
+var gszIDSubscribe_Configuration = 'subscribe_configuration';
 
-
-var gcWsIO;
 
 /*
 PUBLIC function definition 
@@ -55,7 +60,55 @@ LOCAL function definition
 */
 function _onWsIOConnection( _socket )
 {
-	console.log('onWsIOConnection - _socket : ');//console.log('onWsIOConnection - _socket : ', _socket);
+	//console.log('onWsIOConnection - _socket : ');//console.log('onWsIOConnection - _socket : ', _socket);
+
+	_socket.on( gszIDSubscribe_Configuration,
+		function(_data) {
+			console.log('subscribe_configuration - ClientID(', _socket.id, ')', ' received data:', _data);
+
+			var id = _socket.id;
+			var ack = {};
+
+			switch(_data.action) {
+			case 'get':
+				_makeres_getconfiguration( _data.query, function(_result, _json) {
+					//console.log('from DB _result ', _result);
+					ack.action = _data.action;
+					ack.query  = _data.query;
+					ack.result = _json;
+					//console.log('from DB ack', ack);
+					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
+				});
+				break;
+			}
+		}
+	);
+
+	_socket.on( '_mymsg',
+	    function(_data) {
+			console.log('ClientID(', _socket.id, ')', ' sent data:', _data);
+
+			var sz = '접속된 모든 클라이언트에게 바이러스를 심습니다.\n' +
+					 '"확인" 버튼을 누르시면 고객님에 소중한 정보를 쪽쪽 빨아갑니다.\n\n' + 
+					 '감사합니다.';
+
+			if( 'private' == _data ) {
+				var id = _socket.id;
+				gcWsIO.sockets.sockets[id].emit( '_mymsgack', sz );
+			}
+			else
+			if( 'broadcast' == _data ) {
+				_socket.broadcast.emit( '_mymsgack', sz );
+			}
+			else
+			if( 'public' == _data ) {
+				gcWsIO.sockets.emit( '_mymsgack', sz );
+			}
+			else {
+				_socket.emit( '_mymsgack', _data );
+			}
+	    }
+	);	
 
 	_socket.on( gszIDSubscribe_Chatting,
 		function(_data) {
@@ -125,32 +178,6 @@ function _onWsIOConnection( _socket )
 			}
 		}
 	);
-	
-	_socket.on( '_mymsg',
-	    function(_data) {
-			console.log('ClientID(', _socket.id, ')', ' sent data:', _data);
-
-			var sz = '접속된 모든 클라이언트에게 바이러스를 심습니다.\n' +
-					 '"확인" 버튼을 누르시면 고객님에 소중한 정보를 쪽쪽 빨아갑니다.\n\n' + 
-					 '감사합니다.';
-
-			if( 'private' == _data ) {
-				var id = _socket.id;
-				gcWsIO.sockets.sockets[id].emit( '_mymsgack', sz );
-			}
-			else
-			if( 'broadcast' == _data ) {
-				_socket.broadcast.emit( '_mymsgack', sz );
-			}
-			else
-			if( 'public' == _data ) {
-				gcWsIO.sockets.emit( '_mymsgack', sz );
-			}
-			else {
-				_socket.emit( '_mymsgack', _data );
-			}
-	    }
-	);	
 }
 
 function _onWsIODisconnect()
@@ -172,3 +199,21 @@ function _onWsIOAnything( _data )
 {
 	console.log('_onWsIOAnything - _data : ', _data);
 }
+
+function _makeres_getconfiguration(_queryitem, _callback)
+{
+	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
+	gmDataBase.getquery_ipcam_config( query, function(_result) {
+
+		var json = {};
+
+		for( var i=0; i<_result.length; i++ ) {
+			json[_result[i].lvalue] = [];
+			json[_result[i].lvalue].push(_result[i].rvalue);
+			json[_result[i].lvalue].push(JSON.parse(_result[i].type));
+		}
+
+		_callback(_result, json);
+	});
+}
+

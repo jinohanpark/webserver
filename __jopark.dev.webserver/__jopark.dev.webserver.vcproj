@@ -172,6 +172,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\www\submenu\getsetconfig.html"
+					>
+				</File>
+				<File
 					RelativePath="..\www\submenu\profile.html"
 					>
 				</File>

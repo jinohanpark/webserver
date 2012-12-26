@@ -416,7 +416,7 @@ function _makeres_probematch(_xmlobj)
 	objres.scopes.location.country = 'korea';
 	objres.scopes.location.city = 'seoul';
 	
-	objres.xaddrs = 'http://192.168.0.2:3000/onvif/device_service';
+	objres.xaddrs = 'http://192.168.1.2:3000/onvif/device_service';
 	objres.metadataversion = '1';
 
 	////////////////////////////////////////////////////////////////////////////
@@ -458,7 +458,7 @@ function _makebroad_hello()
 	objres.scopes.location.country = 'korea';
 	objres.scopes.location.city = 'seoul';
 	
-	objres.xaddrs = 'http://192.168.0.2:3000/onvif/device_service';
+	objres.xaddrs = 'http://192.168.1.2:3000/onvif/device_service';
 	objres.metadataversion = '1';
 	
 	////////////////////////////////////////////////////////////////////////////

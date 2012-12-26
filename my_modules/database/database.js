@@ -73,7 +73,7 @@ myDataBase.prototype.getquery_ipcam_config = function( _query, _callback )
 {
 	console.log('->> myDataBase.prototype.getquery_ipcam_config');
 	
-	var ajresult = [{}];
+	var ajresult = [];
 	var query = gcmyDataBase.connect.query(_query);
 	
 	query.on('error', function(_err) {
@@ -122,18 +122,18 @@ myDataBase.prototype._makedefault_ipcam_config = function()
 			var sql = 'INSERT INTO configuration (lvalue, rvalue, type, privilige, syntax) VALUES (?,?,?,?,?)';
 			var val = 
 [
-['system.deviceinfo.manufacturer',	'manufacturer', '{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['system.deviceinfo.model',			'model',		'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['system.deviceinfo.fwversion',		'fwversion',	'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['system.deviceinfo.serialno',		'serialno',		'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['system.deviceinfo.hwid',			'hwid',			'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
+['system.deviceinfo.manufacturer',	'manufacturer', '{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64'],
+['system.deviceinfo.model',			'model',		'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64'],
+['system.deviceinfo.fwversion',		'fwversion',	'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64'],
+['system.deviceinfo.serialno',		'serialno',		'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64'],
+['system.deviceinfo.hwid',			'hwid',			'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64'],
 
-['security.account.user',			'root',		'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['security.account.privilige',		'pass',		'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
+['security.account.user',			'root',		'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64'],
+['security.account.privilige',		'pass',		'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64'],
 
-['network.eth0.mac',				'00:11:22:33:44:55',	'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['network.eth0.ipv4',				'192.168.0.2',			'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64'],
-['network.eth0.subnet',				'255.255.255.0',		'{type:\'sz\',min:0,max:64,def:\'\'}', 'admin', 's___g|sz|64']
+['network.eth0.mac',				'00:11:22:33:44:55',	'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64'],
+['network.eth0.ipv4',				'192.168.0.2',			'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64'],
+['network.eth0.subnet',				'255.255.255.0',		'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64']
 
 ];
 			//console.log('val.length :', val.length);
