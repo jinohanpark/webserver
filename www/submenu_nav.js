@@ -28,6 +28,7 @@ function showSubmenu( sztype )
 	szhtml +=		'<dd><a href=/submenu/firmwareupdate.html?submenuid=idfirmup>소프트웨어 업데이트</a></dd>';
 	szhtml +=	'<dt>여러가지</dt>';
 	szhtml +=		'<dd><a href=/submenu/chatting.html?submenuid=idchatting>채팅</a></dd>';
+	szhtml +=		'<dd><a href=/submenu/getsetconfig.html?submenuid=idgetsetconfig>비동기갯셋</a></dd>';
 	szhtml += '</dl>';
 
 	document.write(szhtml);

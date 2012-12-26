@@ -48,10 +48,11 @@ myWebService.prototype.createSocket = function()
 {
 	this.cSocketServer = gmDgram.createSocket('udp4');
 
-	this.cSocketServer.on( 'message', this._onWebServiceMessage );
-	this.cSocketServer.on( 'listening', this._onWebServiceListening );
-	this.cSocketServer.on( 'close', this._onWebServiceClose );
-	this.cSocketServer.on( 'error', this._onWebServiceError );
+	this.cSocketServer.on( 'message', _onWebServiceMessage );
+	this.cSocketServer.on( 'listening', _onWebServiceListening );
+	this.cSocketServer.on( 'close', _onWebServiceClose );
+	this.cSocketServer.on( 'error', _onWebServiceError );
+	
 	this.cSocketServer.bind( this.nWebService_UDPport );
 	this.cSocketServer.setBroadcast(1);
 	this.cSocketServer.setTTL(1);
@@ -66,7 +67,7 @@ myWebService.prototype.fireWebServiceMessage = function( _szwhat )
 
 	switch( _szwhat) {
 	case 'broad_hello':
-		szbroadmsg = this._makebroad_hello(); //console.log('this._makebroad_hello : \r\n', szbroadmsg, '\r\n');
+		szbroadmsg = _makebroad_hello(); //console.log('this._makebroad_hello : \r\n', szbroadmsg, '\r\n');
 		break;
 	}
 
@@ -129,7 +130,7 @@ myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 
 		switch( xmlobj.req ) {
 		case 'GetDeviceInformation':
-			this._makeres_getdeviceinformation(xmlobj, _callbackHttpResponse);
+			_makeres_getdeviceinformation(xmlobj, _callbackHttpResponse);
 			break;
 
 		default:
@@ -158,7 +159,7 @@ myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 /*
 LOCAL function definition 
 */
-myWebService.prototype._onWebServiceMessage = function(_msg, _rinfo)
+function _onWebServiceMessage(_msg, _rinfo)
 {
 	console.log('<_onWebServiceMessage>');
 	//console.log('_msg:', _msg);
@@ -182,8 +183,8 @@ if(0) {
 	var xmlobj = JSON.parse(json); //console.log('xmlobj xml2json', gmUtil.inspect(xmlobj, false, null));
 
 	var szresmsg = null;
-	if( true == gcmyWebService._is_probe(xmlobj) ) {
-		szresmsg = gcmyWebService._makeres_probematch(xmlobj); //console.log('gcmyWebService._makeres_probematch : \r\n', szresmsg, '\r\n');
+	if( true == _is_probe(xmlobj) ) {
+		szresmsg = _makeres_probematch(xmlobj); //console.log('_makeres_probematch : \r\n', szresmsg, '\r\n');
 	}
 
 	if( null != szresmsg ) {
@@ -199,17 +200,17 @@ if(0) {
 	}
 }
 
-myWebService.prototype._onWebServiceClose = function()
+function _onWebServiceClose()
 {
 	console.log('<onWebServiceClose>');
 }
 
-myWebService.prototype._onWebServiceError = function()
+function _onWebServiceError()
 {
 	console.log('<onWebServiceError>');
 }
 
-myWebService.prototype._onWebServiceListening = function()
+function _onWebServiceListening()
 {
 	console.log('<_onWebServiceListening> - ', gcmyWebService.cSocketServer.address());
 	
@@ -220,7 +221,7 @@ myWebService.prototype._onWebServiceListening = function()
 /*
 	check WS-Discovery protocol
 */
-myWebService.prototype._is_probe = function(_xmlobj)
+function _is_probe(_xmlobj)
 {
 	var fret = false;
 	
@@ -239,7 +240,7 @@ myWebService.prototype._is_probe = function(_xmlobj)
 	return fret;
 }
 
-myWebService.prototype._makemsg_soap_envelope = function( _sz )
+function _makemsg_soap_envelope( _sz )
 {
 	_sz += 
 	'<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -293,7 +294,7 @@ myWebService.prototype._makemsg_soap_envelope = function( _sz )
 	return _sz;
 }
 
-myWebService.prototype._makemsg_soap_header = function( _objres, _sz, _szwhat )
+function _makemsg_soap_header( _objres, _sz, _szwhat )
 {
 	_sz +=
 	 '<SOAP-ENV:Header>'
@@ -324,7 +325,7 @@ myWebService.prototype._makemsg_soap_header = function( _objres, _sz, _szwhat )
 	return _sz;
 }	
 
-myWebService.prototype._makemsg_soap_body = function( _objres, _sz, _szwhat )
+function _makemsg_soap_body( _objres, _sz, _szwhat )
 {
 	_sz += 
 	'<SOAP-ENV:Body>'
@@ -395,7 +396,7 @@ myWebService.prototype._makemsg_soap_body = function( _objres, _sz, _szwhat )
 	return _sz;
 }
 
-myWebService.prototype._makeres_probematch = function(_xmlobj)
+function _makeres_probematch(_xmlobj)
 {
 	var objres = {};
 	
@@ -420,14 +421,14 @@ myWebService.prototype._makeres_probematch = function(_xmlobj)
 
 	////////////////////////////////////////////////////////////////////////////
 	var szresmsg = '';
-	szresmsg = this._makemsg_soap_envelope( szresmsg );
-	szresmsg = this._makemsg_soap_header( objres, szresmsg, 'res_probematch' );
-	szresmsg = this._makemsg_soap_body( objres, szresmsg, 'res_probematch' );
+	szresmsg = _makemsg_soap_envelope( szresmsg );
+	szresmsg = _makemsg_soap_header( objres, szresmsg, 'res_probematch' );
+	szresmsg = _makemsg_soap_body( objres, szresmsg, 'res_probematch' );
 	
 	return szresmsg;
 }
 
-myWebService.prototype._makebroad_hello = function()
+function _makebroad_hello()
 {
 	var objres = {};
 	
@@ -462,14 +463,14 @@ myWebService.prototype._makebroad_hello = function()
 	
 	////////////////////////////////////////////////////////////////////////////
 	var szresmsg = '';
-	szresmsg = gcmyWebService._makemsg_soap_envelope( szresmsg );
-	szresmsg = gcmyWebService._makemsg_soap_header( objres, szresmsg, 'broad_hello' );
-	szresmsg = gcmyWebService._makemsg_soap_body( objres, szresmsg, 'broad_hello' );
+	szresmsg = _makemsg_soap_envelope( szresmsg );
+	szresmsg = _makemsg_soap_header( objres, szresmsg, 'broad_hello' );
+	szresmsg = _makemsg_soap_body( objres, szresmsg, 'broad_hello' );
 	
 	return szresmsg;
 }
 
-myWebService.prototype._makeres_getdeviceinformation = function(_xmlobj, _callback)
+function _makeres_getdeviceinformation(_xmlobj, _callback)
 {
 	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "system.deviceinfo.%"';
 	gmDataBase.getquery_ipcam_config( query, function(_result) {
@@ -499,8 +500,8 @@ myWebService.prototype._makeres_getdeviceinformation = function(_xmlobj, _callba
 
 		////////////////////////////////////////////////////////////////////////////
 		var szresmsg = '';
-		szresmsg = gcmyWebService._makemsg_soap_envelope( szresmsg );
-		szresmsg = gcmyWebService._makemsg_soap_body( objres, szresmsg, 'res_getdeviceinformation' );
+		szresmsg = _makemsg_soap_envelope( szresmsg );
+		szresmsg = _makemsg_soap_body( objres, szresmsg, 'res_getdeviceinformation' );
 
 		_callback(szresmsg);
 	});
