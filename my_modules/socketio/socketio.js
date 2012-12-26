@@ -71,7 +71,7 @@ function _onWsIOConnection( _socket )
 
 			switch(_data.action) {
 			case 'get':
-				_makeres_getconfiguration( _data.query, function(_result, _json) {
+				_db_getconfiguration( _data.query, function(_result, _json) {
 					//console.log('from DB _result ', _result);
 					ack.action = _data.action;
 					ack.query  = _data.query;
@@ -80,6 +80,12 @@ function _onWsIOConnection( _socket )
 					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
 				});
 				break;
+				
+			case 'set':
+				_db_setconfiguration( _data.query, function(_result, _json) {
+					;
+				});
+				break;				
 			}
 		}
 	);
@@ -200,7 +206,7 @@ function _onWsIOAnything( _data )
 	console.log('_onWsIOAnything - _data : ', _data);
 }
 
-function _makeres_getconfiguration(_queryitem, _callback)
+function _db_getconfiguration(_queryitem, _callback)
 {
 	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
 	gmDataBase.getquery_ipcam_config( query, function(_result) {
@@ -217,3 +223,17 @@ function _makeres_getconfiguration(_queryitem, _callback)
 	});
 }
 
+function _db_setconfiguration(_queryitem, _callback)
+{
+	var query = 'UPDATE configuration SET rvalue=? WHERE lvalue=?';
+	for( var i=0; i<_queryitem.length; i++ ) {
+
+		var queryarray = [_queryitem[i].rvalue, _queryitem[i].lvalue];
+		
+		gmDataBase.setquery_ipcam_config( query, queryarray, function(_result) {
+			var json = {};
+
+			_callback(_result, json);
+		});
+	}
+}

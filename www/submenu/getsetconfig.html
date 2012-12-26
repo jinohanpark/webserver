@@ -53,8 +53,16 @@ var gserverform_deviceinfo;
 				생산자
 				</p>
 				<input type="text", id="idtext_mfgname" size='39' />
-				<input type="button", id="idbutton_apply" value="적용" />
 				
+				<p>
+				<br>
+				모델이름
+				</p>
+				<input type="text", id="idtext_model" size='39' />
+				
+				<p>
+				<input type="button", id="idbutton_apply" value="적용" />
+				</p>
 			</div>
 
 		</td>
@@ -74,32 +82,56 @@ var gserverform_deviceinfo;
 		//
 		gsocket_config.emit('subscribe_configuration',
 							{ href:window.location.href, action:'get', query:'system.deviceinfo.%' });
+
+		//
+		document.getElementById('idbutton_apply').onclick = function() {
+			var submitform = [];
+
+			var text = document.getElementById('idtext_mfgname').value;
+			var json = {lvalue:'system.deviceinfo.manufacturer', rvalue:text};
+			submitform.push(json);
+
+			var text = document.getElementById('idtext_model').value;
+			//var json = {lvalue:'system.deviceinfo.model', rvalue:text};
+			var json = {lvalue:'system.deviceinfo.model', rvalue:'aaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'};
+			submitform.push(json);
+			
+			gsocket_config.emit('subscribe_configuration',
+								{ href:window.location.href, action:'set', query:submitform });
+		}
 	}
 
 	function init_socket(_socket) {
 		_socket.on( 'publish_configuration', function(_data) {
-			switch( _data.query ) {
-			case 'system.deviceinfo.%':
-				gserverform_deviceinfo = _data.result;
-				document.getElementById('idtext_mfgname').value = gserverform_deviceinfo['system.deviceinfo.manufacturer'][0];
+			if( 'get' == _data.action ) {
+				switch( _data.query ) {
+				case 'system.deviceinfo.%':
+					gserverform_deviceinfo = _data.result;
+					document.getElementById('idtext_mfgname').value = gserverform_deviceinfo['system.deviceinfo.manufacturer'][0];
+					document.getElementById('idtext_model').value = gserverform_deviceinfo['system.deviceinfo.model'][0];
 
-				/*
-				result:
-				{ 'system.deviceinfo.manufacturer': [ 'manufacturer', [Object] ],
-				  'system.deviceinfo.model': [ 'model', [Object] ],
-				  'system.deviceinfo.fwversion': [ 'fwversion', [Object] ],
-				  'system.deviceinfo.serialno': [ 'serialno', [Object] ],
-				  'system.deviceinfo.hwid': [ 'hwid', [Object] ] } }
+					/*
+					result:
+					{ 'system.deviceinfo.manufacturer': [ 'manufacturer', [Object] ],
+					  'system.deviceinfo.model': [ 'model', [Object] ],
+					  'system.deviceinfo.fwversion': [ 'fwversion', [Object] ],
+					  'system.deviceinfo.serialno': [ 'serialno', [Object] ],
+					  'system.deviceinfo.hwid': [ 'hwid', [Object] ] } }
 
-				console.log( 'publish_configuration - ', gserverform_deviceinfo['system.deviceinfo.manufacturer'][0] );
-				console.log( 'publish_configuration - ', gserverform_deviceinfo['system.deviceinfo.manufacturer'][1] );
-				var json = gserverform_deviceinfo['system.deviceinfo.manufacturer'][1];
-				console.log( 'publish_configuration - ', json.min );
-				console.log( 'publish_configuration - ', json.max );
-				console.log( 'publish_configuration - ', json.def );
-				console.log( 'publish_configuration - ', json.type );
-				*/
-				break;
+					console.log( 'publish_configuration - ', gserverform_deviceinfo['system.deviceinfo.manufacturer'][0] );
+					console.log( 'publish_configuration - ', gserverform_deviceinfo['system.deviceinfo.manufacturer'][1] );
+					var json = gserverform_deviceinfo['system.deviceinfo.manufacturer'][1];
+					console.log( 'publish_configuration - ', json.min );
+					console.log( 'publish_configuration - ', json.max );
+					console.log( 'publish_configuration - ', json.def );
+					console.log( 'publish_configuration - ', json.type );
+					*/
+					break;
+				}
+			}//if( 'get' == _data.action )
+			else
+			if( 'set' == _data.action ) {
+				;
 			}
 		});
 	}

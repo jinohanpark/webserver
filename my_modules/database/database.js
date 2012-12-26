@@ -99,6 +99,38 @@ myDataBase.prototype.getquery_ipcam_config = function( _query, _callback )
 	})
 }
 
+myDataBase.prototype.setquery_ipcam_config = function( _query, _param, _callback )
+{
+	console.log('->> myDataBase.prototype.setquery_ipcam_config _query:', _query);
+	console.log('    myDataBase.prototype.setquery_ipcam_config _param:', _param);
+	
+	var ajresult = [];
+	var query = gcmyDataBase.connect.query(_query, _param);
+	
+	query.on('error', function(_err) {
+		// Handle error, an 'end' event will be emitted after this as well
+		console.log('setquery_ipcam_config error:', _err);
+	})
+	.on('fields', function(_fields) {
+		// the field packets for the rows to follow
+		console.log('setquery_ipcam_config fields:', _fields);
+	})
+	.on('result', function(_row) {
+		// Pausing the connnection is useful if your processing involves I/O
+		console.log('setquery_ipcam_config result:', _row);
+
+		//var json = eval('(' + _row.type + ')');
+		//console.log('json:', json);
+		ajresult.push(_row);
+	})
+	.on('end', function() {
+		// all rows have been received
+		console.log('setquery_ipcam_config end:');
+		
+		_callback(ajresult);
+	})
+}
+
 /*
 
 */
