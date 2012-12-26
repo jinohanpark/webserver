@@ -99,6 +99,14 @@
 						>
 					</File>
 				</Filter>
+				<Filter
+					Name="socket.io"
+					>
+					<File
+						RelativePath="..\my_modules\socketio\socketio.js"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter
