@@ -66,8 +66,7 @@ gcWebServer.listen( gnhttpport, _callbackWebServerListen );
 
 /*
 */
-gmmyWsIO.Listen( gcWebServer );
-
+var gcWsIO = gmmyWsIO.Listen( gcWebServer );
 
 /*
 */
@@ -167,7 +166,8 @@ function _onWebServerRequest( _req, _res )
 			form.on( 'progress',
 				function(_bytesReceived, _bytesExpected) {
 					//console.log('on.progress ', bytesReceived, bytesExpected);
-					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'progress', bytesReceived:_bytesReceived, bytesExpected:_bytesExpected } );
+					
+					gcWsIO.sockets.in(gmmyWsIO.GetSubscribeID('firmup')).emit('event_firmup', { action:'progress', bytesReceived:_bytesReceived, bytesExpected:_bytesExpected } );
 				} );
 
 			form.on( 'field', 
@@ -180,7 +180,7 @@ function _onWebServerRequest( _req, _res )
 				function(_tagname, _file) {
 					console.log('on.fileBegin', _tagname, _file);
 
-					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'fileBegin', name:_file.name } );
+					gcWsIO.sockets.in(gmmyWsIO.GetSubscribeID('firmup')).emit('event_firmup', { action:'fileBegin', name:_file.name } );
 				} );
 
 			form.on( 'file',
@@ -188,7 +188,7 @@ function _onWebServerRequest( _req, _res )
 					console.log('on.file', _tagname, _file);
 					files.push([_tagname, _file]);
 
-					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'file', name:_file.name } );
+					gcWsIO.sockets.in(gmmyWsIO.GetSubscribeID('firmup')).emit('event_firmup', { action:'file', name:_file.name } );
 				} );
 
 			form.on( 'error',
@@ -196,7 +196,7 @@ function _onWebServerRequest( _req, _res )
 					console.log('on.error', _err);
 
 					gmFs.unlinkSync( tmp_path );
-					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'error' } );
+					gcWsIO.sockets.in(gmmyWsIO.GetSubscribeID('firmup')).emit('event_firmup', { action:'error' } );
 				} );
 
 			form.on( 'aborted',
@@ -204,7 +204,7 @@ function _onWebServerRequest( _req, _res )
 					console.log('on.aborted');
 
 					gmFs.unlinkSync( tmp_path );
-					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'aborted' } );
+					gcWsIO.sockets.in(gmmyWsIO.GetSubscribeID('firmup')).emit('event_firmup', { action:'aborted' } );
 				} );
 
 			form.on( 'end',
@@ -225,7 +225,7 @@ function _onWebServerRequest( _req, _res )
 						gmFs.unlinkSync( tmp_path );
 					}
 
-					gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'end' } );
+					gcWsIO.sockets.in(gmmyWsIO.GetSubscribeID('firmup')).emit('event_firmup', { action:'end' } );
 				} );
 				
 			form.on( 'field', 

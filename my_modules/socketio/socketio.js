@@ -38,6 +38,11 @@ function myWebSocket( _name )
 	this.self = this;		// gcmyWsIO
 }
 
+myWebSocket.prototype.GetSubscribeID = function( _what )
+{
+	if( 'firmup' == _what ) return gszIDSubscribe_Firmup;
+}
+
 myWebSocket.prototype.CloseListen = function()
 {
 
@@ -53,6 +58,8 @@ myWebSocket.prototype.Listen = function( _cWebServer )
 	gcWsIO.sockets.on( 'message', _onWsIOMessage );
 	gcWsIO.sockets.on( 'anything', _onWsIOAnything );
 	gcWsIO.sockets.on( 'disconnect', _onWsIODisconnect );
+	
+	return gcWsIO;
 }
 
 /*
