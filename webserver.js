@@ -271,14 +271,24 @@ function _onWebServerRequest( _req, _res )
 
 	//
 	if( ('ssi/javascript' == szreqfiletype) ) {
-		var sz = 'var gnaaaa = 1;';
-		callbackReadPageFile( 0, sz );
+		//GET /submenu/configuration.ssi?action=query&lvalue=system.deviceinfo.%&var=gserverform_deviceinfo
+		//console.log('ssi query:', _req.query);
+		
+		_db_getconfiguration( _req.query.lvalue, function(_result, _json) {
+			//console.log('from DB _result ', _json);
+			var sz = 'var ' + _req.query.var + ' = ';
+			sz += 'JSON.parse(';
+			sz += "'" + JSON.stringify(_json) + "'";
+			sz += ');';
+			callbackReadPageFile( 0, sz );
+		});
 	}
-	else {	// HTML,JS,CSS,...
+	else {
+		// HTML,JS,CSS,...
 		var szpagefile = gszbasedir + oUrl.pathname;
 		gmFs.readFile( szpagefile, 'utf8', callbackReadPageFile );
 	}
-	
+
 	function callbackReadPageFile( error, data )
 	{
 		if( error ) {
@@ -363,3 +373,20 @@ function _fnGetRequestFileType( _req )
 	
 	return { 'szreqfiletype' : szretfiletype };
 }	
+
+function _db_getconfiguration(_queryitem, _callback)
+{
+	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
+	gmDataBase.getquery_ipcam_config( query, function(_result) {
+
+		var json = {};
+
+		for( var i=0; i<_result.length; i++ ) {
+			json[_result[i].lvalue] = [];
+			json[_result[i].lvalue].push(_result[i].rvalue);
+			json[_result[i].lvalue].push(JSON.parse(_result[i].type));
+		}
+
+		_callback(_result, json);
+	});
+}

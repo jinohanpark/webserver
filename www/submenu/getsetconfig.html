@@ -13,10 +13,6 @@
 
 <script>
 var gsocket_config;
-var gserverform_deviceinfo;
-
-console.log('gnaaaa : ' + gnaaaa);
-
 </script>
 
 <script>
@@ -28,7 +24,7 @@ console.log('gnaaaa : ' + gnaaaa);
 			;
 		}
 	);
-	
+
 </script>
 </head>
 
@@ -79,14 +75,15 @@ console.log('gnaaaa : ' + gnaaaa);
 	showSubmenu_Selected();
 
 	window.onload = function() {
-		
+
+		init_element();
+
+		//
 		gsocket_config = io.connect();
 		init_socket( gsocket_config );
 		
 		//
-		gsocket_config.emit('subscribe_configuration',
-							{ href:window.location.href, action:'get', query:'system.deviceinfo.%' });
-
+									
 		//
 		document.getElementById('idbutton_apply').onclick = function() {
 			var submitform = [];
@@ -101,6 +98,10 @@ console.log('gnaaaa : ' + gnaaaa);
 			
 			gsocket_config.emit('subscribe_configuration',
 								{ href:window.location.href, action:'set', query:submitform });
+
+			// confirm???
+			gsocket_config.emit('subscribe_configuration',
+								{ href:window.location.href, action:'get', query:'system.deviceinfo.%' });
 		}
 	}
 
@@ -118,25 +119,7 @@ console.log('gnaaaa : ' + gnaaaa);
 				switch( _data.query ) {
 				case 'system.deviceinfo.%':
 					gserverform_deviceinfo = _data.result;
-					document.getElementById('idtext_mfgname').value = gserverform_deviceinfo['system.deviceinfo.manufacturer'][0];
-					document.getElementById('idtext_model').value = gserverform_deviceinfo['system.deviceinfo.model'][0];
-
-					/*
-					result:
-					{ 'system.deviceinfo.manufacturer': [ 'manufacturer', [Object] ],
-					  'system.deviceinfo.model': [ 'model', [Object] ],
-					  'system.deviceinfo.fwversion': [ 'fwversion', [Object] ],
-					  'system.deviceinfo.serialno': [ 'serialno', [Object] ],
-					  'system.deviceinfo.hwid': [ 'hwid', [Object] ] } }
-
-					console.log( 'publish_configuration - ', gserverform_deviceinfo['system.deviceinfo.manufacturer'][0] );
-					console.log( 'publish_configuration - ', gserverform_deviceinfo['system.deviceinfo.manufacturer'][1] );
-					var json = gserverform_deviceinfo['system.deviceinfo.manufacturer'][1];
-					console.log( 'publish_configuration - ', json.min );
-					console.log( 'publish_configuration - ', json.max );
-					console.log( 'publish_configuration - ', json.def );
-					console.log( 'publish_configuration - ', json.type );
-					*/
+					init_element();
 					break;
 				}
 			}//if( 'get' == _data.action )
@@ -145,6 +128,12 @@ console.log('gnaaaa : ' + gnaaaa);
 				;
 			}
 		});
+	}
+	
+	function init_element()
+	{
+		document.getElementById('idtext_mfgname').value = gserverform_deviceinfo['system.deviceinfo.manufacturer'][0];
+		document.getElementById('idtext_model').value = gserverform_deviceinfo['system.deviceinfo.model'][0];
 	}
 
 </script>
