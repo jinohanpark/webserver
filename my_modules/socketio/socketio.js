@@ -67,23 +67,45 @@ function _onWsIOConnection( _socket )
 			console.log('subscribe_configuration - ClientID(', _socket.id, ')', ' received data:', _data);
 
 			var id = _socket.id;
+
 			var ack = {};
+			ack.action = 'ready';
+			ack.query  = _data.query;
+			ack.result = ' ';
+			gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
 
 			switch(_data.action) {
 			case 'get':
 				_db_getconfiguration( _data.query, function(_result, _json) {
 					//console.log('from DB _result ', _result);
+					var ack = {};
 					ack.action = _data.action;
 					ack.query  = _data.query;
 					ack.result = _json;
 					//console.log('from DB ack', ack);
+					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
+
+					var ack = {};
+					ack.action = 'done';
+					ack.query  = _data.query;
+					ack.result = ' ';
 					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
 				});
 				break;
 				
 			case 'set':
 				_db_setconfiguration( _data.query, function(_result, _json) {
-					;
+					var ack = {};
+					ack.action = _data.action;
+					ack.query  = _data.query;
+					ack.result = 'ok';
+					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
+
+					var ack = {};
+					ack.action = 'done';
+					ack.query  = _data.query;
+					ack.result = ' ';
+					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
 				});
 				break;				
 			}

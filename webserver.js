@@ -270,9 +270,15 @@ function _onWebServerRequest( _req, _res )
 	}
 
 	//
-	var szpagefile = gszbasedir + oUrl.pathname;
-	gmFs.readFile( szpagefile, 'utf8', callbackReadPageFile );
-
+	if( ('ssi/javascript' == szreqfiletype) ) {
+		var sz = 'var gnaaaa = 1;';
+		callbackReadPageFile( 0, sz );
+	}
+	else {	// HTML,JS,CSS,...
+		var szpagefile = gszbasedir + oUrl.pathname;
+		gmFs.readFile( szpagefile, 'utf8', callbackReadPageFile );
+	}
+	
 	function callbackReadPageFile( error, data )
 	{
 		if( error ) {
@@ -344,9 +350,9 @@ function _fnGetRequestFileType( _req )
 	case 'png':		szretfiletype = 'image/png'; break;
 	case 'gif':		szretfiletype = 'image/gif'; break;
 	case 'ico':		szretfiletype = 'image/x-icon'; break;
-	case 'ico':		szretfiletype = 'image/x-icon'; break;
 	case 'cgi':		szretfiletype = 'application/cgi'; break;
 	case 'node':	szretfiletype = 'application/node'; break;
+	case 'ssi':		szretfiletype = 'ssi/javascript'; break;
 	default:
 		//var err = new Error('aaaaa');
 		//err.number = 7;

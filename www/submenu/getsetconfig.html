@@ -9,10 +9,14 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/include/jquery-1.8.2.js"></script>
 <script src="/submenu_nav.js"></script>
+<script src="configuration.ssi?action=query&lvalue=system.deviceinfo.%&var=gserverform_deviceinfo"></script>
 
 <script>
 var gsocket_config;
 var gserverform_deviceinfo;
+
+console.log('gnaaaa : ' + gnaaaa);
+
 </script>
 
 <script>
@@ -92,8 +96,7 @@ var gserverform_deviceinfo;
 			submitform.push(json);
 
 			var text = document.getElementById('idtext_model').value;
-			//var json = {lvalue:'system.deviceinfo.model', rvalue:text};
-			var json = {lvalue:'system.deviceinfo.model', rvalue:'aaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'};
+			var json = {lvalue:'system.deviceinfo.model', rvalue:text};
 			submitform.push(json);
 			
 			gsocket_config.emit('subscribe_configuration',
@@ -103,6 +106,14 @@ var gserverform_deviceinfo;
 
 	function init_socket(_socket) {
 		_socket.on( 'publish_configuration', function(_data) {
+			if( 'done' == _data.action ) {
+				console.log('publish_configuration - done');
+			}//if( 'done' == _data.action )
+			else
+			if( 'ready' == _data.action ) {
+				console.log('publish_configuration - ready');
+			}//if( 'ready' == _data.action )
+			else
 			if( 'get' == _data.action ) {
 				switch( _data.query ) {
 				case 'system.deviceinfo.%':
