@@ -32,12 +32,36 @@ function myDataBase( _name )
 myDataBase.prototype.init = function()
 {
 	var connect = gmSql.createConnection( {host:'localhost', user:'root', password:'convex1234!@'} );
-	connect.connect();
-	connect.query('USE ipcam');
 
-	this.connect = connect;
-	
-	return this.connect;
+	connect.connect(function(_err) {
+		if(_err) {
+			console.log( 'gmSql.createConnection - err : ', _err );
+		}
+	});
+
+	connect.query('USE ipcam', function(_err) {
+		if(_err) {
+			console.log( 'gmSql.query(USE ipcam) - err : ', _err );
+		}
+	});
+
+	gcmyDataBase.connect = connect;
+
+	connect.on('error', function(_err) {
+		if( !_err.fatal ) {
+			return;
+		}
+		
+		if(_err.code !== 'PROTOCOL_CONNECTION_LOST') {
+			throw _err;
+		}
+		
+		console.log('>>>>>>>>>> Re-connecting lost connection: ' + _err.stack);
+		
+		gcmyDataBase.init();
+	});
+
+	return gcmyDataBase.connect;
 }
 
 myDataBase.prototype.makedefault_ipcam_database = function()
@@ -166,8 +190,8 @@ myDataBase.prototype._makedefault_ipcam_config = function()
 ['network.eth0.mac',				'00:11:22:33:44:55',	'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64'],
 ['network.eth0.ipv4',				'192.168.0.2',			'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64'],
 ['network.eth0.subnet',				'255.255.255.0',		'{"type":"sz","min":0,"max":64,"def":""}', 'admin', 's___g|sz|64']
-
 ];
+
 			//console.log('val.length :', val.length);
 			for( var i=0; i<val.length; i++ ) {
 				gcmyDataBase.connect.query( sql, val[i], function(_err, _results, _fields) {
