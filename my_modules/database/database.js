@@ -249,22 +249,42 @@ function _make_sqltables()
 	['datetime.syncsource',					'rtc',		'{"type":"select","list":"rtc,ntp","def":"rtc"}',			'admin', 's__sg|select|rtc,ntp'],
 	['datetime.syncinterval',				'none',		'{"type":"select","list":"none,everyday","def":"none"}',	'admin', 's__sg|select|none,everyday'],
 
-/*	
-struct tDDNSINFO {
-	int				nstructsize;
+	['ddns.enable',							'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
+	['ddns.serverip',						' ',		'{"type":"sz","min":0,"max":32,"def":" "}',					'admin', 's__sg|sz|32'],
+	['ddns.serverport',						'53',		'{"type":"port","min":1,"max":65535,"def":53}',				'admin', 's__sg|port|1|65535'],
+	['ddns.id',								' ',		'{"type":"sz","min":0,"max":32,"def":" "}',					'admin', 's__sg|sz|32'],
+	['ddns.passwd',							' ',		'{"type":"sz","min":0,"max":32,"def":" "}',					'admin', 's__sg|sz|32'],
+	['ddns.domainname',						' ',		'{"type":"sz","min":0,"max":64,"def":" "}',					'admin', 's__sg|sz|64'],
+	['ddns.updatetime',						' ',		'{"type":"sec","min":0,"max":60000,"def":600}',				'admin', 's__sg|sec|0|60000'],
+	['ddns.servertype',						'DynDNS',	'{"type":"sz","min":0,"max":32,"def":"DynDNS"}',			'admin', 's__sg|sz|32'],
+	['ddns.email',							'username@example.com',	'{"type":"sz","min":0,"max":256,"def":"username@example.com"}',			'admin', 's__sg|sz|256'],
+	['ddns.macaddress',						'AABBCCDDEEFF',	'{"type":"sz","min":0,"max":32,"def":"AABBCCDDEEFF"}',	'admin', 's__sg|sz|32'],
 
-	int				fenable;							// 0:disable, 1:enable
-	char			szDdnsIP[MAX_DDNS_IP];				// DDNS Server IP
-	unsigned int	nPort;								// DDNS Server Port
-	char			szDdnsID[MAX_DDNS_ID];				// DDNS Server ID
-	char			szDdnsPassword[MAX_DDNS_PASSWD];	// DDNS Server Password
-	char			szDomainName[MAX_DDNS_DOMAINNAME];	// Domain Name
-	unsigned int	nUpdateTime;						// DDNS Update Time
-	char			szServerType[MAX_DDNS_SERVERTYPE];	// DDNS Server Type
-	char			szEmail[MAX_DDNS_EMAIL];			// User e-mail addresss (for VDYN)
-	char			szMac[MAX_DDNS_MAC];				// MAC address (for VDYN)
-};	
-*/	
+	['dido.enable',							'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
+	['dido.nbrofdi',						'1',		'{"type":"int","min":0,"max":4,"def":1}',					'admin', 's__sg|int|0|4'],
+	['dido.di.hwtype',						'relay',	'{"type":"select","list":"relay,voltage","def":"relay"}',   'admin', 's__sg|select|relay,voltage'],
+	['dido.di0.name',						'DI0',		'{"type":"sz","min":0,"max":64,"def":"DI0"}',				'admin', 's__sg|sz|64'],
+	['dido.di0.nonc',						'NO',		'{"type":"sz","min":0,"max":8,"def":"NO"}',					'admin', 's__sg|sz|8'],
+	['dido.di0.detecttime',					'0',		'{"type":"sec","min":0,"max":60,"def":0}',					'admin', 's__sg|sec|0|60'],
+	['dido.nbrofdo',						'1',		'{"type":"int","min":0,"max":4,"def":1}',					'admin', 's__sg|int|0|4'],	
+	['dido.do0.name',						'DO0',		'{"type":"sz","min":0,"max":64,"def":"DO0"}',				'admin', 's__sg|sz|64'],
+	['dido.do0.worktime',					'0',		'{"type":"sec","min":0,"max":6000,"def":0}',				'admin', 's__sg|sec|0|6000'],
+
+	['dns.nbrofcount',						'2',		'{"type":"int","min":0,"max":2,"def":2}',					'admin', 's__sg|int|0|2'],
+	['dns.dns0.ipaddress',					'0.0.0.0',	'{"type":"ipv4","def":"0.0.0.0"}',							'admin', 's__sg|ipv4'],
+	['dns.dns1.ipaddress',					'0.0.0.0',	'{"type":"ipv4","def":"0.0.0.0"}',							'admin', 's__sg|ipv4'],
+
+	['email.server.friendlyname',			' ',		'{"type":"sz","min":0,"max":32,"def":" "}',					'admin', 's__sg|sz|32'],
+	['email.server.sendfrom',				' ',		'{"type":"sz","min":0,"max":32,"def":" "}',					'admin', 's__sg|sz|32'],
+	['email.server.ipaddress',				' ',		'{"type":"sz","min":0,"max":128,"def":" "}',				'admin', 's__sg|sz|128'],
+	['email.server.port',					'25',		'{"type":"port","min":1,"max":65535,"def":25}',				'admin', 's__sg|port|1|65535'],
+	['email.server.id',						' ',		'{"type":"sz","min":0,"max":128,"def":" "}',				'admin', 's__sg|sz|128'],
+	['email.server.passwd',					' ',		'{"type":"sz","min":0,"max":32,"def":" "}',					'admin', 's__sg|sz|32'],
+	['email.server.authentication',			'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
+	
+/*
+
+*/
 
 
 	['system.deviceinfo.manufacturer',	'manufacturer', '{"type":"sz","min":0,"max":64,"def":""}',					'admin', 's___g|sz|64'],
