@@ -281,9 +281,20 @@ function _make_sqltables()
 	['email.server.id',						' ',		'{"type":"sz","min":0,"max":128,"def":" "}',				'admin', 's__sg|sz|128'],
 	['email.server.passwd',					' ',		'{"type":"sz","min":0,"max":32,"def":" "}',					'admin', 's__sg|sz|32'],
 	['email.server.authentication',			'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
+
+	['ftpd.enable',							'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
+	['ftpd.port',							'21',		'{"type":"port","min":1,"max":65535,"def":21}',				'admin', 's__sg|port|1|65535'],
+	['ftpd.homedir',						'/mnt',		'{"type":"sz","min":0,"max":128,"def":"/mnt"}',				'admin', 's__sg|sz|128'],
+	['ftpd.timeout',						'15',		'{"type":"min","min":0,"max":30,"def":"15"}',				'admin', 's__sg|min|0|30'],
+	['ftpd.uploadbw',						'0',		'{"type":"kbyteps","min":0,"max":1024,"def":"0"}',			'admin', 's__sg|kbyteps|0|1024'],
+	['ftpd.downloadbw',						'1024',		'{"type":"kbyteps","min":0,"max":1024,"def":"1024"}',		'admin', 's__sg|kbyteps|0|1024'],
+
+	['account.enable',						'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
+	['account.admin',						' ',		'{"type":"usernamelist","def":" "}',						'admin', 's__sg|usernamelist'],
+	['account.operator',					' ',		'{"type":"usernamelist","def":" "}',						'admin', 's__sg|usernamelist'],
+	['account.viewer',						' ',		'{"type":"usernamelist","def":" "}',						'admin', 's__sg|usernamelist'],
 	
 /*
-
 */
 
 

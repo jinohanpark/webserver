@@ -3,14 +3,16 @@ function Init_jQuery()
 {
 	jQuery(
 	function() { 
-		$('.left_nav a').click(
-			function(ev) {
-				var atag = $(this).text();
-				var szhref = $(this).attr('href');
-				var str = szhref+'&submenutext='+atag;
-				$(this).attr('href', str);
-			}
-		);
+		$(document).ready( function() {
+			showSubmenu_Selected();
+		});
+		
+		$('.left_nav a').click( function(ev) {
+			var atag = $(this).text();
+			var szhref = $(this).attr('href');
+			var str = szhref+'&submenutext='+atag;
+			$(this).attr('href', str);
+		});
 	});
 }(jQuery);
 
@@ -55,38 +57,25 @@ function _myfindquerystring_rvalue( _szquerystring, _szlvalue )
 
 function showSubmenu_Selected()
 {
-	var szsubmenuid1 = '';
-	szsubmenuid1 = _myfindquerystring_rvalue( window.location.href, "submenuid" );
-
+	var szsubmenuid1 = _myfindquerystring_rvalue( window.location.href, "submenuid" );
 	//
+	jQuery('.submenu_nav a[href*='+'"submenuid='+szsubmenuid1+'"]').addClass('selected');
+	/*
 	var szsubmenuid2 = '';
-	var obj = $('.submenu_nav').find('a');
+	var obj = jQuery('.submenu_nav').find('a');
 	for( var i=0; i<obj.length; i++ ) {
 		szsubmenuid2 = _myfindquerystring_rvalue( obj[i].href, "submenuid" );
 		if( szsubmenuid1 == szsubmenuid2 ) {
-			$(obj[i]).addClass('selected');
+			jQuery(obj[i]).addClass('selected');
 			break;
 		}
 	}
+	*/
 }	
 
 function getSubmenuText()
 {
-	var szhtml = '';
-
-	var szsubmenuid1 = '';
-	szsubmenuid1 = _myfindquerystring_rvalue( window.location.href, "submenuid" );
-
-	//
-	var szsubmenuid2 = '';
-	var obj = $('.submenu_nav').find('a');
-	for( var i=0; i<obj.length; i++ ) {
-		szsubmenuid2 = _myfindquerystring_rvalue( obj[i].href, "submenuid" );
-		if( szsubmenuid1 == szsubmenuid2 ) {
-			szhtml = obj[i].innerHTML;
-			break;
-		}
-	}
-
+	var szsubmenuid1 = _myfindquerystring_rvalue( window.location.href, "submenuid" );
+	var szhtml = jQuery('.submenu_nav a[href*='+'"submenuid='+szsubmenuid1+'"]').html();
 	document.write(szhtml);
 }
