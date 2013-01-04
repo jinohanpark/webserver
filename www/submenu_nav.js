@@ -58,8 +58,11 @@ function _myfindquerystring_rvalue( _szquerystring, _szlvalue )
 function showSubmenu_Selected()
 {
 	var szsubmenuid1 = _myfindquerystring_rvalue( window.location.href, "submenuid" );
+	
 	//
-	jQuery('.submenu_nav a[href*='+'"submenuid='+szsubmenuid1+'"]').addClass('selected');
+	if( szsubmenuid1 ) {
+		jQuery('.submenu_nav a[href*='+'"submenuid='+szsubmenuid1+'"]').addClass('selected');
+	}
 	/*
 	var szsubmenuid2 = '';
 	var obj = jQuery('.submenu_nav').find('a');

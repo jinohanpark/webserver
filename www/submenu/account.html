@@ -17,42 +17,111 @@
 </head>
 
 <body>
-<table class="layout_grid" cellspacing="0" cellpadding="0">
+<table id="wrap" class="layout_grid" cellspacing="0" cellpadding="0" align=center>
+
+<thead>
 	<tr>
-		<td class="left_nav">
-			<script>showSubmenu('submenu_nav');</script>
-		</td>
-
-		<td class="normal">
-			<div class="normal">
-				
-				<br><br>
-				<h3><script>getSubmenuText();</script></h3>
-				<p>
-					사용자 계정을 설정할 수 있다.
-				</p>
-			</div>
-			
-			<div class="normal">
-				<p>
-					websocket function을 테스트 합니다. 아래 입력 상자에 입력하시기 바랍니다.
-				</p>
-			
-				<input type="text", id="idtext" />
-				<input type="button", id="idbutton" value="echo" />
-			</div>
-
+		<td>
+		thead
 		</td>
 	</tr>
-</table>
+</thead>
+
+<tbody>
+	<tr>
+		<td>
+		<table id="wrap_body" class="layout_grid" cellspacing="0" cellpadding="0" width="100%">
+		<tr>
+			<td class="left_nav">
+				<script>showSubmenu('submenu_nav');</script>
+			</td>
+			
+			<td>
+			<table id="contents_title" class="layout_grid" cellspacing="0" cellpadding="0">
+			<tr>
+				<td>
+				<div>
+					<h3>
+						<script>getSubmenuText();</script>
+					</h3>
+				</div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+				<div>
+					<p>
+						사용자 계정 추가, 삭제, 수정한다. 웹서버 및 스트림서버를 포함한 시스템에 접근할 수 있는 권한을 설정한다.
+					</p>
+				</div>
+				</td>
+			</tr>
+			</table id="contents_title">
+			<table id="contents_body" cellspacing="0" cellpadding="0">
+			<tr>
+				<th align="left" colspan="10">
+					사용자 목록1
+				</th>
+			</tr>
+			<tr>
+				<td>bbb1</td>
+				<td>bbb2</td>
+			</tr>
+			<tr>
+				<td>ccc1</td>
+				<td>ccc2</td>
+			</tr>
+			</table id="contents_body">
+			</td>
+		</tr>
+		</table id="wrap_body">
+		</td>
+	</tr>
+	
+	<tr>
+		<td>
+		xxxxxxx
+		</td>
+	</tr>
+</tbody>
+
+<tfoot>
+	<tr>
+		<td>
+		tfoot
+		</td>
+	</tr>
+</tfoot>
+
+</table id="wrap">
 </body>
 </html>
 
 <script>
 
+	//	
+	function init_element()
+	{
+		jQuery('table #contents_body').attr('width', '100%');
+		jQuery('table #contents_body th').css('background', '#7e7e7e');
+		jQuery('table #contents_body tr:even').css('background', '#dedede');
+		jQuery('table #contents_body tr:odd').css('background', '#ffffff');
+	}
+
 	jQuery(document).ready( function() {
+		// for debugging
+		jQuery('table #contents_body').attr('border', '1');
+
+		//
+		init_element();
+/*	
+		jQuery('table tr:even').css('background', '#dedede');
+		jQuery('table tr:odd').css('background', '#ffffff');
+		
+		init_element();
+
 		$(function() {
-			console.log('aaaaa');
+			console.log('gserverform_account', gserverform_account['account.enable'][1]);
 		});
 		
 		var socket = io.connect();
@@ -74,5 +143,7 @@
 				$('#idbutton').click();
 			}
 		});
+*/		
 	});
+	
 </script>
