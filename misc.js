@@ -2,6 +2,7 @@
 var objType = new myMisc();
 exports = module.exports = objType;
 
+
 function myMisc( _name )
 {
 	var self = this;
