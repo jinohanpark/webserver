@@ -38,40 +38,61 @@
 			
 			<td>
 			<table id="contents_title" class="layout_grid" cellspacing="0" cellpadding="0">
-			<tr>
-				<td>
-				<div>
-					<h3>
-						<script>getSubmenuText();</script>
-					</h3>
-				</div>
-				</td>
-			</tr>
-			<tr>
-				<td>
-				<div>
-					<p>
-						사용자 계정 추가, 삭제, 수정한다. 웹서버 및 스트림서버를 포함한 시스템에 접근할 수 있는 권한을 설정한다.
-					</p>
-				</div>
-				</td>
-			</tr>
+				<tr>
+					<td>
+					<div>
+						<h3>
+							<script>getSubmenuText();</script>
+						</h3>
+					</div>
+					</td>
+				</tr>
+				
+				<tr>
+					<td>
+					<div>
+						<p>
+							사용자 계정 추가, 삭제, 수정한다. 웹서버 및 스트림서버를 포함한 시스템에 접근할 수 있는 권한을 설정한다.
+						</p>
+					</div>
+					</td>
+				</tr>
+				<tr><td><br></td></tr>
 			</table id="contents_title">
+
 			<table id="contents_body" cellspacing="0" cellpadding="0">
-			<tr>
-				<th align="left" colspan="10">
-					사용자 목록1
-				</th>
-			</tr>
-			<tr>
-				<td>bbb1</td>
-				<td>bbb2</td>
-			</tr>
-			<tr>
-				<td>ccc1</td>
-				<td>ccc2</td>
-			</tr>
+				<tr>
+					<th align="left" colspan="5" data-colwidth='25,35'>
+						사용자 목록
+					</th>
+				</tr>
+				<tr><td width='25%'></td><td width='35%'></td></tr>
+				<tr>
+					<td>bbb1</td>
+					<td>bbb2</td>
+				</tr>
+				<tr>
+					<td>
+						<ui>
+							aaaa1
+							<dt>aaaa1-aaaaa</dt>
+								<dd>ddddddddd</dd><dd>ddddddddd12</dd>
+							<dt>aaaa1-bbbbb</dt>
+						</ui>
+						<li>aaaa2</li>
+					</td>
+				</tr>
+				<tr><td><br></td></tr>
 			</table id="contents_body">
+
+			<table id="contents_body2" cellspacing="0" cellpadding="0">
+				<tr>
+					<th align="left" colspan="10">
+						사용자 인증 설정
+					</th>
+				</tr>
+				<tr><td><br></td></tr>
+			</table id="contents_body2">
 			</td>
 		</tr>
 		</table id="wrap_body">
@@ -103,6 +124,13 @@
 	function init_element()
 	{
 		jQuery('table #contents_body').attr('width', '100%');
+		var ncols = jQuery('table #contents_body tr:first th').attr('colspan');
+
+		jQuery('table #contents_body tr:first').nextAll('tr').each( function() {
+			var ntd = $(this).children('td').length;
+			for( var i=0; i<ncols-ntd; i++ ) $(this).append('<td></td>');
+		});
+		
 		jQuery('table #contents_body th').css('background', '#7e7e7e');
 		jQuery('table #contents_body tr:even').css('background', '#dedede');
 		jQuery('table #contents_body tr:odd').css('background', '#ffffff');
@@ -110,7 +138,7 @@
 
 	jQuery(document).ready( function() {
 		// for debugging
-		jQuery('table #contents_body').attr('border', '1');
+		//jQuery('table #contents_body').attr('border', '1');
 
 		//
 		init_element();
