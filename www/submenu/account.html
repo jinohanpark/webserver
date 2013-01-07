@@ -62,16 +62,24 @@
 
 			<table id="contents_body" cellspacing="0" cellpadding="0">
 				<tr>
-					<th align="left" colspan="5" data-colwidth='25,35'>
+					<th align="left" data-colwidth="'1%','25%','35%','20%'">
 						사용자 목록
 					</th>
 				</tr>
-				<tr><td width='25%'></td><td width='35%'></td></tr>
 				<tr>
+					<td></td>
 					<td>bbb1</td>
 					<td>bbb2</td>
+					<td>bbb3</td>
 				</tr>
 				<tr>
+					<td></td>
+					<td>bbb1</td>
+					<td>bbb2</td>
+					<td>bbb3</td>
+				</tr>
+				<tr>
+					<td></td>
 					<td>
 						<ui>
 							aaaa1
@@ -87,12 +95,52 @@
 
 			<table id="contents_body2" cellspacing="0" cellpadding="0">
 				<tr>
-					<th align="left" colspan="10">
-						사용자 인증 설정
+					<th align="left" data-colwidth="'1%','35%','55%'">
+						인증 방법
 					</th>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						간단한 기본 인증 방식
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						암호화 된 패킷을 통한 인증 방식
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						인증 과정 없음
+					</td>
 				</tr>
 				<tr><td><br></td></tr>
 			</table id="contents_body2">
+
+			<table id="contents_body3" cellspacing="0" cellpadding="0">
+				<tr>
+					<th align="left" data-colwidth="'10px','35%','55%'">
+						기타 설정
+					</th>
+				</tr>
+				<tr>
+					<td></td>
+					<td padding-left="8px;">
+						인증 과정 없이 영상을 볼 수 있다.
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						인증 과정 없이 PTZ 제어를 할 수 있다.
+					</td>
+				</tr>
+				<tr><td><br></td></tr>
+			</table id="contents_body3">
+
 			</td>
 		</tr>
 		</table id="wrap_body">
@@ -119,47 +167,69 @@
 </html>
 
 <script>
-
-	//	
-	function init_element()
+	//
+	function init_appearance()
 	{
-		jQuery('table #contents_body').attr('width', '100%');
-		var ncols = jQuery('table #contents_body tr:first th').attr('colspan');
+		_init_table_appearance('table #contents_body');
+		_init_table_appearance('table #contents_body2');
+		_init_table_appearance('table #contents_body3');
 
-		jQuery('table #contents_body tr:first').nextAll('tr').each( function() {
-			var ntd = $(this).children('td').length;
-			for( var i=0; i<ncols-ntd; i++ ) $(this).append('<td></td>');
-		});
-		
-		jQuery('table #contents_body th').css('background', '#7e7e7e');
-		jQuery('table #contents_body tr:even').css('background', '#dedede');
-		jQuery('table #contents_body tr:odd').css('background', '#ffffff');
+		function _init_table_appearance(_szselector)
+		{
+			// for debugging
+			//jQuery(_szselector).attr('border', '1');
+
+			//
+			jQuery(_szselector).attr('width', '100%');
+			var szcolwidths = jQuery(_szselector + ' tr:first th').attr('data-colwidth');
+			var acolwidths = eval('['+ szcolwidths  +']');
+			var ncols = acolwidths.length;
+
+			jQuery(_szselector + ' tr:first th').attr('colspan', ncols);
+			jQuery(_szselector + ' tr:first').nextAll('tr').each( function() {
+				var i = 0;
+				$(this).children('td').each( function() {
+					$(this).attr('width', acolwidths[i++]);
+					$(this).attr('cellspacing', '5');
+				})
+
+				for( ; i<ncols; i++ ) $(this).append('<td></td>');
+			});
+
+			jQuery(_szselector + ' th').css('background', '#7e7e7e');
+			jQuery(_szselector + ' tr:even').css('background', '#dedede');
+			jQuery(_szselector + ' tr:odd').css('background', '#ffffff');
+
+			//
+			jQuery(_szselector + ' tr').last().css('background', 'none');
+		}
 	}
 
 	jQuery(document).ready( function() {
-		// for debugging
-		//jQuery('table #contents_body').attr('border', '1');
-
 		//
-		init_element();
+		init_appearance();
 /*	
 		jQuery('table tr:even').css('background', '#dedede');
 		jQuery('table tr:odd').css('background', '#ffffff');
 		
-		init_element();
+		init_appearance();
 
+		//
 		$(function() {
 			console.log('gserverform_account', gserverform_account['account.enable'][1]);
 		});
 		
-		var socket = io.connect();
-		socket.on( '_mymsgack', function(_data) {
+
+
+		//		var socket = io.connect();
+		ocket.on( '_mymsgack', function(_data) {
 			alert(_data);
 		});
 
 		$('#idbutton').bind('click', function() {
+		
 		//document.getElementById('idbutton').onclick = function() {
-			//var text = document.getElementById('idtext').value;
+		//var text = document.getElementById('idtext').value;
 			//socket.emit('_mymsg', text);
 			socket.emit('_mymsg', $('#idtext').val());
 		});
