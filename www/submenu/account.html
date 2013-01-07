@@ -62,20 +62,22 @@
 
 			<table id="contents_body" cellspacing="0" cellpadding="0">
 				<tr>
-					<th data-colwidth="'25%','35%','20%'">
-						사용자 목록
+					<th data-colwidth="'35%','35%','20%'">
+						User List
 					</th>
 				</tr>
 				<tr>
 					<td>
-						데이터 리스트
+						Data List tables... IPv4 address setting
+						<dt>데이터 리스트1-1</dt>
 							<dd>데이터1</dd>
 							<dd>데이터2</dd>
 					</td>
 					<td>
-						데이터 리스트1
-							<dd>데이터1-1</dd>
-							<dd>데이터1-2</dd>
+						<dt><br></dt>
+						<dt><br></dt>
+						<dt>데이터 리스트1-1</dt>
+						<dt>데이터 리스트1-2</dt>
 					</td>
 				</tr>
 
@@ -180,7 +182,7 @@
 		function _init_table_appearance(_szselector)
 		{
 			// for debugging
-			//jQuery(_szselector).attr('border', '1');
+			jQuery(_szselector).attr('border', '1');
 
 			//
 			jQuery(_szselector).attr('width', '100%');
@@ -206,7 +208,7 @@
 
 			//
 			jQuery(_szselector + ' th').css('padding-left', '1em').attr('align', 'left');
-			jQuery(_szselector + ' tr td').css('padding-left', '1em');
+			jQuery(_szselector + ' tr').find('td:first').css('padding-left', '1em');
 		}
 	}
 
