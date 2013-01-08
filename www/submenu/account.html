@@ -5,13 +5,18 @@
 <meta charset="utf-8">
 <title>IP CAMERA</title>
 
-<link rel="stylesheet" href="/default.css">
 <link rel="stylesheet" href="/include/jquery/jquery-ui.css">
 <script src="/include/jquery/jquery.js"></script>
 <script src="/include/jquery/jquery-ui.js"></script>
 
+<link rel="stylesheet" href="/default.css">
 <script src="/socket.io/socket.io.js"></script>
 <script src="/submenu_nav.js"></script>
+
+<style>
+	div#users-contain { width: 350px; margin: 20px 0; }
+</style>
+
 <script src="configuration.ssi?action=query&lvalue=account.%&var=gserverform_account"></script>
 
 <script>
@@ -70,18 +75,17 @@
 
 			<table id="contents_body">
 				<tr>
-					<th data-colwidth="'35%','35%','20%'">
+					<th data-colwidth="'45%','25%','20%'">
 						User List
 					</th>
 				</tr>
 				<tr>
-					<td>
+					<td colspan="2">
 						<div id="users-contain" class="ui-widget">
-							<h1>Existing Users:</h1>
 					   	<table id="users" class="ui-widget ui-widget-content">
 					   		<thead>
 					   			<tr class="ui-widget-header ">
-					   				<th>Name</th><th>Email</th><th>Password</th>
+					   				<th>이름 Name</th><th>이메일 Email</th><th>Password</th>
 					   			</tr>
 					   		</thead>
 					   		<tbody>
@@ -211,7 +215,7 @@
 		function _init_bodytable_appearance(_szselector)
 		{
 			// for debugging
-			//jQuery(_szselector).attr('border', '1');
+			jQuery(_szselector).attr('border', '1');
 
 			//
 			jQuery(_szselector).attr('width', '100%');
@@ -222,21 +226,26 @@
 			jQuery(_szselector + ' tr:first th').attr('colspan', ncols);
 			jQuery(_szselector + ' tr:first').nextAll('tr').each( function() {
 				var i = 0;
+				var colspan = 0;
 				$(this).children('td').each( function() {
 					$(this).attr('width', acolwidths[i++]);
 					$(this).attr('cellspacing', '5');
+					colspan += $(this).attr('colspan') || 0;
 				})
 
-				for( ; i<ncols; i++ ) $(this).append('<td></td>');
+				console.log('i=%d, ncols=%d, colspan=%d', i, ncols, colspan);
+				colspan = (0 != colspan) ? colspan-1 : colspan;
+				for( ; i<(ncols-colspan); i++ ) $(this).append('<td></td>');
 			});
 
-			jQuery(_szselector + ' th').css('background', '#7e7e7e');
+			jQuery(_szselector + ' th:first').css('background', '#7e7e7e');
+
 			jQuery(_szselector + ' tr:odd').css('background', '#dedede');
 			jQuery(_szselector + ' tr:even').css('background', '#ffffff');
 			jQuery(_szselector + ' tr').last().css('background', 'none');
 
 			//
-			jQuery(_szselector + ' th').css('padding-left', '1em').attr('align', 'left');
+			jQuery(_szselector + ' th:first').css('padding-left', '1em').attr('align', 'left');
 			jQuery(_szselector + ' tr').find('td:first').css('padding-left', '1em');
 		}
 	}
