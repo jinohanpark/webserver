@@ -4,22 +4,18 @@
 <head>
 <meta charset="utf-8">
 <title>IP CAMERA</title>
+
 <link rel="stylesheet" href="/default.css">
-
-<script src="/socket.io/socket.io.js"></script>
-
+<link rel="stylesheet" href="/include/jquery/jquery-ui.css">
 <script src="/include/jquery/jquery.js"></script>
 <script src="/include/jquery/jquery-ui.js"></script>
 
+<script src="/socket.io/socket.io.js"></script>
 <script src="/submenu_nav.js"></script>
 <script src="configuration.ssi?action=query&lvalue=account.%&var=gserverform_account"></script>
 
 <script>
 	Init_jQuery();
-
-	jQuery(function() {
-		$( "#dialog" ).dialog();
-	});
 </script>
 </head>
 
@@ -248,6 +244,10 @@
 	jQuery(document).ready( function() {
 		//
 		init_appearance();
+
+		jQuery( "#dialog" ).dialog();
+
+
 /*	
 		jQuery('table tr:even').css('background', '#dedede');
 		jQuery('table tr:odd').css('background', '#ffffff');

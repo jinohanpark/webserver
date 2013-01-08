@@ -91,6 +91,7 @@ function _onWebServerRequest( _req, _res )
 
 	//
 	var szreqfiletype;
+	var szfiletype;	// utf8, binary
 
 	var oUrl = gmUrl.parse(_req.url);//console.log('oUrl.pathname:', oUrl.pathname);
 	if( '/' == oUrl.pathname ) {
@@ -109,6 +110,7 @@ function _onWebServerRequest( _req, _res )
 			return;
 		}
 		szreqfiletype = obj.szreqfiletype;
+		szfiletype = obj.sztype;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////
@@ -286,7 +288,7 @@ function _onWebServerRequest( _req, _res )
 	else {
 		// HTML,JS,CSS,...
 		var szpagefile = gszbasedir + oUrl.pathname;
-		gmFs.readFile( szpagefile, 'utf8', callbackReadPageFile );
+		gmFs.readFile( szpagefile, callbackReadPageFile );//gmFs.readFile( szpagefile, 'utf8', callbackReadPageFile );
 	}
 
 	function callbackReadPageFile( error, data )
@@ -302,7 +304,7 @@ function _onWebServerRequest( _req, _res )
 			_res.writeHead( 200, {
 							'Server': 'node.js-jinohan.park',
 							'Content-Type': szreqfiletype,
-							'Set-Cookie': [ //'breakfast = toast;Expires = ' + date.toUTCString(),
+							'Set-Cookie': [ 'breakfast = toast;Expires = ' + date.toUTCString(),
 											'dinner = chicken',
 											'testkey = testvalue'
 										  ]
@@ -348,6 +350,7 @@ function _fnGetRequestFileType( _req )
 {
 	//
 	var szretfiletype = 'text/html';
+	var szrettype = 'utf8';	// binary
 	
 	//
 	var oUrl = gmUrl.parse(_req.url);
@@ -357,12 +360,13 @@ function _fnGetRequestFileType( _req )
 	case 'html':	szretfiletype = 'text/html'; break;
 	case 'css':		szretfiletype = 'text/css'; break;
 	case 'js':		szretfiletype = 'application/javascript'; break;
-	case 'png':		szretfiletype = 'image/png'; break;
-	case 'gif':		szretfiletype = 'image/gif'; break;
-	case 'ico':		szretfiletype = 'image/x-icon'; break;
-	case 'cgi':		szretfiletype = 'application/cgi'; break;
 	case 'node':	szretfiletype = 'application/node'; break;
 	case 'ssi':		szretfiletype = 'ssi/javascript'; break;
+	case 'jpeg':	szretfiletype = 'image/jpeg'; szrettype = 'binary'; break;
+	case 'jpg':		szretfiletype = 'image/jpg'; szrettype = 'binary'; break;
+	case 'png':		szretfiletype = 'image/png'; szrettype = 'binary'; break;
+	case 'gif':		szretfiletype = 'image/gif'; szrettype = 'binary'; break;
+	case 'ico':		szretfiletype = 'image/x-icon'; szrettype = 'binary'; break;
 	default:
 		//var err = new Error('aaaaa');
 		//err.number = 7;
@@ -371,7 +375,7 @@ function _fnGetRequestFileType( _req )
 		return null;
 	}
 	
-	return { 'szreqfiletype' : szretfiletype };
+	return { 'szreqfiletype' : szretfiletype, 'sztype' : szrettype };
 }	
 
 function _db_getconfiguration(_queryitem, _callback)
