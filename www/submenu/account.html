@@ -7,8 +7,10 @@
 <link rel="stylesheet" href="/default.css">
 
 <script src="/socket.io/socket.io.js"></script>
+
 <script src="/include/jquery-1.8.2.js"></script>
 <script src="/submenu_nav.js"></script>
+
 <script src="configuration.ssi?action=query&lvalue=account.%&var=gserverform_account"></script>
 
 <script>
@@ -17,7 +19,7 @@
 </head>
 
 <body>
-<table id="wrap" class="layout_grid" cellspacing="0" cellpadding="0" align=center>
+<table id="wrap" class="layout_grid" align=center>
 
 <thead>
 	<tr>
@@ -30,14 +32,14 @@
 <tbody>
 	<tr>
 		<td>
-		<table id="wrap_body" class="layout_grid" cellspacing="0" cellpadding="0" width="100%">
+		<table id="wrap_body" class="layout_grid" width="100%">
 		<tr>
 			<td class="left_nav">
 				<script>showSubmenu('submenu_nav');</script>
 			</td>
 			
 			<td>
-			<table id="contents_title" class="layout_grid" cellspacing="0" cellpadding="0">
+			<table id="contents_title" class="layout_grid">
 				<tr>
 					<td>
 					<div>
@@ -60,11 +62,30 @@
 				<tr><td><br></td></tr>
 			</table id="contents_title">
 
-			<table id="contents_body" cellspacing="0" cellpadding="0">
+			<table id="contents_body">
 				<tr>
 					<th data-colwidth="'35%','35%','20%'">
 						User List
 					</th>
+				</tr>
+				<tr>
+					<td>
+						<div id="users-contain" class="ui-widget">
+							<h1>Existing Users:</h1>
+					   	<table id="users" class="ui-widget ui-widget-content">
+					   		<thead>
+					   			<tr class="ui-widget-header ">
+					   				<th>Name</th><th>Email</th><th>Password</th>
+					   			</tr>
+					   		</thead>
+					   		<tbody>
+					   			<tr>
+					   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
+					   			</tr>
+					   		</tbody>
+					   	</table>
+						</div>
+					</td>
 				</tr>
 				<tr>
 					<td>
@@ -98,26 +119,23 @@
 				<tr><td><br></td></tr>
 			</table id="contents_body">
 
-			<table id="contents_body2" cellspacing="0" cellpadding="0">
+			<table id="contents_body2">
 				<tr>
-					<th data-colwidth="'1%','35%','55%'">
+					<th data-colwidth="'35%','55%'">
 						인증 방법
 					</th>
 				</tr>
 				<tr>
-					<td></td>
 					<td>
 						간단한 기본 인증 방식
 					</td>
 				</tr>
 				<tr>
-					<td></td>
 					<td>
 						암호화 된 패킷을 통한 인증 방식
 					</td>
 				</tr>
 				<tr>
-					<td></td>
 					<td>
 						인증 과정 없음
 					</td>
@@ -125,20 +143,18 @@
 				<tr><td><br></td></tr>
 			</table id="contents_body2">
 
-			<table id="contents_body3" cellspacing="0" cellpadding="0">
+			<table id="contents_body3">
 				<tr>
-					<th data-colwidth="'10px','35%','55%'">
+					<th data-colwidth="'35%','55%'">
 						기타 설정
 					</th>
 				</tr>
 				<tr>
-					<td></td>
-					<td padding-left="8px;">
+					<td>
 						인증 과정 없이 영상을 볼 수 있다.
 					</td>
 				</tr>
 				<tr>
-					<td></td>
 					<td>
 						인증 과정 없이 PTZ 제어를 할 수 있다.
 					</td>
@@ -175,14 +191,21 @@
 	//
 	function init_appearance()
 	{
-		_init_table_appearance('table #contents_body');
-		_init_table_appearance('table #contents_body2');
-		_init_table_appearance('table #contents_body3');
+		_init_alltable_appearance();
 
-		function _init_table_appearance(_szselector)
+		_init_bodytable_appearance('table #contents_body');
+		_init_bodytable_appearance('table #contents_body2');
+		_init_bodytable_appearance('table #contents_body3');
+
+		function _init_alltable_appearance()
+		{
+			jQuery('table').attr('cellspacing', '0').attr('cellpadding', '2');
+		}
+
+		function _init_bodytable_appearance(_szselector)
 		{
 			// for debugging
-			jQuery(_szselector).attr('border', '1');
+			//jQuery(_szselector).attr('border', '1');
 
 			//
 			jQuery(_szselector).attr('width', '100%');
