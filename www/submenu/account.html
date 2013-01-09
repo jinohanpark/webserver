@@ -14,7 +14,31 @@
 <script src="/submenu_nav.js"></script>
 
 <style>
-	div#users-contain { width: 350px; margin: 20px 0; }
+	div#users-contain { width: 100%; }
+	div#users-contain table { margin-top: 1em; margin-bottom: 1em; border-collapse: collapse; width: 98.5%; }
+	div#users-contain table th { background: #999999; }
+	div#users-contain table td { background: #dedede; }
+	div#users-contain table th,
+	div#users-contain table td { padding-left: 1em; padding-top: 0.2em; padding-bottom: 0.2em; border: 1px solid #bebebe; text-align: left; }
+
+	.tr-hover { background: #80eac0 !important; }
+
+	#dialog-link-add, #dialog-link-modify, #dialog-link-remove {
+		padding: .4em 1em .4em 20px;
+		text-decoration: none;
+		position: relative;
+	}
+
+	#dialog-link-add span.ui-icon,
+	#dialog-link-modify span.ui-icon,
+	#dialog-link-remove span.ui-icon
+	{
+		margin: 0 5px 0 0;
+		position: absolute;
+		left: .2em;
+		top: 50%;
+		margin-top: -8px;
+	}
 </style>
 
 <script src="configuration.ssi?action=query&lvalue=account.%&var=gserverform_account"></script>
@@ -26,10 +50,12 @@
 
 <body>
 
+<!--
 <div class="demo">
 <div id="dialog" title="Basic dialog">
 	<p>This is the default dialog which is useful for displaying information. The dialog window can be moved, resized and closed with the 'x' icon.</p>
 </div>
+-->
 
 <table id="wrap" class="layout_grid" align=center>
 <thead>
@@ -45,134 +71,179 @@
 		<td>
 		<table id="wrap_body" class="layout_grid" width="100%">
 		<tr>
-			<td class="left_nav">
+			<td id="wrap_body_leftnav" class="left_nav">
 				<script>showSubmenu('submenu_nav');</script>
 			</td>
-			
-			<td>
-			<table id="contents_title" class="layout_grid">
-				<tr>
-					<td>
-					<div>
-						<h3>
-							<script>getSubmenuText();</script>
-						</h3>
-					</div>
-					</td>
-				</tr>
-				
-				<tr>
-					<td>
-					<div>
-						<p>
-							사용자 계정 추가, 삭제, 수정한다. 웹서버 및 스트림서버를 포함한 시스템에 접근할 수 있는 권한을 설정한다.
-						</p>
-					</div>
-					</td>
-				</tr>
-				<tr><td><br></td></tr>
-			</table id="contents_title">
 
-			<table id="contents_body">
-				<tr>
-					<th data-colwidth="'45%','25%','20%'">
-						User List
-					</th>
-				</tr>
-				<tr>
-					<td colspan="2">
-						<div id="users-contain" class="ui-widget">
-					   	<table id="users" class="ui-widget ui-widget-content">
-					   		<thead>
-					   			<tr class="ui-widget-header ">
-					   				<th>이름 Name</th><th>이메일 Email</th><th>Password</th>
-					   			</tr>
-					   		</thead>
-					   		<tbody>
-					   			<tr>
-					   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
-					   			</tr>
-					   		</tbody>
-					   	</table>
+			<td id="wrap_body_contents">
+				<!-- body/title -->
+				<table id="contents_title" class="layout_grid">
+				<thead>
+					<tr>
+						<td>
+						<div>
+							<h3>
+								<script>getSubmenuText();</script>
+							</h3>
 						</div>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						Data List tables... IPv4 address setting
-						<dt>데이터 리스트1-1</dt>
-							<dd>데이터1</dd>
-							<dd>데이터2</dd>
-					</td>
-					<td>
-						<dt><br></dt>
-						<dt><br></dt>
-						<dt>데이터 리스트1-1</dt>
-						<dt>데이터 리스트1-2</dt>
-					</td>
-				</tr>
+						</td>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+						<div>
+							<p>
+								사용자 계정 추가, 삭제, 수정한다. 웹서버 및 스트림서버를 포함한 시스템에 접근할 수 있는 권한을 설정한다.
+							</p>
+						</div>
+						</td>
+					</tr>
+				</tbody>	
+				</table id="contents_title">
 
-				<tr>
-					<td>bbb1</td>
-					<td>bbb2</td>
-					<td>bbb3</td>
-				</tr>
-				<tr>
-					<td><dl><dt>
-						데이터 타이틀
-							<dd>데이터1</dd>
-							<dd>데이터2</dd>
-					</dt></dl></td>
-					<td>
-					</td>
-				</tr>
-				<tr><td><br></td></tr>
-			</table id="contents_body">
+				<!-- body/contents -->
+				<table id="contents_body1">
+				<thead>
+					<tr>
+						<th data-widthpercolumn="'25%','25%','0%'">
+							User List
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td colspan="3">
+							<div id="users-contain">
+								<table id="users">
+						   		<thead>
+						   			<tr>
+						   				<th>이름</th><th>권한 그룹</th><th>정보</th>
+						   			</tr>
+						   		</thead>
+						   		<tbody>
+						   			<tr>
+						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
+						   			</tr>
+						   			<tr>
+						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
+						   			</tr>
+						   			<tr>
+						   				<td>테스터1</td><td>tester1@example.com</td><td>test1</td>
+						   			</tr>
+						   		</tbody>
+								<tfoot></tfoot>									
+								</table>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">
+							<p><a href="#add" id="dialog-link-add" class="ui-state-default ui-corner-all">
+								<span class="ui-icon ui-icon-newwin"></span>
+								추가
+							</a>
+							<a href="#modify" id="dialog-link-modify" class="ui-state-default ui-corner-all">
+								<span class="ui-icon ui-icon-newwin"></span>
+								수정
+							</a>
+							<a href="#remove" id="dialog-link-remove" class="ui-state-default ui-corner-all">
+								<span class="ui-icon ui-icon-newwin"></span>
+								삭제
+							</a></p>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Data List tables... IPv4 address setting
+							<dt>데이터 리스트1-1</dt>
+								<dd>데이터1</dd>
+								<dd>데이터2</dd>
+						</td>
+						<td>
+							<dt><br></dt>
+							<dt><br></dt>
+							<dt>데이터 리스트1-1</dt>
+							<dt>데이터 리스트1-2</dt>
+						</td>
+					</tr>
+					<tr>
+						<td>bbb1</td>
+						<td>bbb2</td>
+						<td>bbb3</td>
+					</tr>
+					<tr>
+						<td><dl><dt>
+							데이터 타이틀
+								<dd>데이터1</dd>
+								<dd>데이터2</dd>
+						</dt></dl></td>
+						<td>
+						</td>
+					</tr>
+				</tbody>
+				<tfoot></tfoot>
+				</table id="contents_body1">
 
-			<table id="contents_body2">
-				<tr>
-					<th data-colwidth="'35%','55%'">
-						인증 방법
-					</th>
-				</tr>
-				<tr>
-					<td>
-						간단한 기본 인증 방식
-					</td>
-				</tr>
-				<tr>
-					<td>
-						암호화 된 패킷을 통한 인증 방식
-					</td>
-				</tr>
-				<tr>
-					<td>
-						인증 과정 없음
-					</td>
-				</tr>
-				<tr><td><br></td></tr>
-			</table id="contents_body2">
+				<!-- body/contents -->
+				<table id="contents_body2">
+				<thead>	
+					<tr>
+						<th data-widthpercolumn="'35%','55%'">
+							인증 방법
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+							간단한 기본 인증 방식
+						</td>
+					</tr>
+					<tr>
+						<td>
+							암호화 된 패킷을 통한 인증 방식
+						</td>
+					</tr>
+					<tr>
+						<td>
+							인증 과정 없음
+						</td>
+					</tr>
+				</tbody>	
+				<tfoot></tfoot>
+				</table id="contents_body2">
 
-			<table id="contents_body3">
-				<tr>
-					<th data-colwidth="'35%','55%'">
-						기타 설정
-					</th>
-				</tr>
-				<tr>
-					<td>
-						인증 과정 없이 영상을 볼 수 있다.
-					</td>
-				</tr>
-				<tr>
-					<td>
-						인증 과정 없이 PTZ 제어를 할 수 있다.
-					</td>
-				</tr>
-				<tr><td><br></td></tr>
-			</table id="contents_body3">
-
-			</td>
+				<!-- body/contents -->
+				<table id="contents_body3">
+				<thead>
+					<tr>
+						<th data-widthpercolumn="'35%','55%'">
+							기타 설정
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+							인증 과정 없이 영상을 볼 수 있다.
+						</td>
+						<td>
+							진짜???
+						</td>
+					</tr>
+					<tr>
+						<td>
+							인증 과정 없이 PTZ 제어를 할 수 있다.
+						</td>
+						<td>
+							정말???
+						</td>
+					</tr>
+				</tbody>
+				<tfoot></tfoot>
+				</table id="contents_body3">
+			</td id="wrap_body_contents">
 		</tr>
 		</table id="wrap_body">
 		</td>
@@ -201,52 +272,81 @@
 	//
 	function init_appearance()
 	{
-		_init_alltable_appearance();
+		_init_all_table();
 
-		_init_bodytable_appearance('table #contents_body');
-		_init_bodytable_appearance('table #contents_body2');
-		_init_bodytable_appearance('table #contents_body3');
+		_init_body_table('table#contents_body1');
+		_init_body_table('table#contents_body2');
+		_init_body_table('table#contents_body3');
 
-		function _init_alltable_appearance()
+		_init_userscontain_table('div#users-contain');
+		_init_dialogopen_button('#dialog-link-add');
+
+		function _init_dialogopen_button(_szselector)
 		{
-			jQuery('table').attr('cellspacing', '0').attr('cellpadding', '2');
+			jQuery(_szselector).hover(
+				function() {
+					$(this).toggleClass('ui-state-hover');
+				}
+			);
+
+			jQuery(_szselector).click( function( _event ) {
+				$( "#dialog" ).dialog( "open" );
+				_event.preventDefault();
+			});
 		}
 
-		function _init_bodytable_appearance(_szselector)
+		function _init_userscontain_table(_szselector)
+		{
+			jQuery(_szselector + ' table tbody tr').hover(
+				function() {
+					$(this).children('td').toggleClass('tr-hover');
+				}
+			);
+		}
+
+		function _init_all_table()
+		{
+			//
+			jQuery('table').attr('cellspacing', '0').attr('cellpadding', '2');
+
+			//
+			jQuery('#wrap_body_contents > table').before('<dt>').after('<br></dt>');
+		}
+
+		function _init_body_table(_szselector)
 		{
 			// for debugging
-			jQuery(_szselector).attr('border', '1');
+			//jQuery(_szselector).attr('border', '1');
+
+			//
+			jQuery(_szselector).attr('class', 'ui-widget ui-widget-content');
+			jQuery(_szselector + ' > thead > tr').attr('class', 'ui-widget-header');
 
 			//
 			jQuery(_szselector).attr('width', '100%');
-			var szcolwidths = jQuery(_szselector + ' tr:first th').attr('data-colwidth');
+			var szcolwidths = jQuery(_szselector + ' thead tr:first th').attr('data-widthpercolumn') || '';
 			var acolwidths = eval('['+ szcolwidths  +']');
 			var ncols = acolwidths.length;
 
-			jQuery(_szselector + ' tr:first th').attr('colspan', ncols);
-			jQuery(_szselector + ' tr:first').nextAll('tr').each( function() {
+			jQuery(_szselector + ' > thead tr:first th').attr('colspan', ncols)
+													    .attr('align', 'left')
+													    .css('padding-left', '1em');
+
+			jQuery(_szselector + ' tbody > tr').each( function() {
 				var i = 0;
 				var colspan = 0;
 				$(this).children('td').each( function() {
-					$(this).attr('width', acolwidths[i++]);
-					$(this).attr('cellspacing', '5');
+					$(this).attr('width', acolwidths[i++]).attr('cellspacing', '5');
 					colspan += $(this).attr('colspan') || 0;
-				})
-
-				console.log('i=%d, ncols=%d, colspan=%d', i, ncols, colspan);
+				});
+				//console.log('i=%d, ncols=%d, colspan=%d', i, ncols, colspan);
 				colspan = (0 != colspan) ? colspan-1 : colspan;
 				for( ; i<(ncols-colspan); i++ ) $(this).append('<td></td>');
-			});
+			})
+			.find('td:first').css('padding-left', '1em');
 
-			jQuery(_szselector + ' th:first').css('background', '#7e7e7e');
-
-			jQuery(_szselector + ' tr:odd').css('background', '#dedede');
-			jQuery(_szselector + ' tr:even').css('background', '#ffffff');
-			jQuery(_szselector + ' tr').last().css('background', 'none');
-
-			//
-			jQuery(_szselector + ' th:first').css('padding-left', '1em').attr('align', 'left');
-			jQuery(_szselector + ' tr').find('td:first').css('padding-left', '1em');
+			//jQuery(_szselector + ' tbody tr:odd').css('background', '#dedede');
+			//jQuery(_szselector + ' tbody tr:even').css('background', '#ffffff');
 		}
 	}
 
@@ -254,8 +354,7 @@
 		//
 		init_appearance();
 
-		jQuery( "#dialog" ).dialog();
-
+		//jQuery( "#dialog" ).dialog();
 
 /*	
 		jQuery('table tr:even').css('background', '#dedede');
