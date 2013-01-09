@@ -14,17 +14,17 @@
 <script src="/submenu_nav.js"></script>
 
 <style>
-	div#users-contain { width: 100%; }
-	div#users-contain table { margin-top: 1em; margin-bottom: 1em; border-collapse: collapse; width: 98.5%; }
-	div#users-contain table th { background: #999999; }
-	div#users-contain table td { background: #dedede; }
-	div#users-contain table th,
-	div#users-contain table td { padding-left: 1em; padding-top: 0.2em; padding-bottom: 0.2em; border: 1px solid #bebebe; text-align: left; }
+	div#users-list { width: 100%; }
+	div#users-list table { margin-top: 1em; margin-bottom: 1em; border-collapse: collapse; width: 98.5%; }
+	div#users-list table th { background: #999999; }
+	div#users-list table td { background: #dedede; }
+	div#users-list table th,
+	div#users-list table td { padding-left: 1em; padding-top: 0.2em; padding-bottom: 0.2em; border: 1px solid #bebebe; text-align: left; }
 
 	.tr-hover { background: #80eac0 !important; }
 
 	#dialog-link-add, #dialog-link-modify, #dialog-link-remove {
-		padding: .4em 1em .4em 20px;
+		padding: .4em .8em .2em 30px;
 		text-decoration: none;
 		position: relative;
 	}
@@ -114,7 +114,7 @@
 				<tbody>
 					<tr>
 						<td colspan="3">
-							<div id="users-contain">
+							<div id="users-list">
 								<table id="users">
 						   		<thead>
 						   			<tr>
@@ -139,18 +139,21 @@
 					</tr>
 					<tr>
 						<td colspan="3">
-							<p><a href="#add" id="dialog-link-add" class="ui-state-default ui-corner-all">
+							<p>
+							<a href="#add" id="dialog-link-add" class="ui-state-default ui-corner-all">
 								<span class="ui-icon ui-icon-newwin"></span>
 								추가
 							</a>
+							&nbsp;
 							<a href="#modify" id="dialog-link-modify" class="ui-state-default ui-corner-all">
 								<span class="ui-icon ui-icon-newwin"></span>
 								수정
 							</a>
+							&nbsp;
 							<a href="#remove" id="dialog-link-remove" class="ui-state-default ui-corner-all">
-								<span class="ui-icon ui-icon-newwin"></span>
 								삭제
-							</a></p>
+							</a>
+							</p>
 						</td>
 					</tr>
 					<tr>
@@ -270,33 +273,34 @@
 
 <script>
 	//
-	function init_appearance()
-	{
+	function init_appearance() {
 		_init_all_table();
 
 		_init_body_table('table#contents_body1');
 		_init_body_table('table#contents_body2');
 		_init_body_table('table#contents_body3');
 
-		_init_userscontain_table('div#users-contain');
-		_init_dialogopen_button('#dialog-link-add');
+		_init_userslist_table('div#users-list');
 
-		function _init_dialogopen_button(_szselector)
-		{
-			jQuery(_szselector).hover(
+		_init_dialogopen_button('#dialog-link-add');
+		_init_dialogopen_button('#dialog-link-modify');
+		_init_dialogopen_button('#dialog-link-remove');
+
+		function _init_dialogopen_button(_szselector) {
+			jQuery(_szselector)
+			.hover(
 				function() {
 					$(this).toggleClass('ui-state-hover');
 				}
-			);
-
-			jQuery(_szselector).click( function( _event ) {
-				$( "#dialog" ).dialog( "open" );
+			)
+			.click( function(_event) {
+				console.log($(this).attr('href'));
+				//$( "#dialog" ).dialog( "open" );
 				_event.preventDefault();
 			});
 		}
 
-		function _init_userscontain_table(_szselector)
-		{
+		function _init_userslist_table(_szselector) {
 			jQuery(_szselector + ' table tbody tr').hover(
 				function() {
 					$(this).children('td').toggleClass('tr-hover');
@@ -304,8 +308,7 @@
 			);
 		}
 
-		function _init_all_table()
-		{
+		function _init_all_table() {
 			//
 			jQuery('table').attr('cellspacing', '0').attr('cellpadding', '2');
 
@@ -313,8 +316,7 @@
 			jQuery('#wrap_body_contents > table').before('<dt>').after('<br></dt>');
 		}
 
-		function _init_body_table(_szselector)
-		{
+		function _init_body_table(_szselector) {
 			// for debugging
 			//jQuery(_szselector).attr('border', '1');
 
