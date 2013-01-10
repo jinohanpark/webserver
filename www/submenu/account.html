@@ -35,7 +35,6 @@
 		text-decoration: none;
 		position: relative;
 	}
-
 	#dialog-link-add span.ui-icon,
 	#dialog-link-modify span.ui-icon,
 	#dialog-link-remove span.ui-icon
@@ -46,6 +45,14 @@
 		top: 50%;
 		margin-top: -8px;
 	}
+
+	.ui-dialog .ui-state-error { padding: .3em; }
+	.validateTips { border: 1px solid transparent; padding: 0.3em; }
+
+	label, input { display:block; }
+	input .text { margin-bottom:12px; width:95%; padding: .4em; }
+	fieldset { padding:0; border:0; margin-top:25px; }
+
 </style>
 
 <script src="configuration.ssi?action=query&lvalue=account.%&var=gserverform_account"></script>
@@ -56,14 +63,6 @@
 </head>
 
 <body>
-
-<!--
-<div class="demo">
-<div id="dialog" title="Basic dialog">
-	<p>This is the default dialog which is useful for displaying information. The dialog window can be moved, resized and closed with the 'x' icon.</p>
-</div>
--->
-
 <table id="wrap" class="layout_grid" align=center>
 <thead>
 	<tr>
@@ -295,6 +294,21 @@
 </tfoot>
 
 </table id="wrap">
+
+<div id="dialog-form" title="Create new user 추가">
+	<p class="validateTips"></p>
+	<form>
+	<fieldset>
+		<label for="name">Name</label>
+		<input type="text" name="name" id="name" value="" class="text ui-widget-content ui-corner-all" />
+		<label for="email">Email</label>
+		<input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all" />
+		<label for="password">Password</label>
+		<input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" />
+	</fieldset>
+	</form>
+</div>
+
 </body>
 </html>
 
@@ -309,9 +323,89 @@
 
 		_init_userslist_table('div#users-list');
 
+		_init_dialogbox();
+
 		_init_dialogopen_button('#dialog-link-add');
 		_init_dialogopen_button('#dialog-link-modify');
 		_init_dialogopen_button('#dialog-link-remove');
+
+		function _init_dialogbox() {
+
+			var name = $( "#name" ),
+				email = $( "#email" ),
+				password = $( "#password" ),
+				allFields = $([]).add( name ).add( email ).add( password ),
+				tips = $( ".validateTips" );
+	
+			function updateTips( t ) {
+				tips.text(t).addClass( "ui-state-highlight" );
+				setTimeout( function() {
+					tips.removeClass( "ui-state-highlight", 2500 );
+				}, 500 );
+			}
+
+			function checkLength( o, n, min, max ) {
+				if( o.val().length > max || o.val().length < min ) {
+					o.addClass( "ui-state-error" );
+					updateTips( "Length of " + n + " must be between " + min + " and " + max + "." );
+					return false;
+				}
+				else {
+					return true;
+				}
+			}
+
+			function checkRegexp( o, regexp, n ) {
+				if ( !( regexp.test( o.val() ) ) ) {
+					o.addClass( "ui-state-error" );
+					updateTips( n );
+					return false;
+				} else {
+					return true;
+				}
+			}
+
+			jQuery('#dialog-form').dialog( {
+				autoOpen: false,
+				height: 300,
+				width: 350,
+				modal: true,
+				buttons: {
+					"Create an account": function() {
+						var bValid = true;
+						allFields.removeClass( "ui-state-error" );
+
+						bValid = bValid && checkLength( name, "username", 3, 16 );
+						bValid = bValid && checkLength( email, "email", 6, 80 );
+						bValid = bValid && checkLength( password, "password", 5, 16 );
+
+						bValid = bValid && checkRegexp( name, /^[a-z]([0-9a-z_])+$/i, "Username may consist of a-z, 0-9, underscores, begin with a letter." );
+						// From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
+						bValid = bValid && checkRegexp( email, /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i, "eg. ui@jquery.com" );
+						bValid = bValid && checkRegexp( password, /^([0-9a-zA-Z])+$/, "Password field only allow : a-z 0-9" );
+
+						if ( bValid ) {
+							$( "#users tbody" ).append( "<tr>" +
+								"<td>" + name.val() + "</td>" + 
+								"<td>" + email.val() + "</td>" + 
+								"<td>" + password.val() + "</td>" +
+							"</tr>" );
+
+							_init_userslist_table('div#users-list');
+							$( this ).dialog( "close" );
+						}
+					},
+					"Close": function() {
+						tips.text("");
+						allFields.val( "" ).removeClass( "ui-state-error" );
+						$( this ).dialog( "close" );
+					}
+				},
+				close: function() {
+					allFields.val( "" ).removeClass( "ui-state-error" );
+				}
+			});
+		}
 
 		function _init_dialogopen_button(_szselector) {
 			jQuery(_szselector)
@@ -319,18 +413,26 @@
 				$(this).toggleClass('ui-state-hover');
 			})
 			.click( function(_event) {
-				console.log($(this).attr('href'));
-				//$( "#dialog" ).dialog( "open" );
 				_event.preventDefault();
+
+				console.log($(this).attr('href'));
+				$( "#dialog-form" ).dialog( "open" );
 			});
 		}
 
 		function _init_userslist_table(_szselector) {
 			////////////////////////
 			jQuery(_szselector + ' table tbody tr')
-			.hover( function() {
-				$(this).children('td').toggleClass('table-tr-hover');
-			})
+			.hover( 
+				function() {
+					//console.log('mouseenter');
+					$(this).children('td').addClass('table-tr-hover');
+				},
+				function() {
+					//console.log('mouseleave');
+					$(this).children('td').removeClass('table-tr-hover');
+				}
+			)
 			.click( function(_event) {
 				_event.preventDefault();
 				$(this).parent().find('tr td').removeClass('table-tr-selected');
@@ -338,6 +440,7 @@
 			});
 
 			////////////////////////
+			jQuery('div#table-pagenav').remove();
 			jQuery(_szselector).after('<div id="table-pagenav"></div>');
 
 			//
@@ -349,10 +452,10 @@
 
 			for(i = 0; i < npagestotal; i++) {
 				jQuery('<a href="#"></a>').attr('rel', i).html(i+1).appendTo('#table-pagenav');
-			};
-			jtr.addClass('table-tr-offscreen')
-			   .slice(0, nrowperpage)
-			   .removeClass('table-tr-offscreen');
+			}
+			//jtr.addClass('table-tr-offscreen')
+			//   .slice(0, nrowperpage)
+			//   .removeClass('table-tr-offscreen');
 
 			//
 			jQuery('#table-pagenav a').click( function(_event) {
@@ -370,11 +473,12 @@
 				   .slice(startitem, enditem)
 				   .removeClass('table-tr-offscreen')
 				   .animate({opacity:1}, 300);
-				//jtr.children('td').removeClass('table-tr-hover');
 			});
 
-			jQuery('#table-pagenav a:eq(0)').click();
-			//jQuery('#table-pagenav a:first').addClass('table-pagenav-selected');
+			if( !jQuery('#table-pagenav a').hasClass('table-pagenav-selected') ) {
+				jQuery('#table-pagenav a:eq(0)').click();
+				//jQuery('#table-pagenav a:first').addClass('table-pagenav-selected');
+			}
 		}
 
 		function _init_all_table() {
