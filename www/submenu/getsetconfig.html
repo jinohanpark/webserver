@@ -137,3 +137,37 @@ var gsocket_config;
 	}
 
 </script>
+
+<script>
+	/*
+	//javascript에서 왼쪽과 오른쪽 공백을 없애는 trim을 정규식으로 구현할 수 있다.
+	String.prototype.trim = function() {
+		this.replace(/^\s+|\s+$/g, "");
+	}
+	jQuery 사용 예>
+	$('#name').val($('#name').val().trim());
+
+	//regexp
+	​$(document).ready(function(){
+	    $("#btn").click(function(){
+	        var text = $("#test").val();
+	        var regexp = /[0-9a-zA-Z.;\-]/; // 숫자,영문,특수문자
+	        // var regexp = /[0-9]/; // 숫자만
+	        // var regexp = /[a-zA-Z]/; // 영문만
+	        for( var i=0; i<text.length; i++){
+	            if(text.charAt(i) != " " && regexp.test(text.charAt(i)) == false ){
+	             alert(text.charAt(i) + "는 입력불가능한 문자입니다");
+	             break;
+	            }
+	        }       
+	    });
+    }
+
+	//AES enc-dec
+	var szkey = 'aaa';
+	var szplain = 'ABCDEF';
+	var szcipher = Encrypt(szplain, szkey, 128);
+	var szdecipher = Decrypt(szcipher, szkey, 128);
+	console.log(szplain, szcipher, szdecipher);
+    */
+</script>

@@ -12,16 +12,23 @@
 <link rel="stylesheet" href="/default.css">
 <script src="/socket.io/socket.io.js"></script>
 <script src="/submenu_nav.js"></script>
+<script src="/include/aes.js"></script>
 
 <style>
-	div#users-list { width: 100%; }
-	div#users-list table { margin-top: 1em; margin-bottom: 1em; border-collapse: collapse; width: 98.5%; }
+	div#users-list { width: 100%; height: 120px; }
+	div#users-list table { margin-top: 0.8em; margin-bottom: 1em; border-collapse: collapse; width: 98.5%; }
 	div#users-list table th { background: #999999; }
 	div#users-list table td { background: #dedede; }
 	div#users-list table th,
 	div#users-list table td { padding-left: 1em; padding-top: 0.2em; padding-bottom: 0.2em; border: 1px solid #bebebe; text-align: left; }
 
-	.tr-hover { background: #80eac0 !important; }
+	.table-tr-hover { background: #C0DDEC !important; }
+	.table-tr-selected { background: #58BCF1 !important; color:#ffffff; }
+	.table-tr-offscreen { position: absolute; left: -10000px; }
+
+	div#table-pagenav { text-align: left; }
+	div#table-pagenav a { padding: 3px; color: #1759A3; text-decoration: none; margin: 0 0.5em; }
+	.table-pagenav-selected { background: #1759A3; color: #ffffff !important; font-weight: bold; cursor: default; }
 
 	#dialog-link-add, #dialog-link-modify, #dialog-link-remove {
 		padding: .4em .8em .2em 30px;
@@ -106,7 +113,7 @@
 				<table id="contents_body1">
 				<thead>
 					<tr>
-						<th data-widthpercolumn="'25%','25%','0%'">
+						<th data-widthpercolumn="'35%','25%','0%'">
 							User List
 						</th>
 					</tr>
@@ -118,7 +125,9 @@
 								<table id="users">
 						   		<thead>
 						   			<tr>
-						   				<th>이름</th><th>권한 그룹</th><th>정보</th>
+						   				<th width="25%">이름NAMEname</th>
+						   				<th width="45%">권한 그룹</th>
+						   				<th width="25%">정보</th>
 						   			</tr>
 						   		</thead>
 						   		<tbody>
@@ -131,8 +140,26 @@
 						   			<tr>
 						   				<td>테스터1</td><td>tester1@example.com</td><td>test1</td>
 						   			</tr>
+						   			<tr>
+						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
+						   			</tr>
+						   			<tr>
+						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
+						   			</tr>
+						   			<tr>
+						   				<td>테스터1</td><td>tester1@example.com</td><td>test1</td>
+						   			</tr>
+						   			<tr>
+						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
+						   			</tr>
+						   			<tr>
+						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
+						   			</tr>
+						   			<tr>
+						   				<td>가John Doe</td><td>나john.doe@example.com</td><td>다johndoe1</td>
+						   			</tr>
 						   		</tbody>
-								<tfoot></tfoot>									
+								<tfoot></tfoot>
 								</table>
 							</div>
 						</td>
@@ -288,11 +315,9 @@
 
 		function _init_dialogopen_button(_szselector) {
 			jQuery(_szselector)
-			.hover(
-				function() {
+			.hover( function() {
 					$(this).toggleClass('ui-state-hover');
-				}
-			)
+			})
 			.click( function(_event) {
 				console.log($(this).attr('href'));
 				//$( "#dialog" ).dialog( "open" );
@@ -301,11 +326,54 @@
 		}
 
 		function _init_userslist_table(_szselector) {
-			jQuery(_szselector + ' table tbody tr').hover(
-				function() {
-					$(this).children('td').toggleClass('tr-hover');
-				}
-			);
+			////////////////////////
+			jQuery(_szselector + ' table tbody tr')
+			.hover(function() {
+				$(this).children('td').toggleClass('table-tr-hover');
+			})
+			.click( function(_event) {
+				$(this).parent().find('tr td').removeClass('table-tr-selected');
+				$(this).children('td').addClass('table-tr-selected');
+				_event.preventDefault();
+			});
+
+			////////////////////////
+			jQuery(_szselector).after('<div id="table-pagenav"></div>');
+
+			//
+			var jtr = jQuery(_szselector + ' table tbody tr');
+			var nrowperpage = 4;
+			var nrowtotal = jtr.length;
+			var npagestotal = Math.ceil(nrowtotal/nrowperpage);
+			var i;
+
+			for(i = 0; i < npagestotal; i++) {
+				jQuery('<a href="#"></a>').attr('rel', i).html(i+1).appendTo('#table-pagenav');
+			};
+			jtr.addClass('table-tr-offscreen')
+			   .slice(0, nrowperpage)
+			   .removeClass('table-tr-offscreen');
+
+			//
+			jQuery('#table-pagenav a').click( function(_event) {
+				_event.preventDefault();
+				if( $(this).hasClass('table-pagenav-selected') ) { return; }
+				$('#table-pagenav a').removeClass('table-pagenav-selected');
+				$(this).addClass('table-pagenav-selected');
+
+				var currpage = $(this).attr('rel');
+				var startitem = currpage * nrowperpage;
+				var enditem = startitem + nrowperpage;
+
+				jtr//.css('opacity', '0.0')
+				   .addClass('table-tr-offscreen')
+				   .slice(startitem, enditem)
+				   .removeClass('table-tr-offscreen')
+				   ;//.animate({opacity:1}, 300);
+			});
+
+			jQuery('#table-pagenav a:eq(0)').click();
+			//jQuery('#table-pagenav a:first').addClass('table-pagenav-selected');
 		}
 
 		function _init_all_table() {
@@ -321,7 +389,7 @@
 			//jQuery(_szselector).attr('border', '1');
 
 			//
-			jQuery(_szselector).attr('class', 'ui-widget ui-widget-content');
+			jQuery(_szselector).attr('class', 'ui-widget ui-widget-content ui-corner-top');
 			jQuery(_szselector + ' > thead > tr').attr('class', 'ui-widget-header');
 
 			//
@@ -347,14 +415,17 @@
 			})
 			.find('td:first').css('padding-left', '1em');
 
-			//jQuery(_szselector + ' tbody tr:odd').css('background', '#dedede');
-			//jQuery(_szselector + ' tbody tr:even').css('background', '#ffffff');
+			jQuery(_szselector + ' tbody:first tr:odd').css('background', '#e5e5e5');
+			//jQuery(_szselector + ' tbody:first tr:even').css('background', '#ffffff');
 		}
 	}
 
 	jQuery(document).ready( function() {
 		//
 		init_appearance();
+
+
+
 
 		//jQuery( "#dialog" ).dialog();
 
@@ -391,7 +462,7 @@
 				$('#idbutton').click();
 			}
 		});
+});
 */		
 	});
-	
 </script>
