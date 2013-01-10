@@ -15,7 +15,7 @@
 <script src="/include/aes.js"></script>
 
 <style>
-	div#users-list { width: 100%; height: 120px; }
+	div#users-list { width: 100%; height: 155px; }
 	div#users-list table { margin-top: 0.8em; margin-bottom: 1em; border-collapse: collapse; width: 98.5%; }
 	div#users-list table th { background: #999999; }
 	div#users-list table td { background: #dedede; }
@@ -26,7 +26,7 @@
 	.table-tr-selected { background: #58BCF1 !important; color:#ffffff; }
 	.table-tr-offscreen { position: absolute; left: -10000px; }
 
-	div#table-pagenav { text-align: left; }
+	div#table-pagenav { text-align: left; margin-bottom: 10px; }
 	div#table-pagenav a { padding: 3px; color: #1759A3; text-decoration: none; margin: 0 0.5em; }
 	.table-pagenav-selected { background: #1759A3; color: #ffffff !important; font-weight: bold; cursor: default; }
 
@@ -316,7 +316,7 @@
 		function _init_dialogopen_button(_szselector) {
 			jQuery(_szselector)
 			.hover( function() {
-					$(this).toggleClass('ui-state-hover');
+				$(this).toggleClass('ui-state-hover');
 			})
 			.click( function(_event) {
 				console.log($(this).attr('href'));
@@ -328,13 +328,13 @@
 		function _init_userslist_table(_szselector) {
 			////////////////////////
 			jQuery(_szselector + ' table tbody tr')
-			.hover(function() {
+			.hover( function() {
 				$(this).children('td').toggleClass('table-tr-hover');
 			})
 			.click( function(_event) {
+				_event.preventDefault();
 				$(this).parent().find('tr td').removeClass('table-tr-selected');
 				$(this).children('td').addClass('table-tr-selected');
-				_event.preventDefault();
 			});
 
 			////////////////////////
@@ -342,7 +342,7 @@
 
 			//
 			var jtr = jQuery(_szselector + ' table tbody tr');
-			var nrowperpage = 4;
+			var nrowperpage = 6;
 			var nrowtotal = jtr.length;
 			var npagestotal = Math.ceil(nrowtotal/nrowperpage);
 			var i;
@@ -365,11 +365,12 @@
 				var startitem = currpage * nrowperpage;
 				var enditem = startitem + nrowperpage;
 
-				jtr//.css('opacity', '0.0')
+				jtr.css('opacity', '0.0')
 				   .addClass('table-tr-offscreen')
 				   .slice(startitem, enditem)
 				   .removeClass('table-tr-offscreen')
-				   ;//.animate({opacity:1}, 300);
+				   .animate({opacity:1}, 300);
+				//jtr.children('td').removeClass('table-tr-hover');
 			});
 
 			jQuery('#table-pagenav a:eq(0)').click();
