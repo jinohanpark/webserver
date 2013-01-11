@@ -410,6 +410,8 @@
 			}
 
 			function checkRegexp( o, regexp, n ) {
+				console.log(o.val());
+
 				if ( !( regexp.test( o.val() ) ) ) {
 					o.addClass( "ui-state-error" );
 					updateTips( n );
@@ -418,6 +420,10 @@
 					return true;
 				}
 			}
+
+			console.log(name.val());
+			console.log(email.val());
+			console.log(password.val());
 
 			bValid = bValid && checkLength( name, "username", 3, 16 );
 			bValid = bValid && checkLength( email, "email", 6, 80 );
@@ -519,7 +525,6 @@
 
 			if( !jQuery('#table-pagenav a').hasClass('table-pagenav-selected') ) {
 				jQuery('#table-pagenav a:eq(0)').click();
-				//jQuery('#table-pagenav a:first').addClass('table-pagenav-selected');
 			}
 		}
 
@@ -556,7 +561,6 @@
 					$(this).attr('width', acolwidths[i++]).attr('cellspacing', '5');
 					colspan += $(this).attr('colspan') || 0;
 				});
-				//console.log('i=%d, ncols=%d, colspan=%d', i, ncols, colspan);
 				colspan = (0 != colspan) ? colspan-1 : colspan;
 				for( ; i<(ncols-colspan); i++ ) $(this).append('<td></td>');
 			})
