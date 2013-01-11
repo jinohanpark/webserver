@@ -15,7 +15,7 @@
 <script src="/include/aes.js"></script>
 
 <style>
-	div#users-list { width: 100%; height: 165px; }
+	div#users-list { width: 100%; height: 170px; }
 	div#users-list table { margin-top: 0.8em; margin-bottom: 1em; border-collapse: collapse; width: 98.5%; }
 	div#users-list table th { background: #999999; }
 	div#users-list table td { background: #dedede; }
@@ -59,6 +59,8 @@
 
 <script>
 	Init_jQuery();
+
+
 </script>
 </head>
 
@@ -295,16 +297,17 @@
 
 </table id="wrap">
 
-<div id="dialog-form" title="사용자 계정 관리" data-action="">
-	<p id="dialog-caption"></p>
-	<p class="validateTips"></p>
+<!--****************************************************************-->
+<div id='dialog-form' title='' data-action=''>
+	<p id='dialog-caption'></p>
+	<p class='validateTips'></p>
 	<form>
 	<fieldset>
-		<label for="name">Name</label>
+		<label for="name">이름</label>
 		<input type="text" name="name" id="name" value="" class="text ui-widget-content ui-corner-all" />
-		<label for="email">Email</label>
+		<label for="email">이메일</label>
 		<input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all" />
-		<label for="password">Password</label>
+		<label for="password">열쇠글</label>
 		<input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" />
 	</fieldset>
 	</form>
@@ -324,21 +327,58 @@
 
 		_init_userslist_table('div#users-list');
 
-		_init_dialogbox();
-
 		_init_dialogopen_button('#dialog-link-add');
 		_init_dialogopen_button('#dialog-link-modify');
 		_init_dialogopen_button('#dialog-link-remove');
 
-		function _init_dialogbox() {
+		_init_dialogbox();
 
+		function _init_dialogbox() {
+			jQuery('#dialog-form').attr('title', '사용자 계정 관리');
+			jQuery('#dialog-form').dialog( {
+				autoOpen: false,
+				width: 450,
+				height: 400,				
+				modal: true,
+				buttons: [],
+				//event...
+				create: function( _event, _ui ) {
+					;
+				},
+				open: function( _event, _ui ) {
+					var action = $(this).attr('data-action');
+					if( '#add' == action ) { $('#dialog-caption').text('새로운 사용자 추가'); }
+					else
+					if( '#modify' == action ) { $('#dialog-caption').text('기존 사용자 수정'); }
+				},
+				close: function() {
+					var allFields = $([]).add('#name').add( '#email' ).add( '#password' );
+					allFields.val( "" ).removeClass( "ui-state-error" );
+				}
+			});
+		}
+
+		function ondialog_closeclick() {
+			var	allFields = $([]).add('#name').add( '#email' ).add( '#password' );
+			var	tips = $( ".validateTips" );
+
+			tips.text("");
+			allFields.val( "" ).removeClass( "ui-state-error" );
+			$( this ).dialog( "close" );
+		}
+
+		function ondialog_actionclick() {
 			var name = $( "#name" ),
 				email = $( "#email" ),
-				password = $( "#password" ),
-				allFields = $([]).add( name ).add( email ).add( password ),
-				tips = $( ".validateTips" );
-	
+				password = $( "#password" );
+			var	allFields = $([]).add(name).add(email).add(password);
+
+			var bValid = true;
+			allFields.removeClass( "ui-state-error" );
+
 			function updateTips( t ) {
+				var tips = $( ".validateTips" );
+
 				tips.text(t).addClass( "ui-state-highlight" );
 				setTimeout( function() {
 					tips.removeClass( "ui-state-highlight", 2500 );
@@ -366,63 +406,25 @@
 				}
 			}
 
-			jQuery('#dialog-form').dialog( {
-				autoOpen: false,
-				width: 450,
-				height: 400,				
-				modal: true,
-				buttons: [{
-					text:"Create an account aaa",
-					click: function() {
-						var bValid = true;
-						allFields.removeClass( "ui-state-error" );
+			bValid = bValid && checkLength( name, "username", 3, 16 );
+			bValid = bValid && checkLength( email, "email", 6, 80 );
+			bValid = bValid && checkLength( password, "password", 5, 16 );
 
-						bValid = bValid && checkLength( name, "username", 3, 16 );
-						bValid = bValid && checkLength( email, "email", 6, 80 );
-						bValid = bValid && checkLength( password, "password", 5, 16 );
+			bValid = bValid && checkRegexp( name, /^[a-z]([0-9a-z_])+$/i, "Username may consist of a-z, 0-9, underscores, begin with a letter." );
+			// From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
+			bValid = bValid && checkRegexp( email, /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i, "eg. ui@jquery.com" );
+			bValid = bValid && checkRegexp( password, /^([0-9a-zA-Z])+$/, "Password field only allow : a-z 0-9" );
 
-						bValid = bValid && checkRegexp( name, /^[a-z]([0-9a-z_])+$/i, "Username may consist of a-z, 0-9, underscores, begin with a letter." );
-						// From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
-						bValid = bValid && checkRegexp( email, /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i, "eg. ui@jquery.com" );
-						bValid = bValid && checkRegexp( password, /^([0-9a-zA-Z])+$/, "Password field only allow : a-z 0-9" );
+			if ( bValid ) {
+				$( "#users tbody" ).append( "<tr>" +
+					"<td>" + name.val() + "</td>" + 
+					"<td>" + email.val() + "</td>" + 
+					"<td>" + password.val() + "</td>" +
+				"</tr>" );
 
-						if ( bValid ) {
-							$( "#users tbody" ).append( "<tr>" +
-								"<td>" + name.val() + "</td>" + 
-								"<td>" + email.val() + "</td>" + 
-								"<td>" + password.val() + "</td>" +
-							"</tr>" );
-
-							_init_userslist_table('div#users-list');
-							$( this ).dialog( "close" );
-						}
-					}},
-					{
-					text:"Close aa",
-					click: function() {
-						tips.text("");
-						allFields.val( "" ).removeClass( "ui-state-error" );
-						$( this ).dialog( "close" );
-					}}
-				],//buttons:
-
-				// event...
-				create: function( _event, _ui ) {
-				},
-				open: function( _event, _ui ) {
-					var action = $(this).attr('data-action');
-					if( '#add' == action ) {
-						$('#dialog-caption').text('새로운 사용자 추가');
-					}
-					else
-					if( '#modify' == action ) {
-						$('#dialog-caption').text('기존 사용자 수정');
-					}
-				},
-				close: function() {
-					allFields.val( "" ).removeClass( "ui-state-error" );
-				}
-			});
+				_init_userslist_table('div#users-list');
+				$( this ).dialog( "close" );
+			}
 		}
 
 		function _init_dialogopen_button(_szselector) {
@@ -435,10 +437,19 @@
 
 				var action = $(this).attr('href');
 				if( '#remove' == action ) {
+					;
 				}
 				else {
-					var buttons = $( "#dialog-form" ).dialog( "option", "buttons", [{text:'aaaa'}] );
-					console.log(buttons);
+					if( '#add' == action ) {
+						$( "#dialog-form" ).dialog( "option", "buttons",
+							[{text:'추가', click:ondialog_actionclick},
+						 	 {text:"닫기", click: ondialog_closeclick}] );
+					}
+					else {
+						$( "#dialog-form" ).dialog( "option", "buttons",
+							[{text:'수정', click:ondialog_actionclick},
+						 	 {text:"닫기", click: ondialog_closeclick}] );
+					}
 					$( "#dialog-form" ).attr( 'data-action', action ).dialog( "open" );
 				}
 			});
