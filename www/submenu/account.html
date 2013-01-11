@@ -35,7 +35,7 @@
 		text-decoration: none;
 		position: relative;
 	}
-	#dialog-link-add span.ui-icon,
+	#dialog-link-add    span.ui-icon,
 	#dialog-link-modify span.ui-icon,
 	#dialog-link-remove span.ui-icon
 	{
@@ -350,6 +350,11 @@
 					if( '#add' == action ) { $('#dialog-caption').text('새로운 사용자 추가'); }
 					else
 					if( '#modify' == action ) { $('#dialog-caption').text('기존 사용자 수정'); }
+
+					var oseltr = jQuery('div#users-list table tbody tr .table-tr-selected');
+					$('#name').val(oseltr[0].innerHTML);
+					$('#email').val(oseltr[1].innerHTML);
+					$('#password').val(oseltr[2].innerHTML);
 				},
 				close: function() {
 					var allFields = $([]).add('#name').add( '#email' ).add( '#password' );
