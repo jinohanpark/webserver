@@ -15,7 +15,7 @@
 <script src="/include/aes.js"></script>
 
 <style>
-	div#users-list { width: 100%; height: 155px; }
+	div#users-list { width: 100%; height: 165px; }
 	div#users-list table { margin-top: 0.8em; margin-bottom: 1em; border-collapse: collapse; width: 98.5%; }
 	div#users-list table th { background: #999999; }
 	div#users-list table td { background: #dedede; }
@@ -295,7 +295,8 @@
 
 </table id="wrap">
 
-<div id="dialog-form" title="Create new user 추가">
+<div id="dialog-form" title="사용자 계정 관리" data-action="">
+	<p id="dialog-caption"></p>
 	<p class="validateTips"></p>
 	<form>
 	<fieldset>
@@ -367,11 +368,12 @@
 
 			jQuery('#dialog-form').dialog( {
 				autoOpen: false,
-				height: 300,
-				width: 350,
+				width: 450,
+				height: 400,				
 				modal: true,
-				buttons: {
-					"Create an account": function() {
+				buttons: [{
+					text:"Create an account aaa",
+					click: function() {
 						var bValid = true;
 						allFields.removeClass( "ui-state-error" );
 
@@ -394,11 +396,27 @@
 							_init_userslist_table('div#users-list');
 							$( this ).dialog( "close" );
 						}
-					},
-					"Close": function() {
+					}},
+					{
+					text:"Close aa",
+					click: function() {
 						tips.text("");
 						allFields.val( "" ).removeClass( "ui-state-error" );
 						$( this ).dialog( "close" );
+					}}
+				],//buttons:
+
+				// event...
+				create: function( _event, _ui ) {
+				},
+				open: function( _event, _ui ) {
+					var action = $(this).attr('data-action');
+					if( '#add' == action ) {
+						$('#dialog-caption').text('새로운 사용자 추가');
+					}
+					else
+					if( '#modify' == action ) {
+						$('#dialog-caption').text('기존 사용자 수정');
 					}
 				},
 				close: function() {
@@ -415,8 +433,14 @@
 			.click( function(_event) {
 				_event.preventDefault();
 
-				console.log($(this).attr('href'));
-				$( "#dialog-form" ).dialog( "open" );
+				var action = $(this).attr('href');
+				if( '#remove' == action ) {
+				}
+				else {
+					var buttons = $( "#dialog-form" ).dialog( "option", "buttons", [{text:'aaaa'}] );
+					console.log(buttons);
+					$( "#dialog-form" ).attr( 'data-action', action ).dialog( "open" );
+				}
 			});
 		}
 
@@ -424,14 +448,8 @@
 			////////////////////////
 			jQuery(_szselector + ' table tbody tr')
 			.hover( 
-				function() {
-					//console.log('mouseenter');
-					$(this).children('td').addClass('table-tr-hover');
-				},
-				function() {
-					//console.log('mouseleave');
-					$(this).children('td').removeClass('table-tr-hover');
-				}
+				function() { $(this).children('td').addClass('table-tr-hover'); },
+				function() { $(this).children('td').removeClass('table-tr-hover'); }
 			)
 			.click( function(_event) {
 				_event.preventDefault();
@@ -495,7 +513,7 @@
 
 			//
 			jQuery(_szselector).attr('class', 'ui-widget ui-widget-content ui-corner-top');
-			jQuery(_szselector + ' > thead > tr').attr('class', 'ui-widget-header');
+			jQuery(_szselector + ' thead tr').attr('class', 'ui-widget-header');
 
 			//
 			jQuery(_szselector).attr('width', '100%');
@@ -503,9 +521,9 @@
 			var acolwidths = eval('['+ szcolwidths  +']');
 			var ncols = acolwidths.length;
 
-			jQuery(_szselector + ' > thead tr:first th').attr('colspan', ncols)
-													    .attr('align', 'left')
-													    .css('padding-left', '1em');
+			jQuery(_szselector + ' thead tr:first th').attr('colspan', ncols)
+													  .attr('align', 'left')
+													  .css('padding-left', '1em');
 
 			jQuery(_szselector + ' tbody > tr').each( function() {
 				var i = 0;
@@ -528,11 +546,6 @@
 	jQuery(document).ready( function() {
 		//
 		init_appearance();
-
-
-
-
-		//jQuery( "#dialog" ).dialog();
 
 /*	
 		jQuery('table tr:even').css('background', '#dedede');

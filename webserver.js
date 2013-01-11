@@ -282,6 +282,8 @@ function _onWebServerRequest( _req, _res )
 			sz += 'JSON.parse(';
 			sz += "'" + JSON.stringify(_json) + "'";
 			sz += ');';
+
+			szreqfiletype = 'application/javascript';
 			callbackReadPageFile( 0, sz );
 		});
 	}
