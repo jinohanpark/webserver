@@ -126,40 +126,12 @@
 								<table id="users">
 						   		<thead>
 						   			<tr>
-						   				<th width="25%">이름NAMEname</th>
-						   				<th width="45%">권한 그룹</th>
-						   				<th width="25%">정보</th>
+						   				<th width="40%">이름NAMEname</th>
+						   				<th width="30%">권한 그룹</th>
+						   				<th width="30%">정보</th>
 						   			</tr>
 						   		</thead>
-						   		<tbody>
-						   			<tr>
-						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
-						   			</tr>
-						   			<tr>
-						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
-						   			</tr>
-						   			<tr>
-						   				<td>테스터1</td><td>tester1@example.com</td><td>test1</td>
-						   			</tr>
-						   			<tr>
-						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
-						   			</tr>
-						   			<tr>
-						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
-						   			</tr>
-						   			<tr>
-						   				<td>테스터1</td><td>tester1@example.com</td><td>test1</td>
-						   			</tr>
-						   			<tr>
-						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
-						   			</tr>
-						   			<tr>
-						   				<td>John Doe</td><td>john.doe@example.com</td><td>johndoe1</td>
-						   			</tr>
-						   			<tr>
-						   				<td>가John Doe</td><td>나john.doe@example.com</td><td>다johndoe1</td>
-						   			</tr>
-						   		</tbody>
+						   		<tbody></tbody>
 								<tfoot></tfoot>
 								</table>
 							</div>
@@ -333,6 +305,7 @@
 		_init_body_table('table#contents_body2');
 		_init_body_table('table#contents_body3');
 
+		_userslist_config2table('div#users-list');
 		_init_userslist_table('div#users-list');
 
 		_init_dialogopen_button('#dialog-link-add');
@@ -474,6 +447,76 @@
 			});
 		}
 
+		function _userslist_table2config(_szselector) {
+			////////////////////////
+			//'div#users-list'
+			var aadmin = [], aoperator = [], aviewer = [];
+			jQuery(_szselector + ' table tbody tr').each( function() {
+				var szname = $(this).children('td:eq(0)').text();
+				var szprivilige = $(this).children('td:eq(1)').text();
+				var szcomment = $(this).children('td:eq(2)').text();
+
+				if( 'administrator' == szprivilige ) aadmin.push(szname);
+				if( 'operator' == szprivilige ) aoperator.push(szname);
+				if( 'viewer' == szprivilige ) aviewer.push(szname);
+
+				var sz = '';
+				for( var i=0; i<aadmin.length; i++ ) {
+					if( 0 != i ) sz += ',';
+					sz += aadmin[i];
+				}
+				gserverform_account['account.admin'][0] = sz;
+
+				for( var i=0; i<aoperator.length; i++ ) {
+					if( 0 != i ) sz += ',';
+					sz += aoperator[i];
+				}
+				gserverform_account['account.operator'][0] = sz;
+
+				for( var i=0; i<aviewer.length; i++ ) {
+					if( 0 != i ) sz += ',';
+					sz += aviewer[i];
+				}
+				gserverform_account['account.viewer'][0] = sz;
+			});
+		}
+
+		function _userslist_config2table(_szselector) {
+			////////////////////////
+			//'div#users-list'
+			var tbody = jQuery(_szselector + ' table tbody');
+
+			var aname = gserverform_account['account.admin'][0].split(',');
+			for( var i=0; i<aname.length; i++) {
+				var sz = "<tr>" +
+						"<td>" + aname[i] + "</td>" + 
+						"<td>" + "administrator" + "</td>" + 
+						"<td>" + "comment" + "</td>" +
+					"</tr>";
+				tbody.append(sz);
+			}
+
+			var aname = gserverform_account['account.operator'][0].split(',');
+			for( var i=0; i<aname.length; i++) {
+				var sz = "<tr>" +
+						"<td>" + aname[i] + "</td>" + 
+						"<td>" + "operator" + "</td>" + 
+						"<td>" + "comment" + "</td>" +
+					"</tr>";
+				tbody.append(sz);
+			}
+
+			var aname = gserverform_account['account.viewer'][0].split(',');
+			for( var i=0; i<aname.length; i++) {
+				var sz = "<tr>" +
+						"<td>" + aname[i] + "</td>" + 
+						"<td>" + "viewer" + "</td>" + 
+						"<td>" + "comment" + "</td>" +
+					"</tr>";
+				tbody.append(sz);
+			}
+		}
+
 		function _init_userslist_table(_szselector) {
 			////////////////////////
 			jQuery(_szselector + ' table tbody tr')
@@ -574,7 +617,6 @@
 	jQuery(document).ready( function() {
 		//
 		init_appearance();
-
 /*	
 		jQuery('table tr:even').css('background', '#dedede');
 		jQuery('table tr:odd').css('background', '#ffffff');
