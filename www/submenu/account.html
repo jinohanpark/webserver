@@ -126,7 +126,7 @@
 								<table id="users">
 						   		<thead>
 						   			<tr>
-						   				<th width="40%">이름NAMEname</th>
+						   				<th width="40%">이름 NAME name</th>
 						   				<th width="30%">권한 그룹</th>
 						   				<th width="30%">정보</th>
 						   			</tr>
@@ -145,7 +145,7 @@
 								추가
 							</a>
 							&nbsp;
-							<a href="#modify" id="dialog-link-modify" class="ui-state-default ui-corner-all">
+							<a href="#modify" id="dialog-link-modify" class="ui-state-default ui-corner-all" title="ThemeRoller: jQuery UI's theme builder application">
 								<span class="ui-icon ui-icon-newwin"></span>
 								수정
 							</a>
@@ -271,26 +271,24 @@
 
 <!--****************************************************************-->
 <div id='dialog-form' title='' data-action=''>
-	<p>
-		<label for='currency'>Currency to donate</label>
-		<select id='currency' name='currencyname'>
-			<option value='en-us'>US$</option>
-			<option value='de-DE'>DE$</option>
-			<option value='ja-JP'>YEN$</option>
-		</select>
-	</p>
-	<p id='dialog-caption'></p>
-	<p class='validateTips'></p>
+	<h3><p id='dialog-caption'></p></h3>
 	<form>
 	<fieldset>
 		<label for="name">이름</label>
-		<input type="text" name="name" id="name" value="" class="text ui-widget-content ui-corner-all" />
-		<label for="email">이메일</label>
-		<input type="text" name="email" id="email" value="" class="text ui-widget-content ui-corner-all" />
+		<input type="text" name="name" value="" id="name" class="text ui-widget-content ui-corner-all" />
+		<p>
+			<label for='privilige'>권한 그룹</label>
+			<select id='privilige' name='privilige'>
+				<option value='administrator'>관리자</option>
+				<option value='operator'>고급운영자</option>
+				<option value='viewer'>일반운영자</option>
+			</select>
+		</p>
 		<label for="password">열쇠글</label>
-		<input type="password" name="password" id="password" value="" class="text ui-widget-content ui-corner-all" />
+		<input type="password" name="password" value="" id="password" class="text ui-widget-content ui-corner-all" />
 	</fieldset>
 	</form>
+	<p class='validateTips'></p>
 </div>
 
 </body>
@@ -299,6 +297,8 @@
 <script>
 	//
 	function init_appearance() {
+    	jQuery( document ).tooltip();
+
 		_init_all_table();
 
 		_init_body_table('table#contents_body1');
@@ -322,6 +322,7 @@
 				height: 400,				
 				modal: true,
 				buttons: [],
+
 				//event...
 				create: function( _event, _ui ) {
 					;
@@ -333,19 +334,21 @@
 					if( '#modify' == action ) { $('#dialog-caption').text('기존 사용자 수정'); }
 
 					var oseltr = jQuery('div#users-list table tbody tr .table-tr-selected');
-					$('#name').val(oseltr[0].innerHTML);
-					$('#email').val(oseltr[1].innerHTML);
-					$('#password').val(oseltr[2].innerHTML);
+					if( oseltr.length ) {
+						$('#name').val(oseltr[0].innerHTML);
+						$('#privilige').val(oseltr[1].innerHTML);
+						$('#password').val(oseltr[2].innerHTML);
+					}
 				},
 				close: function() {
-					var allFields = $([]).add('#name').add( '#email' ).add( '#password' );
+					var allFields = $([]).add('#name').add( '#password' );
 					allFields.val( "" ).removeClass( "ui-state-error" );
 				}
 			});
 		}
 
 		function ondialog_closeclick() {
-			var	allFields = $([]).add('#name').add( '#email' ).add( '#password' );
+			var	allFields = $([]).add('#name').add( '#password' );
 			var	tips = $( ".validateTips" );
 
 			tips.text("");
@@ -355,20 +358,30 @@
 
 		function ondialog_actionclick() {
 			var name = $( "#name" ),
-				email = $( "#email" ),
+				privilige = $( "#privilige" ),
 				password = $( "#password" );
-			var	allFields = $([]).add(name).add(email).add(password);
+			var	allFields = $([]).add(name).add(password);
+			var	tips = $( ".validateTips" );
 
 			var bValid = true;
 			allFields.removeClass( "ui-state-error" );
 
 			function updateTips( t ) {
-				var tips = $( ".validateTips" );
-
 				tips.text(t).addClass( "ui-state-highlight" );
 				setTimeout( function() {
-					tips.removeClass( "ui-state-highlight", 2500 );
+					tips.removeClass( "ui-state-highlight", 800 );
 				}, 500 );
+			}
+
+			function checkExist( o, oexp, n ) {
+				if( o.val() == oexp.text() ) {
+					o.addClass( "ui-state-error" );
+					updateTips( "The " + n + " already exists." );
+					return false;
+				}
+				else {
+					return true;
+				}				
 			}
 
 			function checkLength( o, n, min, max ) {
@@ -383,39 +396,46 @@
 			}
 
 			function checkRegexp( o, regexp, n ) {
-				console.log(o.val());
-
 				if ( !( regexp.test( o.val() ) ) ) {
 					o.addClass( "ui-state-error" );
 					updateTips( n );
 					return false;
-				} else {
+				}
+				else {
 					return true;
 				}
 			}
 
-			console.log(name.val());
-			console.log(email.val());
-			console.log(password.val());
+			//console.log(name.val());
+			//console.log(privilige.val());
+			//console.log(password.val());
 
-			bValid = bValid && checkLength( name, "username", 3, 16 );
-			bValid = bValid && checkLength( email, "email", 6, 80 );
-			bValid = bValid && checkLength( password, "password", 5, 16 );
+			bValid = bValid && checkLength( name, "username", 4, 32 );
+			bValid = bValid && checkRegexp( name, /^[a-z]([0-9a-z_])+$/i, "Username may consist of a-z, A-Z, 0-9, underscores, begin with a letter." );
+			jQuery('div#users-list table tbody tr').each( function() {
+				bValid = bValid && checkExist( name, $(this).children('td:eq(0)'), "username" );
+				if( false == bValid ) return;
+			});
 
-			bValid = bValid && checkRegexp( name, /^[a-z]([0-9a-z_])+$/i, "Username may consist of a-z, 0-9, underscores, begin with a letter." );
+			bValid = bValid && checkLength( password, "password", 4, 32 );
+			bValid = bValid && checkRegexp( password, /^([0-9a-z])+$/i, "Password field only allow : a-z, A-Z, 0-9" );
+			/*
 			// From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
 			bValid = bValid && checkRegexp( email, /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i, "eg. ui@jquery.com" );
-			bValid = bValid && checkRegexp( password, /^([0-9a-zA-Z])+$/, "Password field only allow : a-z 0-9" );
+			*/
 
 			if ( bValid ) {
 				$( "#users tbody" ).append( "<tr>" +
 					"<td>" + name.val() + "</td>" + 
-					"<td>" + email.val() + "</td>" + 
+					"<td>" + privilige.val() + "</td>" + 
 					"<td>" + password.val() + "</td>" +
 				"</tr>" );
 
+				tips.text('');
+				tips.removeClass( "ui-state-highlight" );
+
 				_init_userslist_table('div#users-list');
-				$( this ).dialog( "close" );
+				//$( this ).dialog( "close" );
 			}
 		}
 
@@ -437,11 +457,19 @@
 							[{text:'추가', click:ondialog_actionclick},
 						 	 {text:"닫기", click: ondialog_closeclick}] );
 					}
-					else {
+					else
+					if( '#modify' == action ) {
+						var oseltr = jQuery('div#users-list table tbody tr .table-tr-selected');
+						if( !oseltr.length ) {
+							console.log('aaaaaaaaaaaaaaaaa');
+							return;
+						}
+
 						$( "#dialog-form" ).dialog( "option", "buttons",
 							[{text:'수정', click:ondialog_actionclick},
 						 	 {text:"닫기", click: ondialog_closeclick}] );
 					}
+
 					$( "#dialog-form" ).attr( 'data-action', action ).dialog( "open" );
 				}
 			});
@@ -487,31 +515,34 @@
 			var tbody = jQuery(_szselector + ' table tbody');
 
 			var aname = gserverform_account['account.admin'][0].split(',');
-			for( var i=0; i<aname.length; i++) {
+			var cnt = ( '' == aname[0] ) ? 0 : aname.length;
+			for( var i=0; i<cnt; i++) {
 				var sz = "<tr>" +
 						"<td>" + aname[i] + "</td>" + 
 						"<td>" + "administrator" + "</td>" + 
-						"<td>" + "comment" + "</td>" +
+						"<td>" + "" + "</td>" +
 					"</tr>";
 				tbody.append(sz);
 			}
 
 			var aname = gserverform_account['account.operator'][0].split(',');
-			for( var i=0; i<aname.length; i++) {
+			var cnt = ( '' == aname[0] ) ? 0 : aname.length; 
+			for( var i=0; i<cnt; i++) {
 				var sz = "<tr>" +
 						"<td>" + aname[i] + "</td>" + 
 						"<td>" + "operator" + "</td>" + 
-						"<td>" + "comment" + "</td>" +
+						"<td>" + "" + "</td>" +
 					"</tr>";
 				tbody.append(sz);
 			}
 
 			var aname = gserverform_account['account.viewer'][0].split(',');
-			for( var i=0; i<aname.length; i++) {
+			var cnt = ( '' == aname[0] ) ? 0 : aname.length; 
+			for( var i=0; i<cnt; i++) {
 				var sz = "<tr>" +
 						"<td>" + aname[i] + "</td>" + 
 						"<td>" + "viewer" + "</td>" + 
-						"<td>" + "comment" + "</td>" +
+						"<td>" + "" + "</td>" +
 					"</tr>";
 				tbody.append(sz);
 			}
@@ -589,7 +620,7 @@
 
 			//
 			jQuery(_szselector).attr('width', '100%');
-			var szcolwidths = jQuery(_szselector + ' thead tr:first th').attr('data-widthpercolumn') || '';
+			var szcolwidths = jQuery(_szselector + ' thead tr:first th').data('widthpercolumn') || '';
 			var acolwidths = eval('['+ szcolwidths  +']');
 			var ncols = acolwidths.length;
 

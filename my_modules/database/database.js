@@ -290,9 +290,12 @@ function _make_sqltables()
 	['ftpd.downloadbw',						'1024',		'{"type":"kbyteps","min":0,"max":1024,"def":"1024"}',		'admin', 's__sg|kbyteps|0|1024'],
 
 	['account.enable',						'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
-	['account.admin',						' ',		'{"type":"usernamelist","def":" "}',						'admin', 's__sg|usernamelist'],
-	['account.operator',					' ',		'{"type":"usernamelist","def":" "}',						'admin', 's__sg|usernamelist'],
-	['account.viewer',						' ',		'{"type":"usernamelist","def":" "}',						'admin', 's__sg|usernamelist'],
+	['account.admin',						'admin',	'{"type":"usernamelist","def":"admin"}',					'admin', 's__sg|usernamelist|1|30'],
+	['account.admin.passwd',				'pass',		'{"type":"passwd","def":"pass"}',							'admin', 's__sg|passwdlist|4|32'],
+	['account.operator',					'',			'{"type":"usernamelist","def":""}',							'admin', 's__sg|usernamelist|0|30'],
+	['account.operator.passwd',				'',			'{"type":"passwd","def":""}',								'admin', 's__sg|passwdlist|4|32'],
+	['account.viewer',						'',			'{"type":"usernamelist","def":""}',							'admin', 's__sg|usernamelist|0|30'],
+	['account.viewer.passwd',				'',			'{"type":"passwd","def":""}',								'admin', 's__sg|passwdlist|4|32'],
 	
 /*
 */
