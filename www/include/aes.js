@@ -390,11 +390,10 @@ Utf8.decode = function(strUtf) {
   return strUni;
 }
 
-
 function Encrypt(str, key){
-	return Aes.Ctr.encrypt(str, key, 256);
+	return Aes.Ctr.encrypt(str, key, 128);
 }
 
 function Decrypt(str, key){
-	return Aes.Ctr.decrypt(str, key, 256);
+	return Aes.Ctr.decrypt(str, key, 128);
 }

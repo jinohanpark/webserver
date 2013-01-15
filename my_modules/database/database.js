@@ -163,11 +163,11 @@ myDataBase.prototype._makedefault_ipcam_config = function()
 	var obj = {};
 	obj.tablename = 'configuration';
 	obj.sql = 'seqno			tinyint not null auto_increment primary key' + ','
-			+ 'lvalue			char(64) not null' + ','
-			+ 'rvalue			char(128) not null' + ','
-			+ 'type				char(128) not null' + ','
-			+ 'privilige		char(16) not null' + ','
-			+ 'syntax			char(128) not null';
+			+ 'lvalue			varchar(64) not null' + ','
+			+ 'rvalue			varchar(2048) character set utf8 not null' + ','
+			+ 'type				varchar(128) not null' + ','
+			+ 'privilige		varchar(16) not null' + ','
+			+ 'syntax			varchar(128) not null';
 
 	var sql = 'CREATE TABLE ' + obj.tablename + '(' + obj.sql + ')';
 	//console.log('sql :', sql);	

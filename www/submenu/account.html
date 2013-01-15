@@ -22,9 +22,9 @@
 	div#users-list table th,
 	div#users-list table td { padding-left: 1em; padding-top: 0.2em; padding-bottom: 0.2em; border: 1px solid #bebebe; text-align: left; }
 
-	.table-tr-hover { background: #C0DDEC !important; }
-	.table-tr-selected { background: #58BCF1 !important; color:#ffffff; }
 	.table-tr-offscreen { position: absolute; left: -10000px; }
+	.table-td-hover { background: #C0DDEC !important; }
+	.table-td-selected { background: #58BCF1 !important; color:#ffffff; }
 
 	div#table-pagenav { text-align: left; margin-bottom: 10px; }
 	div#table-pagenav a { padding: 3px; color: #1759A3; text-decoration: none; margin: 0 0.5em; }
@@ -60,13 +60,28 @@
 	    padding-left: .5em; padding-right: .5em;
 	    box-shadow: 2px 2px 5px -2px rgba(0,0,0,0.5);
 	}
+
+	#submitapply {
+		padding: .4em .8em .2em 30px;
+		text-decoration: none;
+		position: relative;
+	}
+
+	#submitapply span.ui-icon
+	{
+		margin: 0 5px 0 0;
+		position: absolute;
+		left: .2em;
+		top: 50%;
+		margin-top: -8px;
+	}
+
 </style>
 
 <script src="configuration.ssi?action=query&lvalue=account.%&var=gserverform_account"></script>
-
 <script>
+	var gsocket_config = io.connect();
 	Init_jQuery();
-
 
 </script>
 </head>
@@ -111,6 +126,9 @@
 							<p>
 								사용자 계정 추가, 삭제, 수정한다. 웹서버 및 스트림서버를 포함한 시스템에 접근할 수 있는 권한을 설정한다.
 							</p>
+							<p>
+								This page provide add, remove, modify of User account with privilige.
+							</p>
 						</div>
 						</td>
 					</tr>
@@ -152,13 +170,20 @@
 								추가
 							</a>
 							&nbsp;
-							<a href="#modify" id="dialog-link-modify" class="ui-state-default ui-corner-all" data-notify-tooltip-title="선택된 사용자가 없습니다. 먼저 수정을 원하는 사용자를 L-Click으로 선택하시기 바랍니다." >
+							<a href="#modify" id="dialog-link-modify" class="ui-state-default ui-corner-all" data-notify-tooltip-title="선택된 사용자가 없습니다. 먼저 사용자를 L-Click으로 선택하시기 바랍니다." >
 								<span class="ui-icon ui-icon-newwin"></span>
 								수정
 							</a>
 							&nbsp;
-							<a href="#remove" id="dialog-link-remove" class="ui-state-default ui-corner-all" data-notify-tooltip-title="선택된 사용자가 없습니다. 먼저 수정을 원하는 사용자를 L-Click으로 선택하시기 바랍니다." >
+							<a href="#remove" id="dialog-link-remove" class="ui-state-default ui-corner-all" data-notify-tooltip-title="선택된 사용자가 없습니다. 먼저 사용자를 L-Click으로 선택하시기 바랍니다." >
 								삭제
+							</a>
+							&nbsp;
+							&nbsp;
+							&nbsp;
+							<a href="#submitapply" id="submitapply" class="ui-state-default ui-corner-all">
+								<span class="ui-icon ui-icon-check"></span>
+								적용
 							</a>
 							</p>
 						</td>
@@ -321,6 +346,8 @@
 
 		_init_dialogbox();
 
+		_init_submitapply_button('#submitapply');
+
 		function _init_dialogbox() {
 			jQuery('#dialog-form').attr('title', '사용자 계정 관리');
 			jQuery('#dialog-form').dialog( {
@@ -347,11 +374,11 @@
 						$('#name').attr('disabled', true);//$('#name').attr('readonly', true);
 					}
 
-					var oseltr = jQuery('div#users-list table tbody tr .table-tr-selected');
-					if( oseltr.length ) {
-						$('#name').val(oseltr[0].innerHTML);
-						$('#privilige').val(oseltr[1].innerHTML);
-						$('#password').val(oseltr[2].innerHTML);
+					var oseltd = jQuery('div#users-list table tbody tr .table-td-selected');
+					if( oseltd.length ) {
+						$('#name').val(oseltd[0].innerHTML);
+						$('#privilige').val(oseltd[1].innerHTML);
+						$('#password').val(oseltd[2].innerHTML);
 					}
 				},
 				close: function() {
@@ -450,17 +477,17 @@
 					$( "div#users-list table tbody" ).append( "<tr>" +
 						"<td>" + name.val() + "</td>" + 
 						"<td>" + privilige.val() + "</td>" + 
-						"<td>" + password.val() + "</td>" +
+						"<td>" + Encrypt(password.val(), 'szkey_aaa', 128) + "</td>" +
 					"</tr>" );
 
 					//$( this ).dialog( "close" );
 				}
 				else
 				if( '#modify' == action ) {
-					var oseltr = $('div#users-list table tbody tr .table-tr-selected');
-					oseltr[0].innerHTML = name.val();
-					oseltr[1].innerHTML = privilige.val();
-					oseltr[2].innerHTML = password.val();
+					var oseltd = $('div#users-list table tbody tr .table-td-selected');
+					oseltd[0].innerHTML = name.val();
+					oseltd[1].innerHTML = privilige.val();
+					oseltd[2].innerHTML = Encrypt(password.val(), 'szkey_aaa', 128);
 
 					$( this ).dialog( "close" );
 				}
@@ -477,11 +504,11 @@
 						 '</p>';
 			$( "<div>" ).appendTo( document.body )
 			        	.append( szhtml )
-			        	.addClass( "notification-tooltip ui-state-highlight ui-corner-bottom" )
-			        	.position( { my: "center top", at: "center top", of: window })
-			        	.show({ effect: "blind" })
+			        	.addClass( "notification-tooltip ui-state-highlight ui-corner-top" )
+			        	.position( { my: "center bottom", at: "center bottom", of: window })
+			        	.show({ effect: "slide" })
 			        	.delay( 2000 )
-			        	.hide({ effect: "blind", duration: "fast" }, function() {
+			        	.hide({ effect: "slide", duration: "fast" }, function() {
 			        		$( this ).remove();
 			        	});
 		}
@@ -496,13 +523,14 @@
 
 				var action = $(this).attr('href');
 				if( '#remove' == action ) {
-					var oseltr = jQuery('div#users-list table tbody tr .table-tr-selected');
-					if( !oseltr.length ) {
+					var oseltd = jQuery('div#users-list table tbody tr .table-td-selected');
+					if( !oseltd.length ) {
 						onnotify_tooltip($(this));
 						return;
 					}
 					//
-					;					
+					oseltd.parent().remove();
+					_init_userslist_table('div#users-list');
 				}
 				else {
 					if( '#add' == action ) {
@@ -512,8 +540,8 @@
 					}
 					else
 					if( '#modify' == action ) {
-						var oseltr = jQuery('div#users-list table tbody tr .table-tr-selected');
-						if( !oseltr.length ) {
+						var oseltd = jQuery('div#users-list table tbody tr .table-td-selected');
+						if( !oseltd.length ) {
 							onnotify_tooltip($(this));
 							return;
 						}
@@ -531,33 +559,30 @@
 			////////////////////////
 			//'div#users-list'
 			var aadmin = [], aoperator = [], aviewer = [];
+			var aadmin_pwd = [], aoperator_pwd = [], aviewer_pwd = [];
 			jQuery(_szselector + ' table tbody tr').each( function() {
 				var szname = $(this).children('td:eq(0)').text();
 				var szprivilige = $(this).children('td:eq(1)').text();
-				var szcomment = $(this).children('td:eq(2)').text();
+				var szencpasswd = $(this).children('td:eq(2)').text();
 
-				if( 'administrator' == szprivilige ) aadmin.push(szname);
-				if( 'operator' == szprivilige ) aoperator.push(szname);
-				if( 'viewer' == szprivilige ) aviewer.push(szname);
+				if( 'administrator' == szprivilige ) { aadmin.push(szname); aadmin_pwd.push(szencpasswd); }
+				if( 'operator' == szprivilige ) { aoperator.push(szname); aoperator_pwd.push(szencpasswd); }
+				if( 'viewer' == szprivilige ) { aviewer.push(szname); aviewer_pwd.push(szencpasswd); }
 
-				var sz = '';
-				for( var i=0; i<aadmin.length; i++ ) {
-					if( 0 != i ) sz += ',';
-					sz += aadmin[i];
+				function _getszlist(_array) {
+					var sz = '';
+					for( var i=0; i<_array.length; i++ ) {
+						if( 0 != i ) sz += ',';
+						sz += _array[i];
+					}
+					return sz;
 				}
-				gserverform_account['account.admin'][0] = sz;
-
-				for( var i=0; i<aoperator.length; i++ ) {
-					if( 0 != i ) sz += ',';
-					sz += aoperator[i];
-				}
-				gserverform_account['account.operator'][0] = sz;
-
-				for( var i=0; i<aviewer.length; i++ ) {
-					if( 0 != i ) sz += ',';
-					sz += aviewer[i];
-				}
-				gserverform_account['account.viewer'][0] = sz;
+				gserverform_account['account.admin'][0] = _getszlist(aadmin);
+				gserverform_account['account.admin.passwd'][0] = _getszlist(aadmin_pwd);
+				gserverform_account['account.operator'][0] = _getszlist(aoperator);
+				gserverform_account['account.operator.passwd'][0] = _getszlist(aoperator_pwd);
+				gserverform_account['account.viewer'][0] = _getszlist(aviewer);
+				gserverform_account['account.viewer.passwd'][0] = _getszlist(aviewer_pwd);
 			});
 		}
 
@@ -604,13 +629,13 @@
 			////////////////////////
 			jQuery(_szselector + ' table tbody tr')
 			.hover( 
-				function() { $(this).children('td').addClass('table-tr-hover'); },
-				function() { $(this).children('td').removeClass('table-tr-hover'); }
+				function() { $(this).children('td').addClass('table-td-hover'); },
+				function() { $(this).children('td').removeClass('table-td-hover'); }
 			)
 			.click( function(_event) {
 				_event.preventDefault();
-				$(this).parent().find('tr td').removeClass('table-tr-selected');
-				$(this).children('td').addClass('table-tr-selected');
+				$(this).parent().find('tr td').removeClass('table-td-selected');
+				$(this).children('td').addClass('table-td-selected');
 			});
 
 			////////////////////////
@@ -695,45 +720,62 @@
 			jQuery(_szselector + ' tbody:first tr:odd').css('background', '#e5e5e5');
 			//jQuery(_szselector + ' tbody:first tr:even').css('background', '#ffffff');
 		}
-	}
 
-	jQuery(document).ready( function() {
-		//
-		init_appearance();
-/*	
-		jQuery('table tr:even').css('background', '#dedede');
-		jQuery('table tr:odd').css('background', '#ffffff');
-		
-		init_appearance();
-
-		//
-		$(function() {
-			console.log('gserverform_account', gserverform_account['account.enable'][1]);
-		});
-		
-
-
-		//		var socket = io.connect();
-		ocket.on( '_mymsgack', function(_data) {
-			alert(_data);
-		});
-
-		$('#idbutton').bind('click', function() {
-		
-		//document.getElementById('idbutton').onclick = function() {
-		//var text = document.getElementById('idtext').value;
-			//socket.emit('_mymsg', text);
-			socket.emit('_mymsg', $('#idtext').val());
-		});
-
-		$('#idtext').bind('keypress', function(_event) {
-			//console.log('keycode :'+_event.which);
-			if( 13 == _event.which ) {
+		function _init_submitapply_button(_szselector) {
+			jQuery(_szselector)
+			.hover( function() {
+				$(this).toggleClass('ui-state-hover');
+			})
+			.click( function(_event) {
 				_event.preventDefault();
-				$('#idbutton').click();
+
+				_userslist_table2config('div#users-list');
+				//console.log('gserverform_account', gserverform_account['account.admin'][0]);
+				//console.log('gserverform_account', gserverform_account['account.admin.passwd'][0]);
+
+				var submitform = [];
+				submitform.push({lvalue:'account.admin', rvalue:gserverform_account['account.admin'][0]});
+				submitform.push({lvalue:'account.admin.passwd', rvalue:gserverform_account['account.admin.passwd'][0]});
+				submitform.push({lvalue:'account.operator', rvalue:gserverform_account['account.operator'][0]});
+				submitform.push({lvalue:'account.operator.passwd', rvalue:gserverform_account['account.operator.passwd'][0]});
+				submitform.push({lvalue:'account.viewer', rvalue:gserverform_account['account.viewer'][0]});
+				submitform.push({lvalue:'account.viewer.passwd', rvalue:gserverform_account['account.viewer.passwd'][0]});
+				//
+				gsocket_config.emit('subscribe_configuration', { href:window.location.href, action:'set', query:submitform });
+			});
+		}//function _init_submitapply_button(_szselector)
+
+	}//function init_appearance()
+
+	/*-------------------------------------------------------------------------*/
+	function init_socket(_socket) {
+		_socket.on( 'publish_configuration', function(_data) {
+			if( 'done' == _data.action ) {
+				console.log('publish_configuration - on.done');
+				;
+			}//if( 'done' == _data.action )
+			else
+			if( 'ready' == _data.action ) {
+				console.log('publish_configuration - on.ready');
+				;
+			}//if( 'ready' == _data.action )
+			else
+			if( 'get' == _data.action ) {
+				console.log('publish_configuration - on.get');
+				;
+			}//if( 'get' == _data.action )
+			else
+			if( 'set' == _data.action ) {
+				console.log('publish_configuration - on.set');
+				;
 			}
 		});
-});
-*/		
+	}//function init_socket(_socket)
+
+	/*-------------------------------------------------------------------------*/
+	jQuery(document).ready( function() {
+		init_appearance();
+		init_socket( gsocket_config );
 	});
+
 </script>
