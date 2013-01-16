@@ -1,4 +1,4 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,6 +22,13 @@
 	div#users-list table th,
 	div#users-list table td { padding-left: 1em; padding-top: 0.2em; padding-bottom: 0.2em; border: 1px solid #bebebe; text-align: left; }
 
+	div#users-list table td span.ui-icon {
+		float: left;
+		margin-right: .1em;
+		margin-top : -3px;
+		margin-left : -14px;
+	}
+
 	.table-tr-offscreen { position: absolute; left: -10000px; }
 	.table-td-hover { background: #C0DDEC !important; }
 	.table-td-selected { background: #58BCF1 !important; color:#ffffff; }
@@ -37,8 +44,7 @@
 	}
 	#dialog-link-add    span.ui-icon,
 	#dialog-link-modify span.ui-icon,
-	#dialog-link-remove span.ui-icon
-	{
+	#dialog-link-remove span.ui-icon {
 		margin: 0 5px 0 0;
 		position: absolute;
 		left: .2em;
@@ -67,8 +73,7 @@
 		position: relative;
 	}
 
-	#submitapply span.ui-icon
-	{
+	#submitapply span.ui-icon {
 		margin: 0 5px 0 0;
 		position: absolute;
 		left: .2em;
@@ -80,9 +85,7 @@
 
 <script src="configuration.ssi?action=query&lvalue=account.%&var=gserverform_account"></script>
 <script>
-	var gsocket_config = io.connect();
 	Init_jQuery();
-
 </script>
 </head>
 
@@ -316,8 +319,8 @@
 				<option value='viewer'>일반운영자</option>
 			</select>
 		</p>
-		<label for="password">열쇠글</label>
-		<input type="password" name="password" value="" id="password" class="text ui-widget-content ui-corner-all" />
+		<label for="passwd">열쇠글</label>
+		<input type="password" name="passwd" value="" id="passwd" class="text ui-widget-content ui-corner-all" />
 	</fieldset>
 	</form>
 	<p class='validateTips'></p>
@@ -328,432 +331,466 @@
 
 <script>
 	//
-	function init_appearance() {
-    	jQuery( document ).tooltip();
+	function _init_dialogbox() {
+		jQuery('#dialog-form').attr('title', '사용자 계정 관리');
+		jQuery('#dialog-form').dialog( {
+			autoOpen: false,
+			width: 450,
+			height: 400,				
+			modal: true,
+			buttons: [],
 
-		_init_all_table();
+			//event...
+			create: function( _event, _ui ) {
+				;
+			},
+			open: function( _event, _ui ) {
+				var action = $(this).attr('data-action');
+				var oseltd = jQuery('div#users-list table tbody tr .table-td-selected');
 
-		_init_body_table('table#contents_body1');
-		_init_body_table('table#contents_body2');
-		_init_body_table('table#contents_body3');
+				$('#name').attr('disabled', false);//$('#name').attr('readonly', false);
+				$('#privilige').attr('disabled', false);//$('#privilige').attr('readonly', false);
 
-		_userslist_config2table('div#users-list');
-		_init_userslist_table('div#users-list');
-
-		_init_dialogopen_button('#dialog-link-add');
-		_init_dialogopen_button('#dialog-link-modify');
-		_init_dialogopen_button('#dialog-link-remove');
-
-		_init_dialogbox();
-
-		_init_submitapply_button('#submitapply');
-
-		function _init_dialogbox() {
-			jQuery('#dialog-form').attr('title', '사용자 계정 관리');
-			jQuery('#dialog-form').dialog( {
-				autoOpen: false,
-				width: 450,
-				height: 400,				
-				modal: true,
-				buttons: [],
-
-				//event...
-				create: function( _event, _ui ) {
-					;
-				},
-				open: function( _event, _ui ) {
-					var action = $(this).attr('data-action');
-
-					if( '#add' == action ) { 
-						$('#dialog-caption').text('새로운 사용자 추가');
-						$('#name').attr('disabled', false);//$('#name').attr('readonly', false);
-					}
-					else
-					if( '#modify' == action ) { 
-						$('#dialog-caption').text('기존 사용자 수정');
-						$('#name').attr('disabled', true);//$('#name').attr('readonly', true);
-					}
-
-					var oseltd = jQuery('div#users-list table tbody tr .table-td-selected');
-					if( oseltd.length ) {
-						$('#name').val(oseltd[0].innerHTML);
-						$('#privilige').val(oseltd[1].innerHTML);
-						$('#password').val(oseltd[2].innerHTML);
-					}
-				},
-				close: function() {
-					var allFields = $([]).add('#name').add( '#password' );
-					allFields.val( "" ).removeClass( "ui-state-error" );
+				if( '#add' == action ) { 
+					$('#dialog-caption').text('새로운 사용자 추가');
 				}
+				else
+				if( '#modify' == action ) { 
+					$('#dialog-caption').text('기존 사용자 수정');
+					$('#name').attr('disabled', true);//$('#name').attr('readonly', true);
+
+					if('yes' == ($(oseltd[0]).data('isadmin') || 'no')) {
+						$('#privilige').attr('disabled', true);//$('#privilige').attr('readonly', false);
+					}
+				}
+
+				if( oseltd.length ) {
+					$('#name').val( $(oseltd[0]).text() );
+					$('#privilige').val( $(oseltd[1]).text() );
+					var szdecipher = Decrypt($(oseltd[2]).data('passwd'), 'szkey_aaa', 128);
+					$('#passwd').val( szdecipher );
+				}
+
+				$('#dialog-form :input:visible:enabled:first').focus();
+			},
+			close: function() {
+				var allFields = $([]).add('#name').add( '#passwd' );
+				allFields.val( "" ).removeClass( "ui-state-error" );
+			}
+		});
+	}//function _init_dialogbox()
+
+	function ondialog_closeclick() {
+		var	allFields = $([]).add('#name').add( '#passwd' );
+		var	tips = $( ".validateTips" );
+
+		tips.text('');
+		allFields.val( "" ).removeClass( "ui-state-error" );
+
+		$(this).dialog( "close" );
+	}//function ondialog_closeclick()
+
+	function ondialog_actionclick() {
+		var name = $( "#name" ),
+			privilige = $( "#privilige" ),
+			passwd = $( "#passwd" );
+		var	allFields = $([]).add(name).add(passwd);
+		var	tips = $( ".validateTips" );
+		var action = $('#dialog-form').attr('data-action');
+		var bValid = true;
+
+		allFields.removeClass( "ui-state-error" );
+
+		function updateTips( t ) {
+			tips.text(t).addClass( "ui-state-highlight" );
+			setTimeout( function() {
+				tips.removeClass( "ui-state-highlight", 800 );
+			}, 500 );
+		}
+
+		function checkExist( o, oexp, n ) {
+			if( o.val() == oexp.text() ) {
+				o.addClass( "ui-state-error" );
+				updateTips( "The " + n + " already exists." );
+				return false;
+			}
+			else {
+				return true;
+			}				
+		}
+
+		function checkLength( o, n, min, max ) {
+			if( o.val().length > max || o.val().length < min ) {
+				o.addClass( "ui-state-error" );
+				updateTips( "Length of " + n + " must be between " + min + " and " + max + "." );
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
+
+		function checkRegexp( o, regexp, n ) {
+			if ( !( regexp.test( o.val() ) ) ) {
+				o.addClass( "ui-state-error" );
+				updateTips( n );
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
+
+		//console.log(name.val());
+		//console.log(privilige.val());
+		//console.log(passwd.val());
+
+		if( '#add' == action ) {
+			bValid = bValid && checkLength( name, "username", 4, 32 );
+			bValid = bValid && checkRegexp( name, /^[a-z]([0-9a-z_])+$/i, "Username may consist of a-z, A-Z, 0-9, underscores, begin with a letter." );
+
+			jQuery('div#users-list table tbody tr').each( function() {
+				bValid = bValid && checkExist( name, $(this).children('td:eq(0)'), "username" );
+				if( false == bValid ) return;
 			});
 		}
 
-		function ondialog_closeclick() {
-			var	allFields = $([]).add('#name').add( '#password' );
-			var	tips = $( ".validateTips" );
+		bValid = bValid && checkLength( passwd, "password", 4, 32 );
+		bValid = bValid && checkRegexp( passwd, /^([0-9a-z])+$/i, "Password field only allow : a-z, A-Z, 0-9" );
+		/*
+		// From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
+		bValid = bValid && checkRegexp( email, /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i, "eg. ui@jquery.com" );
+		*/
+		if ( !bValid ) return;
 
-			tips.text("");
-			allFields.val( "" ).removeClass( "ui-state-error" );
+		//
+		tips.text('');
+		tips.removeClass( "ui-state-highlight" );
+
+		if( '#add' == action ) {
+			$( "div#users-list table tbody" ).append( 
+				"<tr>" +
+					"<td data-status='add'>" + name.val() + "</td>" + 
+					"<td>" + privilige.val() + "</td>" + 
+					"<td data-passwd=" + "'" + Encrypt(passwd.val(), 'szkey_aaa', 128) + "'" + " >" + "" + "</td>" +
+				"</tr>"
+			);
+
+			_init_userslist_table('div#users-list');
+			name.focus();
+			//$( this ).dialog( "close" );
+		}
+		else
+		if( '#modify' == action ) {
+			var oseltd = $('div#users-list table tbody tr .table-td-selected');
+			$(oseltd[0]).text(name.val());
+			$(oseltd[1]).text(privilige.val());
+			$(oseltd[2]).data('passwd', Encrypt(passwd.val(), 'szkey_aaa', 128) );
+			$(oseltd[0]).data('status', 'modify');
+
+			_init_userslist_table('div#users-list');
 			$( this ).dialog( "close" );
 		}
 
-		function ondialog_actionclick() {
-			var name = $( "#name" ),
-				privilige = $( "#privilige" ),
-				password = $( "#password" );
-			var	allFields = $([]).add(name).add(password);
-			var	tips = $( ".validateTips" );
-			var action = $('#dialog-form').attr('data-action');
-			var bValid = true;
+	}//function ondialog_actionclick()
 
-			allFields.removeClass( "ui-state-error" );
+	function onnotify_tooltip(_selector) {
+		var msg = _selector;
+		if( 'string' != typeof(_selector) ) {
+			msg = $.trim( _selector.data( "notify-tooltip-title" ) || _selector.text() );
+		}
+		var szhtml = '<p>' +
+				     '<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .1em;"></span>' +
+					 '<strong>Notice: </strong>' + msg +
+					 '</p>';
+		$( "<div>" ).appendTo( document.body )
+		        	.append( szhtml )
+		        	.addClass( "notification-tooltip ui-state-highlight ui-corner-top" )
+		        	.position( { my: "center bottom", at: "center bottom", of: window })
+		        	.show({ effect: "slide" })
+		        	.delay( 2000 )
+		        	.hide({ effect: "slide", duration: "fast" }, function() {
+		        		$( this ).remove();
+		        	});
+	}//function onnotify_tooltip(_selector)
 
-			function updateTips( t ) {
-				tips.text(t).addClass( "ui-state-highlight" );
-				setTimeout( function() {
-					tips.removeClass( "ui-state-highlight", 800 );
-				}, 500 );
-			}
+	function _init_dialogopen_button(_szselector) {
+		jQuery(_szselector)
+		.hover( function() {
+			$(this).toggleClass('ui-state-hover');
+		})
+		.click( function(_event) {
+			_event.preventDefault();
 
-			function checkExist( o, oexp, n ) {
-				if( o.val() == oexp.text() ) {
-					o.addClass( "ui-state-error" );
-					updateTips( "The " + n + " already exists." );
-					return false;
+			var action = $(this).attr('href');
+			if( '#remove' == action ) {
+				var oseltd = jQuery('div#users-list table tbody tr .table-td-selected');
+				if( !oseltd.length ) {
+					onnotify_tooltip($(this));
+					return;
 				}
-				else {
-					return true;
-				}				
-			}
 
-			function checkLength( o, n, min, max ) {
-				if( o.val().length > max || o.val().length < min ) {
-					o.addClass( "ui-state-error" );
-					updateTips( "Length of " + n + " must be between " + min + " and " + max + "." );
-					return false;
+				if( 'yes' == $(oseltd[0]).data('isadmin') ) {
+					onnotify_tooltip('유일한 관리자 계정은 삭제할 수 없습니다.');
+					return;
 				}
-				else {
-					return true;
-				}
+
+				//
+				//oseltd.parent().remove();
+				$(oseltd[0]).data('status', 'remove');
+				_init_userslist_table('div#users-list');
 			}
-
-			function checkRegexp( o, regexp, n ) {
-				if ( !( regexp.test( o.val() ) ) ) {
-					o.addClass( "ui-state-error" );
-					updateTips( n );
-					return false;
-				}
-				else {
-					return true;
-				}
-			}
-
-			//console.log(name.val());
-			//console.log(privilige.val());
-			//console.log(password.val());
-
-			if( '#add' == action ) {
-				bValid = bValid && checkLength( name, "username", 4, 32 );
-				bValid = bValid && checkRegexp( name, /^[a-z]([0-9a-z_])+$/i, "Username may consist of a-z, A-Z, 0-9, underscores, begin with a letter." );
-
-				jQuery('div#users-list table tbody tr').each( function() {
-					bValid = bValid && checkExist( name, $(this).children('td:eq(0)'), "username" );
-					if( false == bValid ) return;
-				});
-			}
-
-			bValid = bValid && checkLength( password, "password", 4, 32 );
-			bValid = bValid && checkRegexp( password, /^([0-9a-z])+$/i, "Password field only allow : a-z, A-Z, 0-9" );
-			/*
-			// From jquery.validate.js (by joern), contributed by Scott Gonzalez: http://projects.scottsplayground.com/email_address_validation/
-			bValid = bValid && checkRegexp( email, /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i, "eg. ui@jquery.com" );
-			*/
-
-			if ( bValid ) {
-				tips.text('');
-				tips.removeClass( "ui-state-highlight" );
-
+			else {
 				if( '#add' == action ) {
-					$( "div#users-list table tbody" ).append( "<tr>" +
-						"<td>" + name.val() + "</td>" + 
-						"<td>" + privilige.val() + "</td>" + 
-						"<td>" + Encrypt(password.val(), 'szkey_aaa', 128) + "</td>" +
-					"</tr>" );
-
-					//$( this ).dialog( "close" );
+					$( "#dialog-form" ).dialog( "option", "buttons",
+						[{text:'추가', click:ondialog_actionclick},
+					 	 {text:"닫기", click:ondialog_closeclick}] );
 				}
 				else
 				if( '#modify' == action ) {
-					var oseltd = $('div#users-list table tbody tr .table-td-selected');
-					oseltd[0].innerHTML = name.val();
-					oseltd[1].innerHTML = privilige.val();
-					oseltd[2].innerHTML = Encrypt(password.val(), 'szkey_aaa', 128);
-
-					$( this ).dialog( "close" );
-				}
-
-				_init_userslist_table('div#users-list');
-			}
-		}
-
-		function onnotify_tooltip(_szselector) {
-			var msg = $.trim( _szselector.data( "notify-tooltip-title" ) || _szselector.text() );
-			var szhtml = '<p>' +
-					     '<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .1em;"></span>' +
-						 '<strong>Notice: </strong>' + msg +
-						 '</p>';
-			$( "<div>" ).appendTo( document.body )
-			        	.append( szhtml )
-			        	.addClass( "notification-tooltip ui-state-highlight ui-corner-top" )
-			        	.position( { my: "center bottom", at: "center bottom", of: window })
-			        	.show({ effect: "slide" })
-			        	.delay( 2000 )
-			        	.hide({ effect: "slide", duration: "fast" }, function() {
-			        		$( this ).remove();
-			        	});
-		}
-
-		function _init_dialogopen_button(_szselector) {
-			jQuery(_szselector)
-			.hover( function() {
-				$(this).toggleClass('ui-state-hover');
-			})
-			.click( function(_event) {
-				_event.preventDefault();
-
-				var action = $(this).attr('href');
-				if( '#remove' == action ) {
 					var oseltd = jQuery('div#users-list table tbody tr .table-td-selected');
 					if( !oseltd.length ) {
 						onnotify_tooltip($(this));
 						return;
 					}
-					//
-					oseltd.parent().remove();
-					_init_userslist_table('div#users-list');
+
+					$( "#dialog-form" ).dialog( "option", "buttons",
+						[{text:'수정', click:ondialog_actionclick},
+					 	 {text:"닫기", click: ondialog_closeclick}] );
 				}
-				else {
-					if( '#add' == action ) {
-						$( "#dialog-form" ).dialog( "option", "buttons",
-							[{text:'추가', click:ondialog_actionclick},
-						 	 {text:"닫기", click:ondialog_closeclick}] );
-					}
-					else
-					if( '#modify' == action ) {
-						var oseltd = jQuery('div#users-list table tbody tr .table-td-selected');
-						if( !oseltd.length ) {
-							onnotify_tooltip($(this));
-							return;
-						}
+				//
+				$( "#dialog-form" ).attr( 'data-action', action ).dialog( "open" );
+			}
+		});
+	}//function _init_dialogopen_button(_szselector)
 
-						$( "#dialog-form" ).dialog( "option", "buttons",
-							[{text:'수정', click:ondialog_actionclick},
-						 	 {text:"닫기", click: ondialog_closeclick}] );
-					}
-					$( "#dialog-form" ).attr( 'data-action', action ).dialog( "open" );
-				}
-			});
-		}
+	function _userslist_table2config(_szselector) {
+		//'div#users-list'
+		var aadmin = [], aoperator = [], aviewer = [];
+		var aadmin_pwd = [], aoperator_pwd = [], aviewer_pwd = [];
 
-		function _userslist_table2config(_szselector) {
-			////////////////////////
-			//'div#users-list'
-			var aadmin = [], aoperator = [], aviewer = [];
-			var aadmin_pwd = [], aoperator_pwd = [], aviewer_pwd = [];
-			jQuery(_szselector + ' table tbody tr').each( function() {
-				var szname = $(this).children('td:eq(0)').text();
-				var szprivilige = $(this).children('td:eq(1)').text();
-				var szencpasswd = $(this).children('td:eq(2)').text();
+		jQuery(_szselector + ' table tbody tr').each( function() {
+			var szstatus = $(this).children('td:eq(0)').data('status');
+			var szname = $(this).children('td:eq(0)').text();
+			var szprivilige = $(this).children('td:eq(1)').text();
+			var szencpasswd = $(this).children('td:eq(2)').data('passwd');
 
+			if( 'remove' != szstatus ) {
 				if( 'administrator' == szprivilige ) { aadmin.push(szname); aadmin_pwd.push(szencpasswd); }
 				if( 'operator' == szprivilige ) { aoperator.push(szname); aoperator_pwd.push(szencpasswd); }
 				if( 'viewer' == szprivilige ) { aviewer.push(szname); aviewer_pwd.push(szencpasswd); }
+			}
 
-				function _getszlist(_array) {
-					var sz = '';
-					for( var i=0; i<_array.length; i++ ) {
-						if( 0 != i ) sz += ',';
-						sz += _array[i];
-					}
-					return sz;
+			//
+			function _getszlist(_array) {
+				var sz = '';
+				for( var i=0; i<_array.length; i++ ) {
+					if( 0 != i ) sz += ',';
+					sz += _array[i];
 				}
-				gserverform_account['account.admin'][0] = _getszlist(aadmin);
-				gserverform_account['account.admin.passwd'][0] = _getszlist(aadmin_pwd);
-				gserverform_account['account.operator'][0] = _getszlist(aoperator);
-				gserverform_account['account.operator.passwd'][0] = _getszlist(aoperator_pwd);
-				gserverform_account['account.viewer'][0] = _getszlist(aviewer);
-				gserverform_account['account.viewer.passwd'][0] = _getszlist(aviewer_pwd);
-			});
-		}
+				return sz;
+			}
+			gserverform_account['account.admin'][0] = _getszlist(aadmin);
+			gserverform_account['account.admin.passwd'][0] = _getszlist(aadmin_pwd);
+			gserverform_account['account.operator'][0] = _getszlist(aoperator);
+			gserverform_account['account.operator.passwd'][0] = _getszlist(aoperator_pwd);
+			gserverform_account['account.viewer'][0] = _getszlist(aviewer);
+			gserverform_account['account.viewer.passwd'][0] = _getszlist(aviewer_pwd);
+		});
+	}//function _userslist_table2config(_szselector)
 
-		function _userslist_config2table(_szselector) {
-			////////////////////////
-			//'div#users-list'
-			var tbody = jQuery(_szselector + ' table tbody');
+	function _userslist_config2table(_szselector) {
+		//'div#users-list'
+		var tbody = jQuery(_szselector + ' table tbody');
 
-			var aname = gserverform_account['account.admin'][0].split(',');
-			var cnt = ( '' == aname[0] ) ? 0 : aname.length;
+		function _addtable( _szwhat, _aname, _apasswd ) {
+			var cnt = ( '' == _aname[0] ) ? 0 : _aname.length;
 			for( var i=0; i<cnt; i++) {
 				var sz = "<tr>" +
-						"<td>" + aname[i] + "</td>" + 
-						"<td>" + "administrator" + "</td>" + 
-						"<td>" + "" + "</td>" +
+						"<td>" + _aname[i] + "</td>" + 
+						"<td>" + _szwhat + "</td>" + 
+						"<td data-passwd=" + "'" + _apasswd[i] + "'" + ">" + "" + "</td>" +
 					"</tr>";
 				tbody.append(sz);
 			}
+		}//function _addtable( _szwhat, _aname, _apasswd )
 
-			var aname = gserverform_account['account.operator'][0].split(',');
-			var cnt = ( '' == aname[0] ) ? 0 : aname.length; 
-			for( var i=0; i<cnt; i++) {
-				var sz = "<tr>" +
-						"<td>" + aname[i] + "</td>" + 
-						"<td>" + "operator" + "</td>" + 
-						"<td>" + "" + "</td>" +
-					"</tr>";
-				tbody.append(sz);
-			}
+		tbody.empty();
 
-			var aname = gserverform_account['account.viewer'][0].split(',');
-			var cnt = ( '' == aname[0] ) ? 0 : aname.length; 
-			for( var i=0; i<cnt; i++) {
-				var sz = "<tr>" +
-						"<td>" + aname[i] + "</td>" + 
-						"<td>" + "viewer" + "</td>" + 
-						"<td>" + "" + "</td>" +
-					"</tr>";
-				tbody.append(sz);
-			}
+		var aname = gserverform_account['account.admin'][0].split(',');
+		var apasswd = gserverform_account['account.admin.passwd'][0].split(',');
+		_addtable( 'administrator', aname, apasswd );
+
+		var aname = gserverform_account['account.operator'][0].split(',');
+		var apasswd = gserverform_account['account.operator.passwd'][0].split(',');
+		_addtable( 'operator', aname, apasswd );
+
+		var aname = gserverform_account['account.viewer'][0].split(',');
+		var apasswd = gserverform_account['account.viewer.passwd'][0].split(',');
+		_addtable( 'viewer', aname, apasswd );
+	}//function _userslist_config2table(_szselector)
+
+	function _init_userslist_table(_szselector) {
+		////////////////////////
+		jQuery(_szselector + ' table tbody tr')
+		.hover( 
+			function() { $(this).children('td').addClass('table-td-hover'); },
+			function() { $(this).children('td').removeClass('table-td-hover'); }
+		)
+		.click( function(_event) {
+			_event.preventDefault();
+			$(this).parent().find('tr td').removeClass('table-td-selected');
+			$(this).children('td').addClass('table-td-selected');
+		});
+
+		////////////////////////
+		var td = jQuery(_szselector + ' table tbody tr:first td:first');
+		if( td ) {
+			td.data('isadmin', 'yes');
+			if( !td.data('status') ) td.data('status', 'locked');
 		}
 
-		function _init_userslist_table(_szselector) {
-			////////////////////////
-			jQuery(_szselector + ' table tbody tr')
-			.hover( 
-				function() { $(this).children('td').addClass('table-td-hover'); },
-				function() { $(this).children('td').removeClass('table-td-hover'); }
-			)
-			.click( function(_event) {
-				_event.preventDefault();
-				$(this).parent().find('tr td').removeClass('table-td-selected');
-				$(this).children('td').addClass('table-td-selected');
+		//
+		$(_szselector + ' table tbody tr').each( function() {
+			var td = $(this).children('td:first');
+
+			//
+			td.children('span').remove();
+
+			//
+			var szstatus = td.data('status') || '';
+			var szui_icon = '';
+			if( 'locked' == szstatus ) szui_icon = 'ui-icon ui-icon-locked';
+			if( 'add' == szstatus ) szui_icon = 'ui-icon ui-icon-plus';
+			if( 'modify' == szstatus ) szui_icon = 'ui-icon ui-icon-notice';
+			if( 'remove' == szstatus ) szui_icon = 'ui-icon ui-icon-minus';
+			if('' != szui_icon) {
+				td.append('<span></span>');
+				td.children('span').addClass(szui_icon);
+			}
+		});
+
+		////////////////////////
+		jQuery('div#table-pagenav').remove();
+		jQuery(_szselector).after('<div id="table-pagenav"></div>');
+
+		//
+		var jtr = jQuery(_szselector + ' table tbody tr');
+		var nrowperpage = 6;
+		var nrowtotal = jtr.length;
+		var npagestotal = Math.ceil(nrowtotal/nrowperpage);
+		var i;
+
+		for(i = 0; i < npagestotal; i++) {
+			jQuery('<a href="#"></a>').attr('rel', i).html(i+1).appendTo('#table-pagenav');
+		}
+		//jtr.addClass('table-tr-offscreen')
+		//   .slice(0, nrowperpage)
+		//   .removeClass('table-tr-offscreen');
+
+		//
+		jQuery('#table-pagenav a').click( function(_event) {
+			_event.preventDefault();
+			if( $(this).hasClass('table-pagenav-selected') ) { return; }
+			$('#table-pagenav a').removeClass('table-pagenav-selected');
+			$(this).addClass('table-pagenav-selected');
+
+			var currpage = $(this).attr('rel');
+			var startitem = currpage * nrowperpage;
+			var enditem = startitem + nrowperpage;
+
+			jtr.css('opacity', '0.0')
+			   .addClass('table-tr-offscreen')
+			   .slice(startitem, enditem)
+			   .removeClass('table-tr-offscreen')
+			   .animate({opacity:1}, 300);
+		});
+
+		if( !jQuery('#table-pagenav a').hasClass('table-pagenav-selected') ) {
+			jQuery('#table-pagenav a:eq(0)').click();
+		}
+
+	}//function _init_userslist_table(_szselector)
+
+	function _init_all_table() {
+		jQuery('table').attr('cellspacing', '0').attr('cellpadding', '2');
+		jQuery('#wrap_body_contents > table').before('<dt>').after('<br></dt>');
+	}//function _init_all_table()
+
+	function _init_body_table(_szselector) {
+		// for debugging
+		//jQuery(_szselector).attr('border', '1');
+
+		//
+		jQuery(_szselector).attr('class', 'ui-widget ui-widget-content ui-corner-top');
+		jQuery(_szselector + ' thead tr').attr('class', 'ui-widget-header');
+
+		//
+		jQuery(_szselector).attr('width', '100%');
+		var szcolwidths = jQuery(_szselector + ' thead tr:first th').data('widthpercolumn') || '';
+		var acolwidths = eval('['+ szcolwidths  +']');
+		var ncols = acolwidths.length;
+
+		jQuery(_szselector + ' thead tr:first th').attr('colspan', ncols)
+												  .attr('align', 'left')
+												  .css('padding-left', '1em');
+
+		jQuery(_szselector + ' tbody > tr').each( function() {
+			var i = 0;
+			var colspan = 0;
+			$(this).children('td').each( function() {
+				$(this).attr('width', acolwidths[i++]).attr('cellspacing', '5');
+				colspan += $(this).attr('colspan') || 0;
 			});
+			colspan = (0 != colspan) ? colspan-1 : colspan;
+			for( ; i<(ncols-colspan); i++ ) $(this).append('<td></td>');
+		})
+		.find('td:first').css('padding-left', '1em');
 
-			////////////////////////
-			jQuery('div#table-pagenav').remove();
-			jQuery(_szselector).after('<div id="table-pagenav"></div>');
+		jQuery(_szselector + ' tbody:first tr:odd').css('background', '#e5e5e5');
+		//jQuery(_szselector + ' tbody:first tr:even').css('background', '#ffffff');
+	}//function _init_body_table(_szselector)
 
+	/*-------------------------------------------------------------------------*/
+	function _init_submitapply_button(_szselector) {
+		jQuery(_szselector)
+		.hover( function() {
+			$(this).toggleClass('ui-state-hover');
+		})
+		.click( function(_event) {
+			_event.preventDefault();
+
+			_userslist_table2config('div#users-list');
+			//console.log('gserverform_account', gserverform_account['account.admin'][0]);
+			//console.log('gserverform_account', gserverform_account['account.admin.passwd'][0]);
+
+			var submitform = [];
+			submitform.push({lvalue:'account.admin', rvalue:gserverform_account['account.admin'][0]});
+			submitform.push({lvalue:'account.admin.passwd', rvalue:gserverform_account['account.admin.passwd'][0]});
+			submitform.push({lvalue:'account.operator', rvalue:gserverform_account['account.operator'][0]});
+			submitform.push({lvalue:'account.operator.passwd', rvalue:gserverform_account['account.operator.passwd'][0]});
+			submitform.push({lvalue:'account.viewer', rvalue:gserverform_account['account.viewer'][0]});
+			submitform.push({lvalue:'account.viewer.passwd', rvalue:gserverform_account['account.viewer.passwd'][0]});
 			//
-			var jtr = jQuery(_szselector + ' table tbody tr');
-			var nrowperpage = 6;
-			var nrowtotal = jtr.length;
-			var npagestotal = Math.ceil(nrowtotal/nrowperpage);
-			var i;
+			gsocket_config.emit('subscribe_configuration', { href:window.location.href, action:'set', query:submitform });
 
-			for(i = 0; i < npagestotal; i++) {
-				jQuery('<a href="#"></a>').attr('rel', i).html(i+1).appendTo('#table-pagenav');
-			}
-			//jtr.addClass('table-tr-offscreen')
-			//   .slice(0, nrowperpage)
-			//   .removeClass('table-tr-offscreen');
-
-			//
-			jQuery('#table-pagenav a').click( function(_event) {
-				_event.preventDefault();
-				if( $(this).hasClass('table-pagenav-selected') ) { return; }
-				$('#table-pagenav a').removeClass('table-pagenav-selected');
-				$(this).addClass('table-pagenav-selected');
-
-				var currpage = $(this).attr('rel');
-				var startitem = currpage * nrowperpage;
-				var enditem = startitem + nrowperpage;
-
-				jtr.css('opacity', '0.0')
-				   .addClass('table-tr-offscreen')
-				   .slice(startitem, enditem)
-				   .removeClass('table-tr-offscreen')
-				   .animate({opacity:1}, 300);
-			});
-
-			if( !jQuery('#table-pagenav a').hasClass('table-pagenav-selected') ) {
-				jQuery('#table-pagenav a:eq(0)').click();
-			}
-		}
-
-		function _init_all_table() {
-			//
-			jQuery('table').attr('cellspacing', '0').attr('cellpadding', '2');
-
-			//
-			jQuery('#wrap_body_contents > table').before('<dt>').after('<br></dt>');
-		}
-
-		function _init_body_table(_szselector) {
-			// for debugging
-			//jQuery(_szselector).attr('border', '1');
-
-			//
-			jQuery(_szselector).attr('class', 'ui-widget ui-widget-content ui-corner-top');
-			jQuery(_szselector + ' thead tr').attr('class', 'ui-widget-header');
-
-			//
-			jQuery(_szselector).attr('width', '100%');
-			var szcolwidths = jQuery(_szselector + ' thead tr:first th').data('widthpercolumn') || '';
-			var acolwidths = eval('['+ szcolwidths  +']');
-			var ncols = acolwidths.length;
-
-			jQuery(_szselector + ' thead tr:first th').attr('colspan', ncols)
-													  .attr('align', 'left')
-													  .css('padding-left', '1em');
-
-			jQuery(_szselector + ' tbody > tr').each( function() {
-				var i = 0;
-				var colspan = 0;
-				$(this).children('td').each( function() {
-					$(this).attr('width', acolwidths[i++]).attr('cellspacing', '5');
-					colspan += $(this).attr('colspan') || 0;
-				});
-				colspan = (0 != colspan) ? colspan-1 : colspan;
-				for( ; i<(ncols-colspan); i++ ) $(this).append('<td></td>');
-			})
-			.find('td:first').css('padding-left', '1em');
-
-			jQuery(_szselector + ' tbody:first tr:odd').css('background', '#e5e5e5');
-			//jQuery(_szselector + ' tbody:first tr:even').css('background', '#ffffff');
-		}
-
-		function _init_submitapply_button(_szselector) {
-			jQuery(_szselector)
-			.hover( function() {
-				$(this).toggleClass('ui-state-hover');
-			})
-			.click( function(_event) {
-				_event.preventDefault();
-
-				_userslist_table2config('div#users-list');
-				//console.log('gserverform_account', gserverform_account['account.admin'][0]);
-				//console.log('gserverform_account', gserverform_account['account.admin.passwd'][0]);
-
-				var submitform = [];
-				submitform.push({lvalue:'account.admin', rvalue:gserverform_account['account.admin'][0]});
-				submitform.push({lvalue:'account.admin.passwd', rvalue:gserverform_account['account.admin.passwd'][0]});
-				submitform.push({lvalue:'account.operator', rvalue:gserverform_account['account.operator'][0]});
-				submitform.push({lvalue:'account.operator.passwd', rvalue:gserverform_account['account.operator.passwd'][0]});
-				submitform.push({lvalue:'account.viewer', rvalue:gserverform_account['account.viewer'][0]});
-				submitform.push({lvalue:'account.viewer.passwd', rvalue:gserverform_account['account.viewer.passwd'][0]});
-				//
-				gsocket_config.emit('subscribe_configuration', { href:window.location.href, action:'set', query:submitform });
-			});
-		}//function _init_submitapply_button(_szselector)
-
-	}//function init_appearance()
+			//?? reloaded to confirm??
+			gsocket_config.emit('subscribe_configuration', { href:window.location.href, action:'get', query:'account.%' });
+		});
+	}//function _init_submitapply_button(_szselector)
 
 	/*-------------------------------------------------------------------------*/
 	function init_socket(_socket) {
 		_socket.on( 'publish_configuration', function(_data) {
-			if( 'done' == _data.action ) {
-				console.log('publish_configuration - on.done');
+			if( 'getdone' == _data.action ) {
+				console.log('publish_configuration - on.getdone');
 				;
-			}//if( 'done' == _data.action )
+			}//if( 'getdone' == _data.action )
+			else
+			if( 'setdone' == _data.action ) {
+				console.log('publish_configuration - on.setdone');
+				;
+			}//if( 'setdone' == _data.action )
 			else
 			if( 'ready' == _data.action ) {
 				console.log('publish_configuration - on.ready');
@@ -762,7 +799,13 @@
 			else
 			if( 'get' == _data.action ) {
 				console.log('publish_configuration - on.get');
-				;
+				switch( _data.query ) {
+				case 'account.%':
+					gserverform_account = _data.result;
+					_userslist_config2table('div#users-list');
+					_init_userslist_table('div#users-list');
+					break;
+				}
 			}//if( 'get' == _data.action )
 			else
 			if( 'set' == _data.action ) {
@@ -773,9 +816,28 @@
 	}//function init_socket(_socket)
 
 	/*-------------------------------------------------------------------------*/
+	var gsocket_config = io.connect();
+	init_socket( gsocket_config );
+
+	jQuery(document).tooltip();
 	jQuery(document).ready( function() {
-		init_appearance();
-		init_socket( gsocket_config );
+
+		_init_all_table();
+
+		_init_body_table('table#contents_body1');
+		_init_body_table('table#contents_body2');
+		_init_body_table('table#contents_body3');
+
+		_init_dialogopen_button('#dialog-link-add');
+		_init_dialogopen_button('#dialog-link-modify');
+		_init_dialogopen_button('#dialog-link-remove');
+
+		_init_dialogbox();
+
+		_userslist_config2table('div#users-list');
+		_init_userslist_table('div#users-list');
+
+		_init_submitapply_button('#submitapply');
 	});
 
 </script>

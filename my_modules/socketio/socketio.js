@@ -93,7 +93,7 @@ function _onWsIOConnection( _socket )
 					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
 
 					var ack = {};
-					ack.action = 'done';
+					ack.action = 'getdone';
 					ack.query  = _data.query;
 					ack.result = ' ';
 					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
@@ -109,7 +109,7 @@ function _onWsIOConnection( _socket )
 					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
 
 					var ack = {};
-					ack.action = 'done';
+					ack.action = 'setdone';
 					ack.query  = _data.query;
 					ack.result = ' ';
 					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
@@ -254,6 +254,7 @@ function _db_getconfiguration(_queryitem, _callback)
 
 function _db_setconfiguration(_queryitem, _callback)
 {
+	var cnt = 0;
 	var query = 'UPDATE configuration SET rvalue=? WHERE lvalue=?';
 	for( var i=0; i<_queryitem.length; i++ ) {
 
@@ -262,7 +263,9 @@ function _db_setconfiguration(_queryitem, _callback)
 		gmDataBase.setquery_ipcam_config( query, queryarray, function(_result) {
 			var json = {};
 
-			_callback(_result, json);
+			if( (++cnt) == _queryitem.length ) {
+				_callback(_result, json);
+			}
 		});
 	}
 }

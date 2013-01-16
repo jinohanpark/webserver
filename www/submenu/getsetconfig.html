@@ -107,9 +107,13 @@ var gsocket_config;
 
 	function init_socket(_socket) {
 		_socket.on( 'publish_configuration', function(_data) {
-			if( 'done' == _data.action ) {
-				console.log('publish_configuration - done');
-			}//if( 'done' == _data.action )
+			if( 'getdone' == _data.action ) {
+				console.log('publish_configuration - on.getdone');
+			}//if( 'getdone' == _data.action )
+			else
+			if( 'setdone' == _data.action ) {
+				console.log('publish_configuration - on.setdone');
+			}//if( 'setdone' == _data.action )
 			else
 			if( 'ready' == _data.action ) {
 				console.log('publish_configuration - ready');
