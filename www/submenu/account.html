@@ -301,11 +301,10 @@
 		</td>
 	</tr>
 </tfoot>
-
 </table id="wrap">
 
 <!--****************************************************************-->
-<div id='dialog-form' title='' data-action=''>
+<div id='dialog-form-usermgr' title='' data-action=''>
 	<h3><p id='dialog-caption'></p></h3>
 	<form>
 	<fieldset>
@@ -326,14 +325,70 @@
 	<p class='validateTips'></p>
 </div>
 
+<!--****************************************************************-->
+<div id='dialog-confirm-onchangedb' title='' data-action=''>
+	<p><span class="ui-icon ui-icon-alert" style="float: left; margin: 0 17px 10px 0;"></span>
+		지금 서버에 접속된 다른 사용자에 의해 이 페이지의 설정이 변경되었습니다.<br><br>
+		변경된 설정으로 새로고침 하시겠습니까?&nbsp;&nbsp;&nbsp;(<span id='dialog-confirm-timeout'></span>초 후 자동 reload)
+	</p>
+</div>
+
 </body>
 </html>
 
+<!--****************************************************************-->
 <script>
+	function _init_dialogbox_onchangedb() {
+		var obj = jQuery('#dialog-confirm-onchangedb');
+		var idtimer, ntimeout;
+
+		function _reload() {
+			console.log('reload');
+			
+			gsocketio.emit('subscribe_configuration', { href:window.location.href, action:'get', query:'account.%' });
+			obj.dialog('close');
+		}
+
+		obj.attr('title', '서버설정 변경 알림');
+		obj.dialog( {
+			autoOpen: false,
+			resizable: false,
+	      	width: 480,
+	      	height: 210,
+			modal: true,
+			buttons: {
+				"새로고침": function() {
+					_reload();
+			    },
+			    "취소": function() {
+			        $(this).dialog( "close" );
+			    }
+			},
+			//event...
+			create: function( _event, _ui ) {
+
+			},
+			open: function( _event, _ui ) {
+				ntimeout = 10;
+				obj.find('span#dialog-confirm-timeout').text(ntimeout);
+				idtimer = setInterval( function() { 
+					ntimeout = ntimeout-1;
+					obj.find('span#dialog-confirm-timeout').text(ntimeout);
+					if( 0 == ntimeout ) {
+						_reload();
+					}
+				}, 1000 );
+			},
+			close: function( _event, _ui ) {
+				clearInterval(idtimer);
+			}
+		});
+	}//function _init_dialogbox_onchangedb()
+
 	//
-	function _init_dialogbox() {
-		jQuery('#dialog-form').attr('title', '사용자 계정 관리');
-		jQuery('#dialog-form').dialog( {
+	function _init_dialogbox_usermgr() {
+		jQuery('#dialog-form-usermgr').attr('title', '사용자 계정 관리');
+		jQuery('#dialog-form-usermgr').dialog( {
 			autoOpen: false,
 			width: 450,
 			height: 400,				
@@ -371,14 +426,14 @@
 					$('#passwd').val( szdecipher );
 				}
 
-				$('#dialog-form :input:visible:enabled:first').focus();
+				$('#dialog-form-usermgr :input:visible:enabled:first').focus();
 			},
 			close: function() {
 				var allFields = $([]).add('#name').add( '#passwd' );
 				allFields.val( "" ).removeClass( "ui-state-error" );
 			}
 		});
-	}//function _init_dialogbox()
+	}//function _init_dialogbox_usermgr()
 
 	function ondialog_closeclick() {
 		var	allFields = $([]).add('#name').add( '#passwd' );
@@ -396,7 +451,7 @@
 			passwd = $( "#passwd" );
 		var	allFields = $([]).add(name).add(passwd);
 		var	tips = $( ".validateTips" );
-		var action = $('#dialog-form').attr('data-action');
+		var action = $('#dialog-form-usermgr').attr('data-action');
 		var bValid = true;
 
 		allFields.removeClass( "ui-state-error" );
@@ -501,7 +556,7 @@
 		}
 		var szhtml = '<p>' +
 				     '<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .1em;"></span>' +
-					 '<strong>Notice: </strong>' + msg +
+					 '<strong>알림: </strong>' + msg +
 					 '</p>';
 		$( "<div>" ).appendTo( document.body )
 		        	.append( szhtml )
@@ -537,12 +592,14 @@
 
 				//
 				//oseltd.parent().remove();
-				$(oseltd[0]).data('status', 'remove');
+				if('remove' == $(oseltd[0]).data('status')) $(oseltd[0]).data('status', '');
+				else $(oseltd[0]).data('status', 'remove');
+
 				_init_userslist_table('div#users-list');
 			}
 			else {
 				if( '#add' == action ) {
-					$( "#dialog-form" ).dialog( "option", "buttons",
+					$( "#dialog-form-usermgr" ).dialog( "option", "buttons",
 						[{text:'추가', click:ondialog_actionclick},
 					 	 {text:"닫기", click:ondialog_closeclick}] );
 				}
@@ -554,12 +611,12 @@
 						return;
 					}
 
-					$( "#dialog-form" ).dialog( "option", "buttons",
+					$( "#dialog-form-usermgr" ).dialog( "option", "buttons",
 						[{text:'수정', click:ondialog_actionclick},
 					 	 {text:"닫기", click: ondialog_closeclick}] );
 				}
 				//
-				$( "#dialog-form" ).attr( 'data-action', action ).dialog( "open" );
+				$( "#dialog-form-usermgr" ).attr( 'data-action', action ).dialog( "open" );
 			}
 		});
 	}//function _init_dialogopen_button(_szselector)
@@ -772,10 +829,10 @@
 			submitform.push({lvalue:'account.viewer', rvalue:gserverform_account['account.viewer'][0]});
 			submitform.push({lvalue:'account.viewer.passwd', rvalue:gserverform_account['account.viewer.passwd'][0]});
 			//
-			gsocket_config.emit('subscribe_configuration', { href:window.location.href, action:'set', query:submitform });
+			gsocketio.emit('subscribe_configuration', { href:window.location.href, action:'set', query:submitform });
 
-			//?? reloaded to confirm??
-			gsocket_config.emit('subscribe_configuration', { href:window.location.href, action:'get', query:'account.%' });
+			//reloaded to confirmation
+			gsocketio.emit('subscribe_configuration', { href:window.location.href, action:'get', query:'account.%' });
 		});
 	}//function _init_submitapply_button(_szselector)
 
@@ -783,22 +840,22 @@
 	function init_socket(_socket) {
 		_socket.on( 'publish_configuration', function(_data) {
 			if( 'getdone' == _data.action ) {
-				console.log('publish_configuration - on.getdone');
+				//console.log('publish_configuration - on.getdone');
 				;
 			}//if( 'getdone' == _data.action )
 			else
 			if( 'setdone' == _data.action ) {
-				console.log('publish_configuration - on.setdone');
+				//console.log('publish_configuration - on.setdone');
 				;
 			}//if( 'setdone' == _data.action )
 			else
 			if( 'ready' == _data.action ) {
-				console.log('publish_configuration - on.ready');
+				//console.log('publish_configuration - on.ready');
 				;
 			}//if( 'ready' == _data.action )
 			else
 			if( 'get' == _data.action ) {
-				console.log('publish_configuration - on.get');
+				//console.log('publish_configuration - on.get');
 				switch( _data.query ) {
 				case 'account.%':
 					gserverform_account = _data.result;
@@ -809,16 +866,26 @@
 			}//if( 'get' == _data.action )
 			else
 			if( 'set' == _data.action ) {
-				console.log('publish_configuration - on.set');
+				//console.log('publish_configuration - on.set');
 				;
+			}
+			else
+			if( 'join' == _data.action ) {
+				//console.log('publish_configuration - on.join');
+				;
+			}
+			else
+			if( 'onchange' == _data.action ) {
+				//console.log('publish_configuration - on.onchange');
+				//console.log(_data.href);
+				//console.log(_data.query);
+
+				$( "#dialog-confirm-onchangedb" ).attr( 'data-action', 'aaa' ).dialog( "open" );
 			}
 		});
 	}//function init_socket(_socket)
 
 	/*-------------------------------------------------------------------------*/
-	var gsocket_config = io.connect();
-	init_socket( gsocket_config );
-
 	jQuery(document).tooltip();
 	jQuery(document).ready( function() {
 
@@ -831,13 +898,17 @@
 		_init_dialogopen_button('#dialog-link-add');
 		_init_dialogopen_button('#dialog-link-modify');
 		_init_dialogopen_button('#dialog-link-remove');
-
-		_init_dialogbox();
+		_init_dialogbox_usermgr();
 
 		_userslist_config2table('div#users-list');
 		_init_userslist_table('div#users-list');
 
 		_init_submitapply_button('#submitapply');
 	});
+
+	var gsocketio = io.connect();
+	init_socket( gsocketio );
+
+	_init_dialogbox_onchangedb();
 
 </script>

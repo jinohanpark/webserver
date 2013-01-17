@@ -291,11 +291,11 @@ function _make_sqltables()
 
 	['account.enable',						'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
 	['account.admin',						'admin',	'{"type":"usernamelist","def":"admin"}',					'admin', 's__sg|usernamelist|1|30'],
-	['account.admin.passwd',				'pass',		'{"type":"passwd","def":"pass"}',							'admin', 's__sg|passwdlist|4|32'],
+	['account.admin.passwd',				'z5n3UO/v7+/hb3p4',	'{"type":"passwd","def":"z5n3UO/v7+/hb3p4"}',		'admin', 's__sg|passwdlist|1|30'],
 	['account.operator',					'',			'{"type":"usernamelist","def":""}',							'admin', 's__sg|usernamelist|0|30'],
-	['account.operator.passwd',				'',			'{"type":"passwd","def":""}',								'admin', 's__sg|passwdlist|4|32'],
+	['account.operator.passwd',				'',			'{"type":"passwd","def":""}',								'admin', 's__sg|passwdlist|0|30'],
 	['account.viewer',						'',			'{"type":"usernamelist","def":""}',							'admin', 's__sg|usernamelist|0|30'],
-	['account.viewer.passwd',				'',			'{"type":"passwd","def":""}',								'admin', 's__sg|passwdlist|4|32'],
+	['account.viewer.passwd',				'',			'{"type":"passwd","def":""}',								'admin', 's__sg|passwdlist|0|30'],
 	
 /*
 */

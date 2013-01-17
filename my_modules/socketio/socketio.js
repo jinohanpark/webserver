@@ -69,56 +69,6 @@ function _onWsIOConnection( _socket )
 {
 	//console.log('onWsIOConnection - _socket : ');//console.log('onWsIOConnection - _socket : ', _socket);
 
-	_socket.on( gszIDSubscribe_Configuration,
-		function(_data) {
-			console.log('subscribe_configuration - ClientID(', _socket.id, ')', ' received data:', _data);
-
-			var id = _socket.id;
-
-			var ack = {};
-			ack.action = 'ready';
-			ack.query  = _data.query;
-			ack.result = ' ';
-			gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
-
-			switch(_data.action) {
-			case 'get':
-				_db_getconfiguration( _data.query, function(_result, _json) {
-					//console.log('from DB _result ', _result);
-					var ack = {};
-					ack.action = _data.action;
-					ack.query  = _data.query;
-					ack.result = _json;
-					//console.log('from DB ack', ack);
-					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
-
-					var ack = {};
-					ack.action = 'getdone';
-					ack.query  = _data.query;
-					ack.result = ' ';
-					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
-				});
-				break;
-				
-			case 'set':
-				_db_setconfiguration( _data.query, function(_result, _json) {
-					var ack = {};
-					ack.action = _data.action;
-					ack.query  = _data.query;
-					ack.result = 'ok';
-					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
-
-					var ack = {};
-					ack.action = 'setdone';
-					ack.query  = _data.query;
-					ack.result = ' ';
-					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
-				});
-				break;				
-			}
-		}
-	);
-
 	_socket.on( '_mymsg',
 	    function(_data) {
 			console.log('ClientID(', _socket.id, ')', ' sent data:', _data);
@@ -144,6 +94,76 @@ function _onWsIOConnection( _socket )
 			}
 	    }
 	);	
+
+	_socket.on( gszIDSubscribe_Configuration,
+		function(_data) {
+			console.log('subscribe_configuration - ClientID(', _socket.id, ')', ' received data:', _data);
+
+			var id = _socket.id;
+
+			var ack = {};
+			ack.action = 'ready';
+			ack.query  = _data.query;
+			ack.result = ' ';
+			gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
+
+			switch(_data.action) {
+			case 'get':
+				_db_getconfiguration( _data.query, function(_result, _json) {
+					//console.log('from DB _result ', _result);
+					var ack = {};
+					ack.action = _data.action;
+					ack.query  = _data.query;
+					ack.result = _json;
+					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
+
+					var ack = {};
+					ack.action = 'getdone';
+					ack.query  = _data.query;
+					ack.result = ' ';
+					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
+				});
+				break;
+
+			case 'set':
+				_db_setconfiguration( _data.query, function(_result, _json) {
+					var ack = {};
+					ack.action = _data.action;
+					ack.query  = _data.query;
+					ack.result = 'ok';
+					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
+
+					var ack = {};
+					ack.action = 'setdone';
+					ack.query  = _data.query;
+					ack.result = ' ';
+					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
+
+					var ack = {};
+					ack.href   = _data.href;
+					ack.action = 'onchange';
+					ack.query  = _data.query;
+					ack.result = ' ';
+					//gcWsIO.sockets.in(gszIDSubscribe_Configuration).emit('publish_configuration', ack);
+					_socket.broadcast.emit('publish_configuration', ack);
+				});
+				break;
+
+			case 'join':
+				console.log('subscribe_configuration - join OK');
+				
+				_socket.join(gszIDSubscribe_Configuration);
+				_socket.set('nickname', _data.query); //nickname이 반드시 필요한건 아니다.
+
+				var ack = {};
+				ack.action = _data.action;
+				ack.query  = _data.query;
+				ack.result = 'ok';
+				gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
+				break;
+			}
+		}
+	);
 
 	_socket.on( gszIDSubscribe_Chatting,
 		function(_data) {
