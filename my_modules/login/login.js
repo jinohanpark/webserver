@@ -2,6 +2,14 @@
 var objType = new myLogin();
 exports = module.exports = objType;
 
+/*
+	my modules
+*/
+var gmEncdec = require('../../my_modules/encdec/encdec.js');
+
+/*
+
+*/
 function myLogin( _name )
 {
 	var self = this;
@@ -14,6 +22,9 @@ function myLogin( _name )
 
 myLogin.prototype.authen = function( _req )
 {
+	var szdec = gmEncdec.Decrypt('z5n3UO/v7+/hb3p4', 'szkey_aaa');
+	console.log(szdec);
+
 	var szusername = '';
 	var szpassword = '';
 	var fret = false;
