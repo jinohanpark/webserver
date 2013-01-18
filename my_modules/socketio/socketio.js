@@ -126,6 +126,7 @@ function _onWsIOConnection( _socket )
 				break;
 
 			case 'set':
+				var cnt = 0;
 				_db_setconfiguration( _data.query, function(_result, _json) {
 					var ack = {};
 					ack.action = _data.action;
@@ -133,19 +134,21 @@ function _onWsIOConnection( _socket )
 					ack.result = 'ok';
 					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
 
-					var ack = {};
-					ack.action = 'setdone';
-					ack.query  = _data.query;
-					ack.result = ' ';
-					gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
+					if( (++cnt) == _data.query.length ) {
+						var ack = {};
+						ack.action = 'setdone';
+						ack.query  = _data.query;
+						ack.result = ' ';
+						gcWsIO.sockets.sockets[id].emit( 'publish_configuration', ack );
 
-					var ack = {};
-					ack.href   = _data.href;
-					ack.action = 'onchange';
-					ack.query  = _data.query;
-					ack.result = ' ';
-					//gcWsIO.sockets.in(gszIDSubscribe_Configuration).emit('publish_configuration', ack);
-					_socket.broadcast.emit('publish_configuration', ack);
+						var ack = {};
+						ack.href   = _data.href;
+						ack.action = 'onchange';
+						ack.query  = _data.query;
+						ack.result = ' ';
+						//gcWsIO.sockets.in(gszIDSubscribe_Configuration).emit('publish_configuration', ack);
+						_socket.broadcast.emit('publish_configuration', ack);
+					}
 				});
 				break;
 
@@ -274,18 +277,13 @@ function _db_getconfiguration(_queryitem, _callback)
 
 function _db_setconfiguration(_queryitem, _callback)
 {
-	var cnt = 0;
 	var query = 'UPDATE configuration SET rvalue=? WHERE lvalue=?';
 	for( var i=0; i<_queryitem.length; i++ ) {
 
 		var queryarray = [_queryitem[i].rvalue, _queryitem[i].lvalue];
-		
 		gmDataBase.setquery_ipcam_config( query, queryarray, function(_result) {
 			var json = {};
-
-			if( (++cnt) == _queryitem.length ) {
-				_callback(_result, json);
-			}
+			_callback(_result, json);
 		});
 	}
 }

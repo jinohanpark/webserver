@@ -38,7 +38,7 @@
 	.table-pagenav-selected { background: #1759A3; color: #ffffff !important; font-weight: bold; cursor: default; }
 
 	#dialog-link-add, #dialog-link-modify, #dialog-link-remove {
-		padding: .4em .8em .2em 30px;
+		padding: .4em .8em .4em 30px;
 		text-decoration: none;
 		position: relative;
 	}
@@ -68,7 +68,7 @@
 	}
 
 	#submitapply {
-		padding: .4em .8em .2em 30px;
+		padding: .4em .8em .4em 30px;
 		text-decoration: none;
 		position: relative;
 	}
@@ -79,6 +79,12 @@
 		left: .2em;
 		top: 50%;
 		margin-top: -8px;
+	}
+
+	#submitapply-pbar {
+		padding: .4em .8em .4em 30px;
+		text-decoration: none;
+		position: relative;
 	}
 
 </style>
@@ -208,7 +214,9 @@
 					<tr>
 						<td>bbb1</td>
 						<td>bbb2</td>
-						<td>bbb3</td>
+						<td>
+							<div id="submitapply-pbar"></div>
+						</td>
 					</tr>
 					<tr>
 						<td><dl><dt>
@@ -343,10 +351,10 @@
 		var idtimer, ntimeout;
 
 		function _reload() {
-			console.log('reload');
-			
 			gsocketio.emit('subscribe_configuration', { href:window.location.href, action:'get', query:'account.%' });
 			obj.dialog('close');
+
+			jQuery('#dialog-form-usermgr').dialog('close');
 		}
 
 		obj.attr('title', '서버설정 변경 알림');
@@ -387,8 +395,10 @@
 
 	//
 	function _init_dialogbox_usermgr() {
-		jQuery('#dialog-form-usermgr').attr('title', '사용자 계정 관리');
-		jQuery('#dialog-form-usermgr').dialog( {
+		var obj = jQuery('#dialog-form-usermgr');
+
+		obj.attr('title', '사용자 계정 관리');
+		obj.dialog( {
 			autoOpen: false,
 			width: 450,
 			height: 400,				
@@ -779,7 +789,7 @@
 		//jQuery(_szselector).attr('border', '1');
 
 		//
-		jQuery(_szselector).attr('class', 'ui-widget ui-widget-content ui-corner-top');
+		jQuery(_szselector).attr('class', 'ui-widget-content ui-corner-top');
 		jQuery(_szselector + ' thead tr').attr('class', 'ui-widget-header');
 
 		//
@@ -839,16 +849,6 @@
 	/*-------------------------------------------------------------------------*/
 	function init_socket(_socket) {
 		_socket.on( 'publish_configuration', function(_data) {
-			if( 'getdone' == _data.action ) {
-				//console.log('publish_configuration - on.getdone');
-				;
-			}//if( 'getdone' == _data.action )
-			else
-			if( 'setdone' == _data.action ) {
-				//console.log('publish_configuration - on.setdone');
-				;
-			}//if( 'setdone' == _data.action )
-			else
 			if( 'ready' == _data.action ) {
 				//console.log('publish_configuration - on.ready');
 				;
@@ -865,10 +865,21 @@
 				}
 			}//if( 'get' == _data.action )
 			else
-			if( 'set' == _data.action ) {
-				//console.log('publish_configuration - on.set');
+			if( 'getdone' == _data.action ) {
+				//console.log('publish_configuration - on.getdone');
 				;
+			}//if( 'getdone' == _data.action )
+			else
+			if( 'set' == _data.action ) {
+				console.log('publish_configuration - on.set');
+
+			    $( "#submitapply-pbar" ).progressbar({ value: 37 });
 			}
+			else
+			if( 'setdone' == _data.action ) {
+				console.log('publish_configuration - on.setdone');
+				;
+			}//if( 'setdone' == _data.action )
 			else
 			if( 'join' == _data.action ) {
 				//console.log('publish_configuration - on.join');

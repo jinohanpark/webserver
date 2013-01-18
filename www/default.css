@@ -3,7 +3,8 @@
 body
 {
 	font-size: 72.5%;
-	font-family: "Trebuchet MS", "Arial", "Helvetica", "Verdana", "sans-serif";
+	/*font-family: "Trebuchet MS", "Arial", "Helvetica", "Verdana", "sans-serif";*/
+	font-family: "Verdana", "Geneva", "sans-serif";
 }
 
 table
@@ -57,7 +58,8 @@ table
 .submenu_nav h4
 {
 	color: #e87b10;
-	font: normal 1.1em "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+	/*font: normal 1.1em "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";*/
+	font: normal 1.1em "Verdana", "Geneva", "sans-serif";
 	margin: 0;
 	padding: 0;
 }
