@@ -2,6 +2,9 @@
 /* -------------------------------- */
 body
 {
+	background-image: url('/images/background.png');
+	/*background-image: url('/images/bg-footer-noise.jpg');*/
+	
 	font-size: 72.5%;
 	/*font-family: "Trebuchet MS", "Arial", "Helvetica", "Verdana", "sans-serif";*/
 	font-family: "Verdana", "Geneva", "sans-serif";

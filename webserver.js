@@ -57,16 +57,24 @@ gcConnect.use( gmConnect.errorHandler({message:true}) );
 /*
 */
 var gcWebServer = gmHttp.createServer(gcConnect);
-
 //gcWebServer.on( 'request', _onWebServerRequest );
 gcWebServer.on( 'connection', _onWebServerConnection );
 gcWebServer.on( 'close', _onWebServerClose );
 gcWebServer.on( 'checkContinue', _oncheckContinue );
 gcWebServer.listen( gnhttpport, _callbackWebServerListen );
 
-/*
-*/
 var gcWsIO = gmmyWsIO.Listen( gcWebServer );
+gcWebServer.mydata = {};
+gcWebServer.mydata.cwsio = gcWsIO;
+
+/*
+var gcWebServer1 = gmHttp.createServer(gcConnect);
+//gcWebServer1.on( 'request', _onWebServerRequest );
+gcWebServer1.on( 'connection', _onWebServerConnection );
+gcWebServer1.on( 'close', _onWebServerClose );
+gcWebServer1.on( 'checkContinue', _oncheckContinue );
+gcWebServer1.listen( 4000, _callbackWebServerListen );
+*/
 
 /*
 */
@@ -168,7 +176,7 @@ function _onWebServerRequest( _req, _res )
 			form.on( 'progress',
 				function(_bytesReceived, _bytesExpected) {
 					//console.log('on.progress ', bytesReceived, bytesExpected);
-					
+
 					gcWsIO.sockets.in(gmmyWsIO.GetSubscribeID('firmup')).emit('event_firmup', { action:'progress', bytesReceived:_bytesReceived, bytesExpected:_bytesExpected } );
 				} );
 
@@ -337,6 +345,7 @@ function _oncheckContinue()
 function _callbackWebServerListen()
 {
 	console.log('callbackWebServerListen 192.168.1.2:3000');
+	//console.log( this );
 	//console.log( gmHttp.STATUS_CODES );
 }
 

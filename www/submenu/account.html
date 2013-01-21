@@ -80,13 +80,6 @@
 		top: 50%;
 		margin-top: -8px;
 	}
-
-	#submitapply-pbar {
-		padding: .4em .8em .4em 30px;
-		text-decoration: none;
-		position: relative;
-	}
-
 </style>
 
 <script src="configuration.ssi?action=query&lvalue=account.%&var=gserverform_account"></script>
@@ -215,7 +208,6 @@
 						<td>bbb1</td>
 						<td>bbb2</td>
 						<td>
-							<div id="submitapply-pbar"></div>
 						</td>
 					</tr>
 					<tr>
@@ -872,8 +864,6 @@
 			else
 			if( 'set' == _data.action ) {
 				console.log('publish_configuration - on.set');
-
-			    $( "#submitapply-pbar" ).progressbar({ value: 37 });
 			}
 			else
 			if( 'setdone' == _data.action ) {
