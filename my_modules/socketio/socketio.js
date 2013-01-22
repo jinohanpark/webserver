@@ -146,6 +146,7 @@ function _onWsIOConnection( _socket )
 						ack.action = 'onchange';
 						ack.query  = _data.query;
 						ack.result = ' ';
+
 						//gcWsIO.sockets.in(gszIDSubscribe_Configuration).emit('publish_configuration', ack);
 						_socket.broadcast.emit('publish_configuration', ack);
 					}

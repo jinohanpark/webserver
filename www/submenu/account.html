@@ -80,6 +80,17 @@
 		top: 50%;
 		margin-top: -8px;
 	}
+
+	#submitapply span.ui-loadinganimatedicon {
+		margin: 0 5px 0 0;
+		position: absolute;
+		left: .2em;
+		top: 50%;
+		margin-top: -8px;
+		width: 16px; 
+		height: 16px; 
+		background-image: url(/images/ajax-loader.gif);
+	}
 </style>
 
 <script src="configuration.ssi?action=query&lvalue=account.%&var=gserverform_account"></script>
@@ -183,7 +194,7 @@
 							&nbsp;
 							&nbsp;
 							&nbsp;
-							<a href="#submitapply" id="submitapply" class="ui-state-default ui-corner-all">
+ 							<a href="#submitapply" id="submitapply" class="ui-state-default ui-corner-all">
 								<span class="ui-icon ui-icon-check"></span>
 								적용
 							</a>
@@ -864,11 +875,16 @@
 			else
 			if( 'set' == _data.action ) {
 				console.log('publish_configuration - on.set');
+				
+				$('#submitapply span').removeClass('ui-icon ui-icon-check');
+				$('#submitapply span').addClass('ui-loadinganimatedicon');
 			}
 			else
 			if( 'setdone' == _data.action ) {
 				console.log('publish_configuration - on.setdone');
-				;
+
+				$('#submitapply span').removeClass('ui-loadinganimatedicon');
+				$('#submitapply span').addClass('ui-icon ui-icon-check');
 			}//if( 'setdone' == _data.action )
 			else
 			if( 'join' == _data.action ) {
