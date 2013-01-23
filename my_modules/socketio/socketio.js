@@ -37,6 +37,12 @@ PUBLIC function definition
 function myWebSocket( _name )
 {
 	this.self = this;		// gcmyWsIO
+
+	this.ttttt = 'xxxxxxxxxxxxxxxxx';
+	this.event = new process.EventEmitter();
+	setInterval( function() {
+		gcmyWsIO.event.emit('tick', 'xxxxxx');
+	}, 1000);
 }
 
 myWebSocket.prototype.FirmwareUpload = function( _req, _szuploadbasedir )

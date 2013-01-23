@@ -80,42 +80,6 @@ myLogin.prototype.islogin = function(_req, _res)
 	}
 
 	return sess.fauthen;
-
-	/*
-	sess.count = sess.count || 0;
-	var n = sess.count++;
-	var name = sess.username || 'anonymous_zXcsa1wjk';
-	var authen = sess.authen || 'false';
-	
-	if( 'POST' != _req.method ) return false;
-	
-	if( '/clear' == _req.url ) {
-		_req.session = null;
-		
-		_res.statusCode = 302;
-		_res.setHeader( 'Location:', '/index.html' );
-		_res.end();
-		return;		
-	}
-
-	if( 'POST' == _req.method ) {
-		_req.session.name = _req.body.name;
-	}
-
-	_req.session.count = _req.session.count || 0;
-	var n = _req.session.count++;
-	var name = _req.session.name || 'Enter your name';
-	_res.end( '<p>hits: ' + n + '</p>'
-			 +'<form method="post">'
-			 +'<p>'
-			 +'<input type="text" name="name" value="' + name + '"/>'
-			 +'<input type="submit" value="Save" />'
-			 +'</p>'
-			 +'</form>'
-			 +'<p><a href="/clear">clear session</a></p>'
-			 );
-	return;			 
-	*/
 }
 
 myLogin.prototype.getvalue = function( _num )

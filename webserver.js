@@ -68,6 +68,10 @@ gcWebServer.listen( gnhttpport, _callbackWebServerListen );
 */
 var gcWsIO = gmmyWsIO.Listen( gcWebServer );
 
+gmmyWsIO.event.on('tick', function( _aaa ) {
+	console.log('aaa' + _aaa);
+})
+
 /*
 var gcWebServer1 = gmHttp.createServer(gcConnect);
 //gcWebServer1.on( 'request', _onWebServerRequest );
