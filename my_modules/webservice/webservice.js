@@ -1,4 +1,4 @@
-﻿
+
 var gcmyWebService = new myWebService();
 exports = module.exports = gcmyWebService;
 

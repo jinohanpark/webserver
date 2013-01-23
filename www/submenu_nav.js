@@ -1,4 +1,4 @@
-﻿
+
 function Init_jQuery()
 {
 	jQuery(

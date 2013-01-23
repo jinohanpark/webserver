@@ -1,4 +1,4 @@
-﻿
+
 var gcmyWsIO = new myWebSocket();
 exports = module.exports = gcmyWsIO;
 
@@ -19,6 +19,7 @@ var gcWsIO;
 /*
 	my modules
 */
+var gmMisc = require('../../misc.js');
 var gmDataBase = require('../../my_modules/database/database.js');
 var gcDBClient = gmDataBase.init();
 
@@ -38,9 +39,86 @@ function myWebSocket( _name )
 	this.self = this;		// gcmyWsIO
 }
 
-myWebSocket.prototype.GetSubscribeID = function( _what )
+myWebSocket.prototype.FirmwareUpload = function( _req, _szuploadbasedir )
 {
-	if( 'firmup' == _what ) return gszIDSubscribe_Firmup;
+	var szuploadbasedir = _szuploadbasedir || gmOS.tmpDir();
+	//console.log(szuploadbasedir);
+
+	var form   = _req.form;
+	var files  = [];
+	var fields = [];
+
+	form.on( 'progress',
+		function(_bytesReceived, _bytesExpected) {
+			//console.log('on.progress ', bytesReceived, bytesExpected);
+
+			gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'progress', bytesReceived:_bytesReceived, bytesExpected:_bytesExpected } );
+		} );
+
+	form.on( 'field', 
+		function(_field, _value) {
+			console.log('on.field', _field, _value);
+			fields.push([_field, _value]);
+		} );
+
+	form.on( 'fileBegin', 
+		function(_tagname, _file) {
+			console.log('on.fileBegin', _tagname, _file);
+
+			gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'fileBegin', name:_file.name } );
+		} );
+
+	form.on( 'file',
+		function(_tagname, _file) {
+			console.log('on.file', _tagname, _file);
+			files.push([_tagname, _file]);
+
+			gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'file', name:_file.name } );
+		} );
+
+	form.on( 'error',
+		function(_err) {
+			console.log('on.error', _err);
+
+			gmFs.unlinkSync( tmp_path );
+			gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'error' } );
+		} );
+
+	form.on( 'aborted',
+		function(_err) {
+			console.log('on.aborted');
+
+			gmFs.unlinkSync( tmp_path );
+			gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'aborted' } );
+		} );
+
+	form.on( 'end',
+		function() {
+			console.log('-> upload done');
+
+			var tmp_path = files[0][1].path;
+			var target_path = szuploadbasedir + '/' + files[0][1].name;
+			//console.log('-> tmp_path', tmp_path);
+			//console.log('-> target_path', target_path);
+			
+			try {
+				// move the file from the temporary location to the intended location
+				gmFs.renameSync( tmp_path, target_path );
+			}
+			catch(e) {
+				gmMisc.dbgerr( 'error upload - ' + tmp_path + ',' + target_path );
+				// delete the temporary file, so that the explicitly set temporary upload dir does not get filled with unwanted files
+				gmFs.unlinkSync( tmp_path );
+			}
+
+			gcWsIO.sockets.in(gszIDSubscribe_Firmup).emit('event_firmup', { action:'end' } );
+		} );
+		
+	form.on( 'field', 
+		function(_field, _value) {
+			console.log('on.field', _field, _value);
+			fields.push([_field, _value]);
+		} );
 }
 
 myWebSocket.prototype.CloseListen = function()

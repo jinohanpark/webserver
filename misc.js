@@ -1,4 +1,4 @@
-﻿
+
 var objType = new myMisc();
 exports = module.exports = objType;
 

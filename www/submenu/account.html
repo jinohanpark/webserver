@@ -5,6 +5,8 @@
 <meta charset="utf-8">
 <title>IP CAMERA</title>
 
+<link rel="shortcut icon" href="/favicon.ico">
+
 <link rel="stylesheet" href="/include/jquery/jquery-ui.css">
 <script src="/include/jquery/jquery.js"></script>
 <script src="/include/jquery/jquery-ui.js"></script>
@@ -847,6 +849,7 @@
 			//reloaded to confirmation
 			gsocketio.emit('subscribe_configuration', { href:window.location.href, action:'get', query:'account.%' });
 		});
+
 	}//function _init_submitapply_button(_szselector)
 
 	/*-------------------------------------------------------------------------*/
@@ -875,7 +878,7 @@
 			else
 			if( 'set' == _data.action ) {
 				console.log('publish_configuration - on.set');
-				
+
 				$('#submitapply span').removeClass('ui-icon ui-icon-check');
 				$('#submitapply span').addClass('ui-loadinganimatedicon');
 			}
