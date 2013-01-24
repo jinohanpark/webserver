@@ -96,27 +96,27 @@ var gsocket_config;
 			var json = {lvalue:'system.deviceinfo.model', rvalue:text};
 			submitform.push(json);
 			
-			gsocket_config.emit('subscribe_configuration',
+			gsocket_config.emit('event_configuration',
 								{ href:window.location.href, action:'set', query:submitform });
 
 			// confirm???
-			gsocket_config.emit('subscribe_configuration',
+			gsocket_config.emit('event_configuration',
 								{ href:window.location.href, action:'get', query:'system.deviceinfo.%' });
 		}
 	}
 
 	function init_socket(_socket) {
-		_socket.on( 'publish_configuration', function(_data) {
+		_socket.on( 'event_configuration', function(_data) {
 			if( 'getdone' == _data.action ) {
-				console.log('publish_configuration - on.getdone');
+				console.log('event_configuration - on.getdone');
 			}//if( 'getdone' == _data.action )
 			else
 			if( 'setdone' == _data.action ) {
-				console.log('publish_configuration - on.setdone');
+				console.log('event_configuration - on.setdone');
 			}//if( 'setdone' == _data.action )
 			else
 			if( 'ready' == _data.action ) {
-				console.log('publish_configuration - ready');
+				console.log('event_configuration - ready');
 			}//if( 'ready' == _data.action )
 			else
 			if( 'get' == _data.action ) {

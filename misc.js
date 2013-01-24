@@ -169,3 +169,31 @@ if (!module.parent) {
   	console.log('Express started on port 3000');
 }
 */
+
+/*
+var bufferSize = 8;
+
+var read = gmFs.createReadStream('aaa.xml', {
+  bufferSize: bufferSize
+});
+var write = gmFs.createWriteStream('output.xml');
+
+read
+  .on('data', function(data) {
+    console.log('read: data');
+    console.log(data.toString()); // buffer type으로 받기 때문에 변경한다.
+  })
+  .on('end',   function()          { console.log('read: end');    })
+  .on('error', function(e)         { console.log('read: error');  })
+  .on('close', function()          { console.log('read: colse');  })
+  .on('fd',    function(fd)        { console.log('read: fd');     })
+  ;
+
+write
+  .on('drain', function()          { console.log('write: drain'); })
+  .on('error', function(e)         { console.log('write: error' ); })
+  .on('close', function()          { console.log('write: close' ); })
+  .on('pipe',  function(src)       { console.log('write: pipe'  ); })
+  ;
+read.pipe(write);
+*/

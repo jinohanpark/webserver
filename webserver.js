@@ -64,13 +64,8 @@ gcWebServer.on( 'connection', _onWebServerConnection );
 gcWebServer.on( 'close', _onWebServerClose );
 gcWebServer.on( 'checkContinue', _oncheckContinue );
 gcWebServer.listen( gnhttpport, _callbackWebServerListen );
-/*
-*/
+/**/
 var gcWsIO = gmmyWsIO.Listen( gcWebServer );
-
-gmmyWsIO.event.on('tick', function( _aaa ) {
-	console.log('aaa' + _aaa);
-})
 
 /*
 var gcWebServer1 = gmHttp.createServer(gcConnect);
@@ -80,6 +75,7 @@ gcWebServer1.on( 'close', _onWebServerClose );
 gcWebServer1.on( 'checkContinue', _oncheckContinue );
 gcWebServer1.listen( 4000, _callbackWebServerListen );
 */
+
 
 /*
 */
@@ -240,20 +236,25 @@ function _onWebServerRequest( _req, _res )
 			_res.end();
 		}
 		else {
-			var date = new Date();
-			date.setDate(date.getDate() + 7);
-			_res.writeHead( 200, {
-							'Server': 'node.js-jinohan.park',
-							'Content-Type': szreqfiletype,
-							'Set-Cookie': [ 'breakfast = toast;Expires = ' + date.toUTCString(),
-											'dinner = chicken',
-											'testkey = testvalue'
-										  ]
-							//, 'Cache-Control': 'public, max-age=' + (maxAge / 1000)
-						    }
-						  );
+			_writeHead( _res, szreqfiletype );
 			_res.end( data );
 		}
+	}
+
+	function _writeHead(_res, _szmimetype) {
+		var date = new Date();
+		date.setDate(date.getDate() + 7);
+
+		_res.writeHead( 200, {
+						'Server': 'node.js-jinohan.park',
+						'Content-Type': _szmimetype,
+						'Set-Cookie': [ 'breakfast = toast;Expires = ' + date.toUTCString(),
+										'dinner = chicken',
+										'testkey = testvalue'
+									  ]
+						//, 'Cache-Control': 'public, max-age=' + (maxAge / 1000)
+					    }
+					  );
 	}
 
 	return;

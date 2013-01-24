@@ -356,7 +356,7 @@
 		var idtimer, ntimeout;
 
 		function _reload() {
-			gsocketio.emit('subscribe_configuration', { href:window.location.href, action:'get', query:'account.%' });
+			gsocketio.emit('event_configuration', { href:window.location.href, action:'get', query:'account.%' });
 			obj.dialog('close');
 
 			jQuery('#dialog-form-usermgr').dialog('close');
@@ -844,24 +844,28 @@
 			submitform.push({lvalue:'account.viewer', rvalue:gserverform_account['account.viewer'][0]});
 			submitform.push({lvalue:'account.viewer.passwd', rvalue:gserverform_account['account.viewer.passwd'][0]});
 			//
-			gsocketio.emit('subscribe_configuration', { href:window.location.href, action:'set', query:submitform });
+			gsocketio.emit('event_configuration', { href:window.location.href, action:'set', query:submitform, serveraction:{ which:'account', latch:'yes'} });
 
 			//reloaded to confirmation
-			gsocketio.emit('subscribe_configuration', { href:window.location.href, action:'get', query:'account.%' });
+			gsocketio.emit('event_configuration', { href:window.location.href, action:'get', query:'account.%' });
+
+			//serveraction?
+			gsocketio.emit('event_serveraction', { href:window.location.href, action:'set', query:'account.%' });
 		});
 
 	}//function _init_submitapply_button(_szselector)
 
 	/*-------------------------------------------------------------------------*/
 	function init_socket(_socket) {
-		_socket.on( 'publish_configuration', function(_data) {
+		
+		_socket.on( 'event_configuration', function(_data) {
 			if( 'ready' == _data.action ) {
-				//console.log('publish_configuration - on.ready');
+				//console.log('event_configuration - on.ready');
 				;
 			}//if( 'ready' == _data.action )
 			else
 			if( 'get' == _data.action ) {
-				//console.log('publish_configuration - on.get');
+				//console.log('event_configuration - on.get');
 				switch( _data.query ) {
 				case 'account.%':
 					gserverform_account = _data.result;
@@ -872,35 +876,41 @@
 			}//if( 'get' == _data.action )
 			else
 			if( 'getdone' == _data.action ) {
-				//console.log('publish_configuration - on.getdone');
+				//console.log('event_configuration - on.getdone');
 				;
 			}//if( 'getdone' == _data.action )
 			else
 			if( 'set' == _data.action ) {
-				console.log('publish_configuration - on.set');
+				console.log('event_configuration - on.set');
 
 				$('#submitapply span').removeClass('ui-icon ui-icon-check');
 				$('#submitapply span').addClass('ui-loadinganimatedicon');
 			}
 			else
 			if( 'setdone' == _data.action ) {
-				console.log('publish_configuration - on.setdone');
+				console.log('event_configuration - on.setdone');
 
 				$('#submitapply span').removeClass('ui-loadinganimatedicon');
 				$('#submitapply span').addClass('ui-icon ui-icon-check');
 			}//if( 'setdone' == _data.action )
 			else
 			if( 'join' == _data.action ) {
-				//console.log('publish_configuration - on.join');
+				//console.log('event_configuration - on.join');
 				;
 			}
 			else
 			if( 'onchange' == _data.action ) {
-				//console.log('publish_configuration - on.onchange');
+				//console.log('event_configuration - on.onchange');
 				//console.log(_data.href);
 				//console.log(_data.query);
 
-				$( "#dialog-confirm-onchangedb" ).attr( 'data-action', 'aaa' ).dialog( "open" );
+				var szsubmenuid1 = _myfindquerystring_rvalue( window.location.href, "submenuid" );
+				//console.log('szsubmenuid1=', szsubmenuid1);
+				var szsubmenuid2 = _myfindquerystring_rvalue( _data.href, "submenuid" );
+				//console.log('szsubmenuid2=', szsubmenuid2);
+				if( szsubmenuid1 == szsubmenuid2 ) {
+					$( "#dialog-confirm-onchangedb" ).attr( 'data-action', 'aaa' ).dialog( "open" );
+				}
 			}
 		});
 	}//function init_socket(_socket)

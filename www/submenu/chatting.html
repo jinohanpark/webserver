@@ -115,22 +115,22 @@ var gsocket_chat;
 		init_socket( gsocket_chat );
 		
 		//
-		gsocket_chat.emit('subscribe_chatting', { action:'subscriber_list' });
+		gsocket_chat.emit('event_chatting', { action:'subscriber_list' });
 
 		//
 		document.getElementById('idbutton_chat').onclick = function() {
 			var text = document.getElementById('idtext_chatmessage').value;
-			gsocket_chat.emit('subscribe_chatting', { action:'chatmessage', msg:text });
+			gsocket_chat.emit('event_chatting', { action:'chatmessage', msg:text });
 		}
 		document.getElementById('idtext_chatmessage').onkeypress = function() {
 			if( 13 !== event.keyCode ) return;
 			var text = document.getElementById('idtext_chatmessage').value;
-			gsocket_chat.emit('subscribe_chatting', { action:'chatmessage', msg:text });
+			gsocket_chat.emit('event_chatting', { action:'chatmessage', msg:text });
 		}
 		document.getElementById('idbutton_join').onclick = function() {
 			var sznickname = document.getElementById('idtext_nickname').value;
-			gsocket_chat.emit('subscribe_chatting', { action:'join', nickname:sznickname });
-			gsocket_chat.emit('subscribe_chatting', { action:'subscriber_list' });
+			gsocket_chat.emit('event_chatting', { action:'join', nickname:sznickname });
+			gsocket_chat.emit('event_chatting', { action:'subscriber_list' });
 		}
 	}
 
