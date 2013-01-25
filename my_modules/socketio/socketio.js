@@ -40,9 +40,9 @@ function myWebSocket( _name )
 	this.self = this;		// gcmyWsIO
 
 	this.event = new process.EventEmitter();
-	setInterval( function() {
-		gcmyWsIO.event.emit('tick', 'xxxxxx');
-	}, 1000);
+	// setInterval( function() {
+	// 	gcmyWsIO.event.emit('tick', 'xxxxxx');
+	// }, 1000);
 }
 
 myWebSocket.prototype.Listen = function( _cWebServer )

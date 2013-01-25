@@ -1,6 +1,6 @@
 
 /*
-	based on node.js v0.8.14
+	based on node.js v0.8.18
 */
 
 
@@ -10,7 +10,7 @@ var gszbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webse
 var gszuploadbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload';
 
 /*
-	internal modules
+	native modules
 */
 var gmUtil = require('util');
 var gmHttp = require('http');
@@ -47,7 +47,7 @@ var gcWebServiceServer = gmWebService.createSocket();
 */
 var gcConnect = gmConnect();
 gcConnect.use( gmConnect.query() );
-// gcConnect.use( gmConnect.basicAuth('aaa', '111') );
+//gcConnect.use( gmConnect.basicAuth('aaab', '1111') );
 gcConnect.use( gmConnect.favicon(gszbasedir+'/images/favicon.ico') );
 gcConnect.use( gmConnect.logger('dev') );
 gcConnect.use( gmConnect.bodyParser({uploadDir:gszuploadbasedir, defer:true}) );
@@ -94,9 +94,13 @@ function _onWebServerRequest( _req, _res )
 	//console.log('gmConnect.query:', _req.query);		//console.log('gmConnect.query.key:', _req.query.key);
 	//console.log('gmConnect.body:', _req.body);
 	//console.log('gmConnect.multipart:', _req.files);
-	//console.log('gmConnect.cookies:', _req.cookies);
-	//console.log('gmConnect.session:', _req.session);
+	console.log('---------------------------------------');
+	console.log('gmConnect.cookies:', _req.cookies);
+
+	console.log('gmConnect.session:', _req.session);
 	console.log('gmUrl.url:', _req.url);
+
+	_req.session._mydata = '11111';
 
 	//
 	var szreqfiletype;
@@ -191,7 +195,8 @@ function _onWebServerRequest( _req, _res )
 	///////////////////////////////////////////////////////////////////////////////////	
 	//
 	if( ('text/html' == szreqfiletype) ) {
-		var flogin = gmLogin.islogin(_req, _res);
+		//var flogin = gmLogin.islogin(_req, _res);
+		var flogin = true;
 
 		if( false == flogin ) {
 			if( ('/login.html' != oUrl.pathname) ) {
@@ -246,13 +251,13 @@ function _onWebServerRequest( _req, _res )
 		date.setDate(date.getDate() + 7);
 
 		_res.writeHead( 200, {
-						'Server': 'node.js-jinohan.park',
+						'Server': 'nodejs-jinohan.park',
 						'Content-Type': _szmimetype,
 						'Set-Cookie': [ 'breakfast = toast;Expires = ' + date.toUTCString(),
 										'dinner = chicken',
 										'testkey = testvalue'
 									  ]
-						//, 'Cache-Control': 'public, max-age=' + (maxAge / 1000)
+						, 'Cache-Control': 'no-cache'
 					    }
 					  );
 	}
@@ -337,4 +342,24 @@ function _db_getconfiguration(_queryitem, _callback)
 
 		_callback(_result, json);
 	});
+}
+
+function getSharedSecretForUserFunction(_user, _callback) {
+	console.log('aaaaaaaaaaaaaaaaaaaa getSharedSecretForUserFunction');
+
+	var result;
+	if(_user == 'foo') 
+		result= 'bar';
+	_callback(null, result);
+}
+
+function validatePasswordFunction(_username, _password, _successCallback, _failureCallback) {
+	console.log('aaaaaaaaaaaaaaaaaaaa validatePasswordFunction');
+
+	if( _username === 'foo' && _password === "bar" ) {
+		_successCallback();
+	}
+	else {
+		_failureCallback();
+	}
 }
