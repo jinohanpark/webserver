@@ -2,6 +2,7 @@
 
 
 var crypto = require('crypto');
+var util = require('util');
 
 
 // We store all "sessions" in here.
@@ -54,7 +55,7 @@ function auth401(req, res, realm, opaque, message) {
   // The session times out after one hour.
   var timer = setTimeout(function() {
     delete nonces[opaque];
-  }, 60*60*1000);
+  }, 60*1000);
 
   nonces[opaque] = {
     n:     nonce,
@@ -72,6 +73,10 @@ function auth401(req, res, realm, opaque, message) {
 
 
 exports.login = function(req, res, realm, users) {
+	console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+
+	console.log(util.inspect(req.connection, true, null));
+
   var opaque = md5(realm+req.headers['user-agent']+req.connection.remoteAddress);
 
   // Check if the headers are present.
