@@ -94,13 +94,11 @@ function _onWebServerRequest( _req, _res )
 	//console.log('gmConnect.query:', _req.query);		//console.log('gmConnect.query.key:', _req.query.key);
 	//console.log('gmConnect.body:', _req.body);
 	//console.log('gmConnect.multipart:', _req.files);
-	console.log('---------------------------------------');
-	console.log('gmConnect.cookies:', _req.cookies);
-
-	console.log('gmConnect.session:', _req.session);
+	//console.log('---------------------------------------');
+	//console.log('gmConnect.cookies:', _req.cookies);
+	//console.log('gmConnect.session:', _req.session);
 	console.log('gmUrl.url:', _req.url);
-
-	_req.session._mydata = '11111';
+	//_req.session._mydata = '11111';
 
 	//
 	var szreqfiletype;

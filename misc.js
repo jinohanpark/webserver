@@ -226,3 +226,113 @@ openssl genrsa -out privatekey.pem 1024
 openssl req -new -key privatekey.pem -out certrequest.csr 
 openssl x509 -req -in certrequest.csr -signkey privatekey.pem -out certificate.pem
 */
+
+
+/*
+AXIS-ONVIF
+Device Management -> CreateUsers : 장비에 root@pass로 암호가 걸려있는 경우 ONVIF REQ. XML 내용임.
+REQ->
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:tds="http://www.onvif.org/ver10/device/wsdl" xmlns:tt="http://www.onvif.org/ver10/schema">
+  <s:Header xmlns:s="http://www.w3.org/2003/05/soap-envelope">
+    <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+      <wsse:UsernameToken>
+        <wsse:Username>root</wsse:Username>
+        <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">o487Ro2wUWIEmX74G+GxkuoSvGg=</wsse:Password>
+        <wsse:Nonce>VOdNhkxop4LWnwbLkNnuyg==</wsse:Nonce>
+        <wsu:Created>2013-01-28T01:23:37Z</wsu:Created>
+      </wsse:UsernameToken>
+    </wsse:Security>
+  </s:Header>
+  <soap:Body>
+    <tds:CreateUsers>
+      <tds:User>
+        <tt:Username>admin</tt:Username>
+        <tt:Password>123</tt:Password>
+        <tt:UserLevel>User</tt:UserLevel>
+      </tds:User>
+    </tds:CreateUsers>
+  </soap:Body>
+</soap:Envelope>
+
+RES->
+HTTP/1.1 400 Bad Request
+Server: gSOAP/2.7
+Content-Type: application/soap+xml; charset=utf-8
+Content-Length: 3062
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope" xmlns:SOAP-ENC="http://www.w3.org/2003/05/soap-encoding" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:c14n="http://www.w3.org/2001/10/xml-exc-c14n#" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsa5="http://www.w3.org/2005/08/addressing" xmlns:xmime="http://tempuri.org/xmime.xsd" xmlns:xop="http://www.w3.org/2004/08/xop/include" xmlns:wsrfbf="http://docs.oasis-open.org/wsrf/bf-2" xmlns:wstop="http://docs.oasis-open.org/wsn/t-1" xmlns:tt="http://www.onvif.org/ver10/schema" xmlns:wsrfr="http://docs.oasis-open.org/wsrf/r-2" xmlns:aa="http://www.axis.com/vapix/ws/action1" xmlns:aev="http://www.axis.com/vapix/ws/event1" xmlns:apc="http://www.axis.com/vapix/ws/panopsiscalibration1" xmlns:arth="http://www.axis.com/vapix/ws/recordedtour1" xmlns:tan1="http://www.onvif.org/ver20/analytics/wsdl/RuleEngineBinding" xmlns:tan2="http://www.onvif.org/ver20/analytics/wsdl/AnalyticsEngineBinding" xmlns:tan="http://www.onvif.org/ver20/analytics/wsdl" xmlns:tds="http://www.onvif.org/ver10/device/wsdl" xmlns:tev1="http://www.onvif.org/ver10/events/wsdl/NotificationProducerBinding" xmlns:tev2="http://www.onvif.org/ver10/events/wsdl/EventBinding" xmlns:tev3="http://www.onvif.org/ver10/events/wsdl/SubscriptionManagerBinding" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:tev4="http://www.onvif.org/ver10/events/wsdl/PullPointSubscriptionBinding" xmlns:tev="http://www.onvif.org/ver10/events/wsdl" xmlns:timg="http://www.onvif.org/ver20/imaging/wsdl" xmlns:tptz="http://www.onvif.org/ver20/ptz/wsdl" xmlns:trt="http://www.onvif.org/ver10/media/wsdl" xmlns:ter="http://www.onvif.org/ver10/error" xmlns:tns1="http://www.onvif.org/ver10/topics" xmlns:tnsaxis="http://www.axis.com/2009/event/topics">
+  <SOAP-ENV:Header>
+    <wsse:Security SOAP-ENV:mustUnderstand="true">
+      <wsse:UsernameToken>
+        <wsse:Username>root</wsse:Username>
+        <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">UDQnmFY7PCAr5LrGFB+mHbtR8r0=</wsse:Password>
+        <wsse:Nonce>MYzpgVEClNXJAChhT/KFtw==</wsse:Nonce>
+        <wsu:Created>2013-01-28T01:29:20Z</wsu:Created>
+      </wsse:UsernameToken>
+    </wsse:Security>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <SOAP-ENV:Fault SOAP-ENV:encodingStyle="http://www.w3.org/2003/05/soap-encoding">
+      <SOAP-ENV:Code>
+        <SOAP-ENV:Value>SOAP-ENV:Sender</SOAP-ENV:Value>
+        <SOAP-ENV:Subcode>
+          <SOAP-ENV:Value>ter:NotAuthorized</SOAP-ENV:Value>
+        </SOAP-ENV:Subcode>
+      </SOAP-ENV:Code>
+      <SOAP-ENV:Reason>
+        <SOAP-ENV:Text xml:lang="en">Sender not authorized</SOAP-ENV:Text>
+      </SOAP-ENV:Reason>
+      <SOAP-ENV:Detail>
+        <SOAP-ENV:Text>The action requested requires authorization and the sender is not authorized</SOAP-ENV:Text>
+      </SOAP-ENV:Detail>
+    </SOAP-ENV:Fault>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+// 아래는 암호를 설정하지 않은 경우 (ONVIF testtool.exe에서 management tab에서 관리)
+REQ->
+<?xml version='1.0' encoding='utf-8'?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+               xmlns:tds="http://www.onvif.org/ver10/device/wsdl"
+               xmlns:tt="http://www.onvif.org/ver10/schema">
+  <soap:Body>
+    <tds:CreateUsers>
+      <tds:User>
+        <tt:Username>admin</tt:Username>
+        <tt:Password>123</tt:Password>
+        <tt:UserLevel>User</tt:UserLevel>
+      </tds:User>
+    </tds:CreateUsers>
+  </soap:Body>
+</soap:Envelope>
+
+RES->
+HTTP/1.1 400 Bad Request
+Server: gSOAP/2.7
+Content-Type: application/soap+xml; charset=utf-8
+Content-Length: 2564
+Connection: close
+
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope" xmlns:SOAP-ENC="http://www.w3.org/2003/05/soap-encoding" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:c14n="http://www.w3.org/2001/10/xml-exc-c14n#" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsa5="http://www.w3.org/2005/08/addressing" xmlns:xmime="http://tempuri.org/xmime.xsd" xmlns:xop="http://www.w3.org/2004/08/xop/include" xmlns:wsrfbf="http://docs.oasis-open.org/wsrf/bf-2" xmlns:wstop="http://docs.oasis-open.org/wsn/t-1" xmlns:tt="http://www.onvif.org/ver10/schema" xmlns:wsrfr="http://docs.oasis-open.org/wsrf/r-2" xmlns:aa="http://www.axis.com/vapix/ws/action1" xmlns:aev="http://www.axis.com/vapix/ws/event1" xmlns:apc="http://www.axis.com/vapix/ws/panopsiscalibration1" xmlns:arth="http://www.axis.com/vapix/ws/recordedtour1" xmlns:tan1="http://www.onvif.org/ver20/analytics/wsdl/RuleEngineBinding" xmlns:tan2="http://www.onvif.org/ver20/analytics/wsdl/AnalyticsEngineBinding" xmlns:tan="http://www.onvif.org/ver20/analytics/wsdl" xmlns:tds="http://www.onvif.org/ver10/device/wsdl" xmlns:tev1="http://www.onvif.org/ver10/events/wsdl/NotificationProducerBinding" xmlns:tev2="http://www.onvif.org/ver10/events/wsdl/EventBinding" xmlns:tev3="http://www.onvif.org/ver10/events/wsdl/SubscriptionManagerBinding" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:tev4="http://www.onvif.org/ver10/events/wsdl/PullPointSubscriptionBinding" xmlns:tev="http://www.onvif.org/ver10/events/wsdl" xmlns:timg="http://www.onvif.org/ver20/imaging/wsdl" xmlns:tptz="http://www.onvif.org/ver20/ptz/wsdl" xmlns:trt="http://www.onvif.org/ver10/media/wsdl" xmlns:ter="http://www.onvif.org/ver10/error" xmlns:tns1="http://www.onvif.org/ver10/topics" xmlns:tnsaxis="http://www.axis.com/2009/event/topics">
+  <SOAP-ENV:Body>
+    <SOAP-ENV:Fault>
+      <SOAP-ENV:Code>
+        <SOAP-ENV:Value>SOAP-ENV:Sender</SOAP-ENV:Value>
+        <SOAP-ENV:Subcode>
+          <SOAP-ENV:Value>ter:NotAuthorized</SOAP-ENV:Value>
+        </SOAP-ENV:Subcode>
+      </SOAP-ENV:Code>
+      <SOAP-ENV:Reason>
+        <SOAP-ENV:Text xml:lang="en">Sender not authorized</SOAP-ENV:Text>
+      </SOAP-ENV:Reason>
+      <SOAP-ENV:Detail>
+        <SOAP-ENV:Text>The action requested requires authorization and the sender is not authorized</SOAP-ENV:Text>
+      </SOAP-ENV:Detail>
+    </SOAP-ENV:Fault>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+*/
