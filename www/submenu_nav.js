@@ -10,7 +10,7 @@ function Init_jQuery()
 		$('.left_nav a').click( function(ev) {
 			var atag = $(this).text();
 			var szhref = $(this).attr('href');
-			var str = szhref+'&submenutext='+atag;
+			var str = szhref;//var str = szhref+'&submenutext='+atag;
 			$(this).attr('href', str);
 		});
 	});

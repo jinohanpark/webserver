@@ -76,7 +76,6 @@ gcWebServer1.on( 'checkContinue', _oncheckContinue );
 gcWebServer1.listen( 4000, _callbackWebServerListen );
 */
 
-
 /*
 */
 function _onWebServerRequest( _req, _res )
@@ -125,6 +124,17 @@ function _onWebServerRequest( _req, _res )
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////
+	// check authentication
+	// only html???
+	if( ('text/html' == szreqfiletype) ) {	
+		var fok = gmLogin.login( _req, _res );
+		if( false == fok ) {
+	    	// the response is already finished so we can just return here.
+	    	return;
+	    }
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////
 	//
 	if( ('application/soap+xml' == szreqfiletype) ) {
 		if( 'post' != _req.method.toLowerCase() ) {
@@ -159,6 +169,7 @@ function _onWebServerRequest( _req, _res )
 		}
 
 		switch( oUrl.pathname ) {
+		/*	
 		case '/cgi-bin/login.node':
 			var fok = gmLogin.authen(_req);
 			if( false == fok ) {
@@ -168,7 +179,7 @@ function _onWebServerRequest( _req, _res )
 				_fnRedirectPage(_req, _res, '/index.html');
 			}
 			break;
-
+		*/
 		case '/cgi-bin/upload.node':
 			console.log('-> /cgi-bin/upload.node');
 
@@ -192,8 +203,9 @@ function _onWebServerRequest( _req, _res )
 	
 	///////////////////////////////////////////////////////////////////////////////////	
 	//
+	/*
 	if( ('text/html' == szreqfiletype) ) {
-		//var flogin = gmLogin.islogin(_req, _res);
+		var flogin = gmLogin.islogin(_req, _res);
 		var flogin = true;
 
 		if( false == flogin ) {
@@ -208,6 +220,7 @@ function _onWebServerRequest( _req, _res )
 			}
 		}
 	}
+	*/
 
 	//
 	if( ('ssi/javascript' == szreqfiletype) ) {
@@ -280,7 +293,7 @@ function _oncheckContinue()
 
 function _callbackWebServerListen()
 {
-	console.log('callbackWebServerListen 192.168.1.2:3000');
+	console.log('callbackWebServerListen 192.168.0.2:3000');
 	//console.log( this );
 	//console.log( gmHttp.STATUS_CODES );
 }

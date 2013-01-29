@@ -62,6 +62,9 @@ function auth401(req, res, realm, opaque, message) {
     timer: timer
   };
 
+	console.log('111 opaque:', opaque);
+	console.log('111 ganonces[opaque]:', nonces);
+
   res.writeHead(401, {
     'Content-Type': 'text/html',
     'WWW-Authenticate': 'Digest realm="'+realm+'",qop="auth",nonce="'+nonce+'",opaque="'+opaque+'"'
@@ -75,7 +78,7 @@ function auth401(req, res, realm, opaque, message) {
 exports.login = function(req, res, realm, users) {
 	console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
 
-	console.log(util.inspect(req.connection, true, null));
+	//console.log(util.inspect(req.connection, true, null));
 
   var opaque = md5(realm+req.headers['user-agent']+req.connection.remoteAddress);
 

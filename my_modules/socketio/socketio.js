@@ -1,6 +1,6 @@
 
-var gcmyWsIO = new myWebSocket();
-exports = module.exports = gcmyWsIO;
+var gcThis = new myWebSocket();
+exports = module.exports = gcThis;
 
 /*
 	internal modules
@@ -37,11 +37,11 @@ PUBLIC function definition
 */
 function myWebSocket( _name )
 {
-	this.self = this;		// gcmyWsIO
+	this.self = this;		// gcThis
 
 	this.event = new process.EventEmitter();
 	// setInterval( function() {
-	// 	gcmyWsIO.event.emit('tick', 'xxxxxx');
+	// 	gcThis.event.emit('tick', 'xxxxxx');
 	// }, 1000);
 }
 
@@ -59,7 +59,7 @@ myWebSocket.prototype.Listen = function( _cWebServer )
 	gcWsIO.sockets.on( 'disconnect', _onWsIODisconnect );
 	
 	//
-	gcmyWsIO.event.on('tick', function( _aaa ) {
+	gcThis.event.on('tick', function( _aaa ) {
 		console.log('aaa' + _aaa);
 	});
 	
