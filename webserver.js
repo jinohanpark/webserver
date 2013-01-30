@@ -126,6 +126,7 @@ function _onWebServerRequest( _req, _res )
 	///////////////////////////////////////////////////////////////////////////////////
 	// check authentication
 	// only html???
+	/*
 	if( ('text/html' == szreqfiletype) ) {	
 		var fok = gmLogin.login( _req, _res );
 		if( false == fok ) {
@@ -133,6 +134,7 @@ function _onWebServerRequest( _req, _res )
 	    	return;
 	    }
 	}
+	*/
 
 	///////////////////////////////////////////////////////////////////////////////////
 	//

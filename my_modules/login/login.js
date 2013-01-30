@@ -30,21 +30,6 @@ function myLogin( _name )
 	this.session_timeout = 60*60*1000;	// after one hour
 };
 
-/*
-	var gmPause = require('pause');
-	var cnt = 0;
-	var pause = gmPause();
-	var timerid = setInterval( function() {
-   		console.log('aaaaa');
-		if( cnt++ == 5 ) {
-			pause.resume();
-			clearInterval(timerid);
-			timerid = null;
-		}
-   	}, 1000);
-	console.log('bbbbbbbbbbbbb');
-*/
-
 function _db_getconfiguration(_queryitem, _callback)
 {
 	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
@@ -152,6 +137,7 @@ myLogin.prototype.login = function( _req, _res )
 
 	//console.log(util.inspect(_req.connection, true, null));
 
+	return
 	_db_getconfiguration( 'account.%', function(_result, _json) {
 		//console.log('from DB _result._json:', _json);
 
@@ -178,9 +164,13 @@ myLogin.prototype.login = function( _req, _res )
 		var aname = _json['account.viewer'][0].split(',');
 		var apasswd = _json['account.viewer.passwd'][0].split(',');
 		_add( 'viewer', aname, apasswd );
-		
+
 		console.log('users:', users);
+
+		return _gogogo();
 	});
+
+	function _gogogo() {
 
 	var opaque = _getopaquehash( realm, _req );
 
@@ -262,6 +252,8 @@ myLogin.prototype.login = function( _req, _res )
 
 	//return tauth.username;
 	return true;
+
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

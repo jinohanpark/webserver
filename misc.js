@@ -336,3 +336,68 @@ Connection: close
   </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 */
+
+/*
+var Fiber = require('fibers');
+
+function sleep(ms) {
+    var fiber = Fiber.current;
+    setTimeout(function() {
+        fiber.run();
+        console.log('bbbbbbbbbbbbbbb');
+    }, ms);
+    Fiber.yield();
+    console.log('aaaaaaaaaaaaaaaaaaa');
+}
+
+Fiber(function() {
+    console.log('wait... ' + new Date);
+    sleep(10000);
+    console.log('ok... ' + new Date);
+}).run();
+
+console.log('back in main');
+*/
+
+/*
+var Fiber = require('fibers');
+
+var inc = Fiber(function(start) {
+    var total = start;
+    while (true) {
+        total += Fiber.yield(total);
+    }
+});
+
+for (var ii = inc.run(1); ii <= 10; ii = inc.run(1)) {
+    console.log(ii);
+}
+*/
+
+/*
+var Fiber = require('fibers');
+
+console.log('aaaaaaaaaaaaaaaaaaa');
+var fn = Fiber(function() {
+    console.log('async work here...');
+    Fiber.yield();
+    console.log('still working...');
+    Fiber.yield();
+    console.log('just a little bit more...');
+    Fiber.yield();
+    throw new Error('oh crap!');
+});
+console.log('bbbbbbbbbbbbbbbbbb');
+try {
+    while (true) {
+      console.log('ccccccccccccccccc');
+        fn.run();
+        console.log('dddddddddddddddddddd');
+    }
+} catch(e) {
+    console.log('safely caught that error!');
+    console.log(e.stack);
+}
+
+console.log('done!');
+*/
