@@ -47,7 +47,13 @@ var gcWebServiceServer = gmWebService.createSocket();
 */
 var gcConnect = gmConnect();
 gcConnect.use( gmConnect.query() );
-//gcConnect.use( gmConnect.basicAuth('aaab', '1111') );
+// gcConnect.use( gmConnect.basicAuth('aaab', '1111') );
+gcConnect.use( gmConnect.basicAuth( function(_user, _pass, _fn) {
+	console.log('aaaaa');
+	console.log('user', _user);
+	console.log('pass', _pass);
+    //User.authenticate({ user: _user, pass: _pass }, _fn);
+}));
 gcConnect.use( gmConnect.favicon(gszbasedir+'/images/favicon.ico') );
 gcConnect.use( gmConnect.logger('dev') );
 gcConnect.use( gmConnect.bodyParser({uploadDir:gszuploadbasedir, defer:true}) );
