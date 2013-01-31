@@ -37,6 +37,7 @@ var gmmyWsIO = require('./my_modules/socketio/socketio.js');
 var gcDBClient = gmDataBase.init();	//console.log('gcDBClient:', gcDBClient);
 gmDataBase.makedefault_ipcam_database();
 
+
 /*
 */ 
 var gcWebServiceServer = gmWebService.createSocket();	//console.log('gcWebServiceServer:', gcWebServiceServer);
