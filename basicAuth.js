@@ -110,12 +110,125 @@ function _parsing_authorization(_szauthorization) {
     return tauthorization;
 }
 
-module.exports = function basicAuth(callback, realm)
+
+/**
+ * Basic Auth:
+ *
+ * Enfore basic authentication by providing a `callback(user, pass)`,
+ * which must return `true` in order to gain access. Alternatively an async
+ * method is provided as well, invoking `callback(user, pass, callback)`. Populates
+ * `req.user`. The final alternative is simply passing username / password
+ * strings.
+ *
+ *  Simple username and password
+ *
+ *     connect(connect.basicAuth('username', 'password'));
+ *
+ *  Callback verification
+ *
+ *     connect()
+ *       .use(connect.basicAuth(function(user, pass){
+ *         return 'tj' == user & 'wahoo' == pass;
+ *       }))
+ *
+ *  Async callback verification, accepting `fn(err, user)`.
+ *
+ *     connect()
+ *       .use(connect.basicAuth(function(user, pass, fn){
+ *         User.authenticate({ user: user, pass: pass }, fn);
+ *       }))
+ *
+ * @param {Function|String} callback or username
+ * @param {String} realm
+ * @api public
+ */
+module.exports = function basicAuth(_method)
 {
   //realm = realm || 'Authorization Required';
   realm = 'IPCAM_SERVER';
 
-  return function(req, res, next) {
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  var fnbasic = function(req, res, next) {
+    var authorization = req.headers.authorization;
+
+    if (req.user) return next();
+    if (!authorization) return unauthorized(res, realm);
+
+    var parts = authorization.split(' ');
+
+    if (parts.length !== 2) return next(utils.error(400));
+
+    var scheme = parts[0]
+      , credentials = new Buffer(parts[1], 'base64').toString()
+      , index = credentials.indexOf(':');
+
+    if ('Basic' != scheme || index < 0) return next(utils.error(400));
+    
+    var user = credentials.slice(0, index)
+      , pass = credentials.slice(index + 1);
+
+    // async
+    var pause = utils.pause(req);
+    _checkall(user, pass, function(err, user, _message) {
+      if (err || !user)  return unauthorized(res, realm);
+      req.user = req.remoteUser = user;
+      next();
+      pause.resume();
+    });
+
+    /////////////////////////////////////////////////////////////////////////////////
+    //
+    function _checkall( _user, _pass, _fncallback ) {
+
+      var isauthen_enable;
+      var users = {};
+
+      _db_getconfiguration( 'account.%', function(_result, _json) {
+        //console.log('from DB _result._json:', _json);
+        isauthen_enable = _json['account.enable'][0];
+
+        function _add( _szprivilege, _aname, _apasswd ) {
+          var cnt = ( '' == _aname[0] ) ? 0 : _aname.length;
+          for( var i=0; i<cnt; i++ ) {
+            var szdec = gmEncdec.Decrypt(_apasswd[i], 'szkey_aaa');
+            users[_aname[i]] = [];
+            users[_aname[i]][0] = szdec;
+            users[_aname[i]][1] = _szprivilege;
+          }
+        }
+
+        var aname = _json['account.admin'][0].split(',');
+        var apasswd = _json['account.admin.passwd'][0].split(',');
+        _add( 'admin', aname, apasswd );
+
+        var aname = _json['account.operator'][0].split(',');
+        var apasswd = _json['account.operator.passwd'][0].split(',');
+        _add( 'operator', aname, apasswd );
+
+        var aname = _json['account.viewer'][0].split(',');
+        var apasswd = _json['account.viewer.passwd'][0].split(',');
+        _add( 'viewer', aname, apasswd );
+
+        //console.log('users:', users);
+
+        // check username and password!
+        if( !users[_user][0] ) {
+          _fncallback(true, _user);  
+        }
+        else {
+          if( users[_user][0] == _pass ) {
+            _fncallback(false, _user);    
+          }
+          else {
+            _fncallback(true, _user);     
+          }
+        }
+      });
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  var fndigest = function(req, res, next) {
     var authorization = req.headers.authorization;  //console.log('authorization:', authorization);
     var opaque = _getopaquehash( realm, req ); console.log('opaque:', opaque);
     
@@ -146,9 +259,9 @@ module.exports = function basicAuth(callback, realm)
     //
     function _checkall( _tauth, _realm, _fncallback ) {
 
-      var isauthen_enable;
       var fauthen_error = true;
 
+      var isauthen_enable;
       var users = {};
 
       _db_getconfiguration( 'account.%', function(_result, _json) {
@@ -177,14 +290,14 @@ module.exports = function basicAuth(callback, realm)
         var apasswd = _json['account.viewer.passwd'][0].split(',');
         _add( 'viewer', aname, apasswd );
 
-        console.log('users:', users);
+        //console.log('users:', users);
 
         _gogogo();
       });
 
       function _gogogo() {
-        console.log('>>>>>>>>> _tauth:', _tauth);
-       do {
+        //console.log('>>>>>>>>> _tauth:', _tauth);
+        do {
           // check realm!
           if( _tauth.realm != realm ) {
             console.log('eeeeeeeeee');
@@ -251,39 +364,16 @@ module.exports = function basicAuth(callback, realm)
       };//function _gogogo()
     }//function _checkall( _tauth, _realm, _fncallback )
   }
-};  
 
-/**
- * Basic Auth:
- *
- * Enfore basic authentication by providing a `callback(user, pass)`,
- * which must return `true` in order to gain access. Alternatively an async
- * method is provided as well, invoking `callback(user, pass, callback)`. Populates
- * `req.user`. The final alternative is simply passing username / password
- * strings.
- *
- *  Simple username and password
- *
- *     connect(connect.basicAuth('username', 'password'));
- *
- *  Callback verification
- *
- *     connect()
- *       .use(connect.basicAuth(function(user, pass){
- *         return 'tj' == user & 'wahoo' == pass;
- *       }))
- *
- *  Async callback verification, accepting `fn(err, user)`.
- *
- *     connect()
- *       .use(connect.basicAuth(function(user, pass, fn){
- *         User.authenticate({ user: user, pass: pass }, fn);
- *       }))
- *
- * @param {Function|String} callback or username
- * @param {String} realm
- * @api public
- */
+  ///////////////////////////////////////////////////////////////////////////////////////////////
+  if( 'basic' == _method ) {
+    return fnbasic;  
+  }
+  else
+  if( 'digest' == _method ) {    
+    return fndigest;
+  }
+};  
 
 /*
 module.exports = function basicAuth(callback, realm) {

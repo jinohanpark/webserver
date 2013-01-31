@@ -27,33 +27,26 @@ var gmConnect = require('connect');
 	my modules
 */
 var gmMisc = require('./misc.js');
-var gmLogin = require('./my_modules/login/login.js');
+//var gmLogin = require('./my_modules/login/login.js');
 var gmWebService = require('./my_modules/webservice/webservice.js');
 var gmDataBase = require('./my_modules/database/database.js');
 var gmmyWsIO = require('./my_modules/socketio/socketio.js');
 
 /*
 */
-var gcDBClient = gmDataBase.init();
-//console.log('gcDBClient:', gcDBClient);
+var gcDBClient = gmDataBase.init();	//console.log('gcDBClient:', gcDBClient);
 gmDataBase.makedefault_ipcam_database();
 
 /*
 */ 
-var gcWebServiceServer = gmWebService.createSocket();
-//console.log('gcWebServiceServer:', gcWebServiceServer);
+var gcWebServiceServer = gmWebService.createSocket();	//console.log('gcWebServiceServer:', gcWebServiceServer);
 
 /*
 */
 var gcConnect = gmConnect();
 gcConnect.use( gmConnect.query() );
-// gcConnect.use( gmConnect.basicAuth('aaab', '1111') );
-gcConnect.use( gmConnect.basicAuth( function(_user, _pass, _fn) {
-	console.log('aaaaa');
-	console.log('user', _user);
-	console.log('pass', _pass);
-    //User.authenticate({ user: _user, pass: _pass }, _fn);
-}));
+//gcConnect.use( gmConnect.basicAuth('basic') );
+gcConnect.use( gmConnect.basicAuth('digest') );
 gcConnect.use( gmConnect.favicon(gszbasedir+'/images/favicon.ico') );
 gcConnect.use( gmConnect.logger('dev') );
 gcConnect.use( gmConnect.bodyParser({uploadDir:gszuploadbasedir, defer:true}) );

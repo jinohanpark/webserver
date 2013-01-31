@@ -5,9 +5,13 @@ exports = module.exports = gcThis;
 /*
 	native modules
 */
-var gmCrypto = require('crypto');
-var gmUtil = require('util');
-var gmPause = require('pause');
+
+
+/*
+	external modules
+*/
+var gmUtils = require('connect/lib/utils.js');
+
 
 /*
 	my modules
@@ -20,15 +24,14 @@ var gcDBClient = gmDataBase.init();
 	global variable
 */
 var ganonces = {};	// keep sessions info.
+var gsession_timeout = 60*60*1000;  // after one hour
 
 /*
 */
 function myLogin( _name )
 {
 	var self = this;
-
-	this.session_timeout = 60*60*1000;	// after one hour
-};
+}
 
 function _db_getconfiguration(_queryitem, _callback)
 {
@@ -47,19 +50,37 @@ function _db_getconfiguration(_queryitem, _callback)
 	});
 }
 
-function _md5(_s) {
-	return gmCrypto.createHash('md5').update(_s).digest('hex');
-}
-
 function _getpasswordhash( _realm, _username, _password ) {
-	return _md5(_username+':'+_realm+':'+_password);
+	var sz = _username+':'+_realm+':'+_password;
+	return gmUtils.md5(sz, 'hex');
 }
 
 function _getopaquehash( _realm, _req ) {
-	return _md5( _realm+_req.headers['user-agent']+_req.connection.remoteAddress );
+	var sz = _realm+_req.headers['user-agent']+_req.connection.remoteAddress;
+	return gmUtils.md5(sz, 'hex');  
 }
 
-function _parsing_authorization(_req) {
+function _res_digest_unauthorized( _req, _res, _realm, _opaque, _message) {
+	var nonce = new Date().getTime();
+
+	// session timeout
+	var timer = setTimeout(function() {
+		delete ganonces[_opaque];
+	}, gsession_timeout );
+
+	ganonces[_opaque] = {
+		n:     nonce,
+		timer: timer
+	};
+
+	var szres = 'Digest '+'realm="'+_realm+'"'+',qop="auth"'+',nonce="'+nonce+'"'+',opaque="'+_opaque+'"';
+
+	_res.statusCode = 401;
+	_res.setHeader('WWW-Authenticate', szres);
+	_res.end(_message);//_res.end('Unauthorized');
+}
+
+function _parsing_authorization(_szauthorization) {
 	var tauthorization = {
 		'username': null,
 		'realm':    null,
@@ -73,9 +94,9 @@ function _parsing_authorization(_req) {
 	};
 
 	for( var lvalue in tauthorization ) {
-		var val = new RegExp(lvalue+'="([^"]*)"').exec(_req.headers.authorization);
+		var val = new RegExp(lvalue+'="([^"]*)"').exec(_szauthorization);
 		if( null == val ) {
-			val = new RegExp(lvalue+'=([^,]*)').exec(_req.headers.authorization);
+			val = new RegExp(lvalue+'=([^,]*)').exec(_szauthorization);
 		}
 
 		if( (val == null) || (!val[1]) ) {
@@ -88,27 +109,6 @@ function _parsing_authorization(_req) {
   	return tauthorization;
 }
 
-function _res_auth( _req, _res, _realm, _opaque, _message) {
-	var nonce = new Date().getTime();
-
-	// session timeout
-	var timer = setTimeout(function() {
-		delete ganonces[_opaque];
-	}, gcThis.session_timeout );
-
-	ganonces[_opaque] = {
-		n:     nonce,
-		timer: timer
-	};
-
-	_res.writeHead( 401, {
-		'Content-Type': 'text/html',
-		'WWW-Authenticate': 'Digest realm="'+_realm+'",qop="auth",nonce="'+nonce+'",opaque="'+_opaque+'"'
-	});
-
-	_res.end(_message);
-}
-
 myLogin.prototype.logout = function( _req )
 {
 	var tauth = _parsing_authorization(_req);
@@ -118,147 +118,158 @@ myLogin.prototype.logout = function( _req )
 	}
 
 	var opaque = _getopaquehash( tauth.realm, _req );
-
 	clearTimeout(ganonces[opaque].timer);
 	delete ganonces[opaque];
 
 	return true;
 };
 
-	var realm = 'IPCAM_MACNO';
-	var users = {};
-
-myLogin.prototype.login = function( _req, _res )
+myLogin.prototype.httpDigest = function( _req, _res, _next )
 {
-	var fauthen_enable;
-	// 	'admin': 'df612ed72c77e5b55021809a58799711', // This is the output of: auth.passhash('Admin section', 'admin', 'password')
-	// 	'erik':  _getpasswordhash(realm, 'erik', 'hello')
-	// };
+  	var realm = 'IPCAM_SERVER';
 
-	//console.log(util.inspect(_req.connection, true, null));
+  	return function(_req, _res, _next) {
+    	var authorization = _req.headers.authorization;  //console.log('authorization:', authorization);
+    	var opaque = _getopaquehash( realm, _req ); console.log('opaque:', opaque);
+    
+    	// check if the headers are present.
+    	if( !authorization ) {
+      		return _res_digest_unauthorized(_req, _res, realm, opaque, 'Unauthorized. please login.');
+    	}
 
-	return
-	_db_getconfiguration( 'account.%', function(_result, _json) {
-		//console.log('from DB _result._json:', _json);
+    	// is digest authentication?
+    	if( authorization.substr(0, 6) != 'Digest' ) {
+      		return _next(gmUtils.error(400, 'Unauthorized. we are http-digest authentication(refer to RFC2069) supported.'));
+    	}
 
-		fauthen_enable = _json['account.enable'][0];
+    	var tauth = _parsing_authorization(authorization);  //console.log('*** parsing req.headers.authorization:', tauth);
+    	if( false == tauth ) {
+      		return _next(gmUtils.error(400, 'Unauthorized. invalid authentication http request header.'));
+    	}
 
-		function _add( _szprivilege, _aname, _apasswd ) {
-			var cnt = ( '' == _aname[0] ) ? 0 : _aname.length;
-			for( var i=0; i<cnt; i++ ) {
-				var szdec = gmEncdec.Decrypt(_apasswd[i], 'szkey_aaa');
-				users[_aname[i]] = [];
-				users[_aname[i]][0] = _getpasswordhash(realm, _aname[i], szdec);
-				users[_aname[i]][1] = _szprivilege;
-			}
-		}
+    	// async
+    	var pause = gmUtils.pause(_req);
+    	_checkall(tauth, realm, function(err, user, _message) {
+      		if(err || !user) return _res_digest_unauthorized(_req, _res, realm, opaque, _message);
+      		_next();
+      		pause.resume();
+    	});
 
-		var aname = _json['account.admin'][0].split(',');
-		var apasswd = _json['account.admin.passwd'][0].split(',');
-		_add( 'admin', aname, apasswd );
+    	/////////////////////////////////////////////////////////////////////////////////
+    	//
+    	function _checkall( _tauth, _realm, _fncallback ) {
 
-		var aname = _json['account.operator'][0].split(',');
-		var apasswd = _json['account.operator.passwd'][0].split(',');
-		_add( 'operator', aname, apasswd );
+      		var isauthen_enable;
+      		var fauthen_error = true;
 
-		var aname = _json['account.viewer'][0].split(',');
-		var apasswd = _json['account.viewer.passwd'][0].split(',');
-		_add( 'viewer', aname, apasswd );
+      		var users = {};
 
-		console.log('users:', users);
+      		_db_getconfiguration( 'account.%', function(_result, _json) {
+        		//console.log('from DB _result._json:', _json);
+        		isauthen_enable = _json['account.enable'][0];
 
-		return _gogogo();
-	});
+        		function _add( _szprivilege, _aname, _apasswd ) {
+          			var cnt = ( '' == _aname[0] ) ? 0 : _aname.length;
+          			for( var i=0; i<cnt; i++ ) {
+            			var szdec = gmEncdec.Decrypt(_apasswd[i], 'szkey_aaa');
+            			users[_aname[i]] = [];
+            			users[_aname[i]][0] = _getpasswordhash(realm, _aname[i], szdec);
+            			users[_aname[i]][1] = _szprivilege;
+          			}
+        		}
 
-	function _gogogo() {
+				var aname = _json['account.admin'][0].split(',');
+				var apasswd = _json['account.admin.passwd'][0].split(',');
+				_add( 'admin', aname, apasswd );
 
-	var opaque = _getopaquehash( realm, _req );
+				var aname = _json['account.operator'][0].split(',');
+				var apasswd = _json['account.operator.passwd'][0].split(',');
+				_add( 'operator', aname, apasswd );
 
-	// check if the headers are present.
-	if( !_req.headers.authorization ) {
-		console.log('bbbbbhhhbbbbbbb');
-		_res_auth(_req, _res, realm, opaque, 'Please login.');
-		return false;
-	}
+				var aname = _json['account.viewer'][0].split(',');
+				var apasswd = _json['account.viewer.passwd'][0].split(',');
+				_add( 'viewer', aname, apasswd );
 
-	// We only support digest authentication.
-	if( _req.headers.authorization.substr(0, 6) != 'Digest' ) {
-		console.log('cccccccccccc');
-		_res_auth(_req, _res, realm, opaque, 'Only digest authentication supported.');
-		return false;
-	}
+				console.log('users:', users);
 
-	var tauth = _parsing_authorization(_req);
-	//console.log('*** req.headers.auth:', tauth);
+				_gogogo();
+			});
 
-	// We need all item authen.
-	if( false == tauth ) {
-		console.log('dddddddddddd');
-		_res_auth(_req, _res, realm, opaque, 'Invalid authentication header.');
-		return false;
-	}
+      		function _gogogo() {
+        		console.log('>>>>>>>>> _tauth:', _tauth);
+       			do {
+          			// check realm!
+          			if( _tauth.realm != realm ) {
+            			console.log('eeeeeeeeee');
+            			_req.authentication = null;
+            			_fncallback(true, _tauth.username, 'Unauthorized.');
+            			break;
+          			}
 
-	if( tauth.realm != realm ) {
-		console.log('eeeeeeeeee');
-		_res_auth(_req, _res, realm, opaque, 'Invalid realm.');
-		return false;
-	}
-	
-	// Check for a valid username.
-	console.log('xxxxxxxxxx :', tauth.username );
-	console.log('xxxxxxxxxx :', users[tauth.username] );
-	console.log('xxxxxxxxxx :', users[tauth.username][0] );
-	if( !users[tauth.username][0] ) {
-		console.log('ffffffffffffff');
-		_res_auth(_req, _res, realm, opaque, 'Invalid username and/or password combination.');
-		return false;
-	}
-	
-	// Make sure the requested url is actually the url we are authenticating.
-	var p = tauth.uri.lastIndexOf(_req.url);
+          			// check username!
+          			if( !users[_tauth.username][0] ) {
+            			console.log('ffffffffffffff');
+            			_req.authentication = null;
+            			_fncallback(true, _tauth.username, 'Unauthorized.');
+            			break;
+          			}
 
-	// Some browsers add the host and port, others don't, so check both.
-	// Don't just check for the substring but actually make sure the whole end matches.
-	if( (p == -1) || ((p + _req.url.length) != tauth.uri.length) ) {
-		console.log('ggggggggggg');
-		_res_auth(_req, _res, realm, opaque, 'Invalid uri.');
-		return false;
-	}
+					// Make sure the requested url is actually the url we are authenticating.
+					// Some browsers add the host and port, others don't, so check both.
+					// Don't just check for the substring but actually make sure the whole end matches.
+          			var p = _tauth.uri.lastIndexOf(req.url);
+          			if( (p == -1) || ((p + req.url.length) != _tauth.uri.length) ) {
+            			console.log('ggggggggggg');
+            			_req.authentication = null;
+            			_fncallback(true, _tauth.username, 'Unauthorized.');
+            			break;
+          			}
 
-	//console.log('*** ganonces[opaque]:opaque:', opaque);
-	//console.log('*** ganonces[opaque]:', ganonces);
+          			// Make sure this session exists and hasn't timed out.
+          			if( !ganonces[opaque] ) {
+            			console.log('not exists session info.');
+            			_req.authentication = null;
+            			_fncallback(true, _tauth.username, 'Unauthorized.');
+            			break;
+          			}
 
-	// Make sure this session exists and hasn't timed out.
-	if( !ganonces[opaque] || (ganonces[opaque].n != tauth.nonce) ) {
-		console.log('hhhhhhhhhhhh');
-		_res_auth(_req, _res, realm, opaque, 'Invalid nonce.');
-		return false;
-	}
+					// Hasn't session time-stamp.
+					// if( ganonces[opaque].n != _tauth.nonce ) {
+					// 	console.log('session time-stamp mismatch.');
+					// 	_req.authentication = null;
+					// 	_fncallback(true, _tauth.username, 'Unauthorized.');
+					// 	break;
+					// }
 
-	var response = _md5( users[tauth.username][0]+':'+tauth.nonce+':'+tauth.nc+':'+tauth.cnonce+':'+tauth.qop+':'+_md5(_req.method+':'+tauth.uri));
-	if( tauth.response != response ) {
-		console.log('iiiiiiiiiii');
-		_res_auth(_req, _res, realm, opaque, 'Invalid username and/or password combination.');
-		return false;
-	}
+					var response = gmUtils.md5(users[_tauth.username][0]+':'+_tauth.nonce+':'+_tauth.nc+':'+_tauth.cnonce+':'+_tauth.qop+':'+gmUtils.md5(_req.method+':'+_tauth.uri));
+					if( _tauth.response != response ) {
+						console.log('invalid username and password.');
+						_req.authentication = null;
+						_fncallback(true, _tauth.username, 'Unauthorized.');
+					}
+          			else {
+            			fauthen_error = false;
 
-	// Extend timeout the session.
-	clearTimeout( ganonces[opaque].timer );
+            			// Extend timeout the session.
+            			clearTimeout( ganonces[opaque].timer );
 
-	// session timeout
-	ganonces[opaque].timer = setTimeout( function() {
-		delete ganonces[opaque];
-	}, gcThis.session_timeout );
+            			// session timeout
+            			ganonces[opaque].timer = setTimeout( function() {
+              				delete ganonces[opaque];
+            			}, gsession_timeout );
 
-	//return tauth.username;
-	return true;
-
-	}
+            			_fncallback(fauthen_error, _tauth.username);
+          			}
+        		} while(0); // do...while
+      		};//function _gogogo()
+    	}//function _checkall( _tauth, _realm, _fncallback )
+  	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //
+/*
 myLogin.prototype.authen = function( _req )
 {
 	var szdec = gmEncdec.Decrypt('z5n3UO/v7+/hb3p4', 'szkey_aaa');
@@ -303,9 +314,9 @@ myLogin.prototype.authen = function( _req )
 
 	return fret;
 }
+*/
 
 /*
-*/
 myLogin.prototype.islogin = function(_req, _res)
 {
 	var sess = _req.session;
@@ -318,3 +329,4 @@ myLogin.prototype.islogin = function(_req, _res)
 
 	return sess.fauthen;
 }
+*/
