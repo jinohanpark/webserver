@@ -13,41 +13,40 @@ var gmBuffer	= require('buffer');
 /*
 	external modules
 */
+var gmFiber 	= require('fibers');
+var gmFuture 	= require('fibers/future'), wait = gmFuture.wait;
 var gmSql		= require('mysql');
-
 
 /*
 	my modules
 */
 var gmMisc = require('../../misc.js');
 
+
 /*
 PUBLIC function definition 
 */
 function myDataBase( _name )
 {
-	this.connect = null;
+	;
 }
 
 myDataBase.prototype.init = function()
 {
-	var connect = gmSql.createConnection( {host:'localhost', user:'root', password:'convex1234!@'} );
-
-	connect.connect(function(_err) {
+	var db = gmSql.createConnection( {host:'localhost', user:'root', password:'convex1234!@'} );
+	db.connect( function(_err) {
 		if(_err) {
 			console.log( 'gmSql.createConnection - err : ', _err );
 		}
 	});
 
-	connect.query('USE ipcam', function(_err) {
+	db.query( 'USE ipcam', function(_err) {
 		if(_err) {
 			console.log( 'gmSql.query(USE ipcam) - err : ', _err );
 		}
 	});
 
-	gcmyDataBase.connect = connect;
-
-	connect.on('error', function(_err) {
+	db.on('error', function(_err) {
 		if( !_err.fatal ) {
 			return;
 		}
@@ -61,26 +60,30 @@ myDataBase.prototype.init = function()
 		gcmyDataBase.init();
 	});
 
-	return gcmyDataBase.connect;
+	gcmyDataBase.db = db;
+
+	//return gcmyDataBase.db;
 }
 
 myDataBase.prototype.makedefault_ipcam_database = function()
 {
 	console.log('->> myDataBase.prototype.makedefault_ipcam_database');
-	
-	gcmyDataBase.connect.query('CREATE DATABASE ipcam', function(_err) {
+
+	var future = new gmFuture;
+
+	gcmyDataBase.db.query('CREATE DATABASE ipcam', function(_err) {
 		//console.log(_err);
 		if( _err ) {
 			switch(_err.code) {
 			case 'ER_DB_CREATE_EXISTS':
-				gcmyDataBase.connect.query('DROP DATABASE ipcam', function(_err) {
+				gcmyDataBase.db.query('DROP DATABASE ipcam', function(_err) {
 					if(_err) {}
 					else {
-						gcmyDataBase.connect.query('CREATE DATABASE ipcam', function(_err) {
+						gcmyDataBase.db.query('CREATE DATABASE ipcam', function(_err) {
 							if(_err) {}
 							else {
-								gcmyDataBase.connect.query('USE ipcam');
-								gcmyDataBase._makedefault_ipcam_config();
+								gcmyDataBase.db.query('USE ipcam');
+								_makedefault_ipcam_config( future );
 							}
 						});
 					}
@@ -88,9 +91,12 @@ myDataBase.prototype.makedefault_ipcam_database = function()
 			}
 		}
 		else {
-			gcmyDataBase.connect.query('USE ipcam');
+			gcmyDataBase.db.query('USE ipcam');
+			future.return({'ret':'ok', 'code':''});
 		}
 	});
+
+	return future;
 }
 
 myDataBase.prototype.getquery_ipcam_config = function( _query, _callback )
@@ -98,7 +104,7 @@ myDataBase.prototype.getquery_ipcam_config = function( _query, _callback )
 	console.log('->> myDataBase.prototype.getquery_ipcam_config');
 	
 	var ajresult = [];
-	var query = gcmyDataBase.connect.query(_query);
+	var query = gcmyDataBase.db.query(_query);
 	
 	query.on('error', function(_err) {
 		// Handle error, an 'end' event will be emitted after this as well
@@ -129,7 +135,7 @@ myDataBase.prototype.setquery_ipcam_config = function( _query, _param, _callback
 	console.log('    myDataBase.prototype.setquery_ipcam_config _param:', _param);
 	
 	var ajresult = [];
-	var query = gcmyDataBase.connect.query(_query, _param);
+	var query = gcmyDataBase.db.query(_query, _param);
 	
 	query.on('error', function(_err) {
 		// Handle error, an 'end' event will be emitted after this as well
@@ -155,10 +161,7 @@ myDataBase.prototype.setquery_ipcam_config = function( _query, _param, _callback
 	})
 }
 
-/*
-
-*/
-myDataBase.prototype._makedefault_ipcam_config = function()
+function _makedefault_ipcam_config( _future )
 {
 	var obj = {};
 	obj.tablename = 'configuration';
@@ -170,20 +173,23 @@ myDataBase.prototype._makedefault_ipcam_config = function()
 			+ 'syntax			varchar(128) not null';
 
 	var sql = 'CREATE TABLE ' + obj.tablename + '(' + obj.sql + ')';
-	//console.log('sql :', sql);	
+	//console.log('sql :', sql);
 
-	gcmyDataBase.connect.query( sql, function(_err) {
+	gcmyDataBase.db.query( sql, function(_err) {
 		if(_err) {}
 		else {
-			
 			var sql = 'INSERT INTO configuration (lvalue, rvalue, type, privilige, syntax) VALUES (?,?,?,?,?)';
-			var val = _make_sqltables();
-			
-			//console.log('val.length :', val.length);
+			var val = _make_sqltables();	//console.log('val.length :', val.length);
+			var cnt = val.length;
 			for( var i=0; i<val.length; i++ ) {
-				gcmyDataBase.connect.query( sql, val[i], function(_err, _results, _fields) {
+				gcmyDataBase.db.query( sql, val[i], function(_err, _results, _fields) {
 					if(_err) { console.log(_err); }
-					else { }
+					else {
+						cnt = cnt - 1;
+						if(0 == cnt) {
+							_future.return({'ret':'ok', 'code':''});
+						}
+					}
 				});
 			}
 		}

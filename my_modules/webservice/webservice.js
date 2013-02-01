@@ -28,7 +28,7 @@ gmMisc.event.on('aaa', function(_param) {
 });
 */
 var gmDataBase = require('../../my_modules/database/database.js');
-var gcDBClient = gmDataBase.init();
+gmDataBase.init();
 
 
 /*

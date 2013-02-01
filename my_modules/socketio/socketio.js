@@ -21,7 +21,7 @@ var gcWsIO;
 */
 var gmMisc = require('../../misc.js');
 var gmDataBase = require('../../my_modules/database/database.js');
-var gcDBClient = gmDataBase.init();
+gmDataBase.init();
 
 /*
 	global variable

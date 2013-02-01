@@ -3,8 +3,6 @@
 	based on node.js v0.8.18
 */
 
-
-
 var gnhttpport = 3000;
 var gszbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www';
 var gszuploadbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload';
@@ -29,12 +27,12 @@ var gmConnect = require('connect');
 var gmMisc = require('./misc.js');
 //var gmLogin = require('./my_modules/login/login.js');
 var gmWebService = require('./my_modules/webservice/webservice.js');
-var gmDataBase = require('./my_modules/database/database.js');
 var gmmyWsIO = require('./my_modules/socketio/socketio.js');
 
 /*
 */
-var gcDBClient = gmDataBase.init();	//console.log('gcDBClient:', gcDBClient);
+var gmDataBase = require('./my_modules/database/database.js');
+gmDataBase.init();
 gmDataBase.makedefault_ipcam_database();
 
 
