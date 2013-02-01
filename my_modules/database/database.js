@@ -161,6 +161,16 @@ myDataBase.prototype.setquery_ipcam_config = function( _query, _param, _callback
 	})
 }
 
+function _syncquery( _sql, _val, _future )
+{
+	gcmyDataBase.db.query( _sql, _val, function(_err, _results, _fields) {
+		if(_err) { 
+			console.log('_syncquery err:', _err);
+			_future.return({'ret':'ok', 'code':''});
+		}
+	});
+}
+
 function _makedefault_ipcam_config( _future )
 {
 	var obj = {};
