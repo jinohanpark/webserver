@@ -208,10 +208,9 @@ myWebService.prototype._onWebServiceError = function()
 
 myWebService.prototype._onWebServiceListening = function()
 {
-	console.log('<_onWebServiceListening> - this: ', this.server.address());
-	//console.log('<_onWebServiceListening> - ', this.server.address());
-	
-	//this.fireWebServiceMessage('broad_hello');
+	console.log('<_onWebServiceListening> - ', this.server.address());
+
+	this.fireWebServiceMessage('broad_hello');
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
