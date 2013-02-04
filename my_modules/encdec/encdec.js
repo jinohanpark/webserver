@@ -1,3 +1,7 @@
+
+/*
+  single instance module
+*/
 var gcmyEncdec = new myEncdec();
 exports = module.exports = gcmyEncdec;
 

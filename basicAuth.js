@@ -24,7 +24,6 @@ var utils = require('../utils')
 */
 var gmEncdec = require('../../../../my_modules/encdec/encdec.js');
 var gmDataBase = require('../../../../my_modules/database/database.js');
-gmDataBase.init();
 
 /*
   global variable

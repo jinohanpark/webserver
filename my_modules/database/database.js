@@ -1,14 +1,13 @@
 
+/*
+	single instance module
+*/
 var gcmyDataBase = new myDataBase();
 exports = module.exports = gcmyDataBase;
 
 /*
 	internal modules
 */
-var gmOS		= require('os');
-var gmUtil		= require('util');
-var gmFs		= require('fs');
-var gmBuffer	= require('buffer');
 
 /*
 	external modules
@@ -20,7 +19,6 @@ var gmSql		= require('mysql');
 /*
 	my modules
 */
-var gmMisc = require('../../misc.js');
 
 
 /*
@@ -31,9 +29,9 @@ function myDataBase( _name )
 	;
 }
 
-myDataBase.prototype.init = function()
+myDataBase.prototype.init = function( _option )
 {
-	var db = gmSql.createConnection( {host:'localhost', user:'root', password:'convex1234!@'} );
+	var db = gmSql.createConnection( _option );
 	db.connect( function(_err) {
 		if(_err) {
 			console.log( 'gmSql.createConnection - err : ', _err );
@@ -57,12 +55,11 @@ myDataBase.prototype.init = function()
 		
 		console.log('>>>>>>>>>> Re-connecting lost connection: ' + _err.stack);
 		
-		gcmyDataBase.init();
+		gcmyDataBase.init( _option );
 	});
 
 	gcmyDataBase.db = db;
-
-	//return gcmyDataBase.db;
+	gcmyDataBase._option = _option;
 }
 
 myDataBase.prototype.makedefault_ipcam_database = function()
@@ -77,17 +74,29 @@ myDataBase.prototype.makedefault_ipcam_database = function()
 			switch(_err.code) {
 			case 'ER_DB_CREATE_EXISTS':
 				gcmyDataBase.db.query('DROP DATABASE ipcam', function(_err) {
-					if(_err) {}
+					if(_err) {
+						console.log('makedefault_ipcam_database - error2 db_drop:', _err.code);
+						_future.return({'ret':'fail', 'code':_err.code});
+					}
 					else {
 						gcmyDataBase.db.query('CREATE DATABASE ipcam', function(_err) {
-							if(_err) {}
+							if(_err) {
+								console.log('makedefault_ipcam_database - error2 db_create:', _err.code);
+								_future.return({'ret':'fail', 'code':_err.code});
+							}
 							else {
 								gcmyDataBase.db.query('USE ipcam');
-								_makedefault_ipcam_config( future );
+								_sync_makedefault_ipcam_config( future );
 							}
 						});
 					}
 				});
+				break;
+
+			default:
+				console.log('makedefault_ipcam_database - error1 db_create:', _err.code);
+				_future.return({'ret':'fail', 'code':_err.code});
+				break;					
 			}
 		}
 		else {
@@ -161,17 +170,7 @@ myDataBase.prototype.setquery_ipcam_config = function( _query, _param, _callback
 	})
 }
 
-function _syncquery( _sql, _val, _future )
-{
-	gcmyDataBase.db.query( _sql, _val, function(_err, _results, _fields) {
-		if(_err) { 
-			console.log('_syncquery err:', _err);
-			_future.return({'ret':'ok', 'code':''});
-		}
-	});
-}
-
-function _makedefault_ipcam_config( _future )
+function _sync_makedefault_ipcam_config( _future )
 {
 	var obj = {};
 	obj.tablename = 'configuration';
@@ -193,7 +192,10 @@ function _makedefault_ipcam_config( _future )
 			var cnt = val.length;
 			for( var i=0; i<val.length; i++ ) {
 				gcmyDataBase.db.query( sql, val[i], function(_err, _results, _fields) {
-					if(_err) { console.log(_err); }
+					if(_err) { 
+						console.log(_err);
+						_future.return({'ret':'fail', 'code':_err});
+					}
 					else {
 						cnt = cnt - 1;
 						if(0 == cnt) {

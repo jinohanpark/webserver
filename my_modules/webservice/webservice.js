@@ -1,7 +1,4 @@
 
-var gcmyWebService = new myWebService();
-exports = module.exports = gcmyWebService;
-
 /*
 	internal modules
 */
@@ -22,47 +19,46 @@ var gmXml2Json = require('xml2json');
 	my modules
 */
 var gmMisc = require('../../misc.js');
-/*
-gmMisc.event.on('aaa', function(_param) {
-	console.log('gmMisc.event.on _param:', _param);
-});
-*/
 var gmDataBase = require('../../my_modules/database/database.js');
-gmDataBase.init();
+
+/*
+	global variable
+*/
 
 
 /*
-PUBLIC function definition 
+	multiple instance
 */
-function myWebService( _name )
+var myWebService = function( _name )
 {
-	this.self = this;		// gcmyWebService
-	this.cSocketServer = '';
-	
-	this.nWebService_UDPport = 3702;
-	this.nWebService_MulticastIP = '239.255.255.250';
+	this.server = null;
+	this.nport_udp = 3702;
+	this.szip_multicast ='239.255.255.250';
 
 }
+// export module
+module.exports = myWebService;
+
 
 myWebService.prototype.createSocket = function()
 {
-	this.cSocketServer = gmDgram.createSocket('udp4');
+	this.server = gmDgram.createSocket('udp4');
 
-	this.cSocketServer.on( 'message', _onWebServiceMessage );
-	this.cSocketServer.on( 'listening', _onWebServiceListening );
-	this.cSocketServer.on( 'close', _onWebServiceClose );
-	this.cSocketServer.on( 'error', _onWebServiceError );
-	
-	this.cSocketServer.bind( this.nWebService_UDPport );
-	this.cSocketServer.setBroadcast(1);
-	this.cSocketServer.setTTL(1);
-	this.cSocketServer.addMembership( this.nWebService_MulticastIP );
+	this.server.on( 'message', this._onWebServiceMessage );
+	this.server.on( 'listening', this._onWebServiceListening );
+	this.server.on( 'close', this._onWebServiceClose );
+	this.server.on( 'error', this._onWebServiceError );
 
-	return this.cSocketServer;
+	this.server.bind( this.nport_udp );
+	this.server.setBroadcast(1);
+	this.server.setTTL(1);
+	this.server.addMembership( this.szip_multicast );
 }
 
 myWebService.prototype.fireWebServiceMessage = function( _szwhat )
 {
+	var server = this.server;
+
 	var szbroadmsg = null;
 
 	switch( _szwhat) {
@@ -73,9 +69,9 @@ myWebService.prototype.fireWebServiceMessage = function( _szwhat )
 
 	if( null != szbroadmsg ) {
 		var data = new Buffer(szbroadmsg, 'utf8');
-		gcmyWebService.cSocketServer.send( data, 0, data.length, gcmyWebService.nWebService_UDPport, gcmyWebService.nWebService_MulticastIP,
+		server.send( data, 0, data.length, this.nport_udp, this.szip_multicast,
 			function(_err, _bytes) {
-				console.log('gcmyWebService.cSocketServer.send broadpacket - %s:%d(len:%d)', gcmyWebService.nWebService_MulticastIP, gcmyWebService.nWebService_UDPport, _bytes);
+				console.log('this.send broadpacket - %s:%d(len:%d)', this.szip_multicast, this.nport_udp, _bytes);
 				//console.log('- .send data :', data);
 				//console.log('- .send data.length :', data.length);
 			}
@@ -159,7 +155,7 @@ myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 /*
 LOCAL function definition 
 */
-function _onWebServiceMessage(_msg, _rinfo)
+myWebService.prototype._onWebServiceMessage = function(_msg, _rinfo)
 {
 	console.log('<_onWebServiceMessage>');
 	//console.log('_msg:', _msg);
@@ -189,9 +185,9 @@ if(0) {
 
 	if( null != szresmsg ) {
 		var data = new Buffer(szresmsg, 'utf8');
-		gcmyWebService.cSocketServer.send( data, 0, data.length, _rinfo.port, _rinfo.address,
+		this.server.send( data, 0, data.length, _rinfo.port, _rinfo.address,
 			function(_err, _bytes) {
-				console.log('gcmyWebService.cSocketServer.send respacket - %s:%d(len:%d)', _rinfo.address, _rinfo.port, _bytes);
+				console.log('this.server.send respacket - %s:%d(len:%d)', _rinfo.address, _rinfo.port, _bytes);
 				//console.log('- .send data :', data);
 				//console.log('- .send data.length :', data.length);
 			}
@@ -200,28 +196,29 @@ if(0) {
 	}
 }
 
-function _onWebServiceClose()
+myWebService.prototype._onWebServiceClose = function()
 {
 	console.log('<onWebServiceClose>');
 }
 
-function _onWebServiceError()
+myWebService.prototype._onWebServiceError = function()
 {
 	console.log('<onWebServiceError>');
 }
 
-function _onWebServiceListening()
+myWebService.prototype._onWebServiceListening = function()
 {
-	console.log('<_onWebServiceListening> - ', gcmyWebService.cSocketServer.address());
+	console.log('<_onWebServiceListening> - this: ', this.server.address());
+	//console.log('<_onWebServiceListening> - ', this.server.address());
 	
-	gcmyWebService.fireWebServiceMessage('broad_hello');
+	//this.fireWebServiceMessage('broad_hello');
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 	check WS-Discovery protocol
 */
-function _is_probe(_xmlobj)
+myWebService.prototype._is_probe = function(_xmlobj)
 {
 	var fret = false;
 	
@@ -240,7 +237,7 @@ function _is_probe(_xmlobj)
 	return fret;
 }
 
-function _makemsg_soap_envelope( _sz )
+myWebService.prototype._makemsg_soap_envelope = function( _sz )
 {
 	_sz += 
 	'<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -294,7 +291,7 @@ function _makemsg_soap_envelope( _sz )
 	return _sz;
 }
 
-function _makemsg_soap_header( _objres, _sz, _szwhat )
+myWebService.prototype._makemsg_soap_header = function( _objres, _sz, _szwhat )
 {
 	_sz +=
 	 '<SOAP-ENV:Header>'
@@ -325,7 +322,7 @@ function _makemsg_soap_header( _objres, _sz, _szwhat )
 	return _sz;
 }	
 
-function _makemsg_soap_body( _objres, _sz, _szwhat )
+myWebService.prototype._makemsg_soap_body = function( _objres, _sz, _szwhat )
 {
 	_sz += 
 	'<SOAP-ENV:Body>'
@@ -396,7 +393,7 @@ function _makemsg_soap_body( _objres, _sz, _szwhat )
 	return _sz;
 }
 
-function _makeres_probematch(_xmlobj)
+myWebService.prototype._makeres_probematch = function(_xmlobj)
 {
 	var objres = {};
 	
@@ -416,7 +413,7 @@ function _makeres_probematch(_xmlobj)
 	objres.scopes.location.country = 'korea';
 	objres.scopes.location.city = 'seoul';
 	
-	objres.xaddrs = 'http://192.168.1.2:3000/onvif/device_service';
+	objres.xaddrs = 'http://192.168.0.2:3000/onvif/device_service';
 	objres.metadataversion = '1';
 
 	////////////////////////////////////////////////////////////////////////////
@@ -428,7 +425,7 @@ function _makeres_probematch(_xmlobj)
 	return szresmsg;
 }
 
-function _makebroad_hello()
+myWebService.prototype._makebroad_hello = function()
 {
 	var objres = {};
 	
@@ -458,7 +455,7 @@ function _makebroad_hello()
 	objres.scopes.location.country = 'korea';
 	objres.scopes.location.city = 'seoul';
 	
-	objres.xaddrs = 'http://192.168.1.2:3000/onvif/device_service';
+	objres.xaddrs = 'http://192.168.0.2:3000/onvif/device_service';
 	objres.metadataversion = '1';
 	
 	////////////////////////////////////////////////////////////////////////////
@@ -470,7 +467,7 @@ function _makebroad_hello()
 	return szresmsg;
 }
 
-function _makeres_getdeviceinformation(_xmlobj, _callback)
+myWebService.prototype._makeres_getdeviceinformation = function(_xmlobj, _callback)
 {
 	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "system.deviceinfo.%"';
 	gmDataBase.getquery_ipcam_config( query, function(_result) {

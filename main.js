@@ -14,21 +14,34 @@ var gmOs = require('os');
 
 
 /*
+	native modules
+*/
+var gmUtil = require('util');
+var gmHttp = require('http');
+var gmFs   = require('fs');
+var gmUrl  = require('url');
+var gmQS   = require('querystring');
+
+/*
 	external modules
 */
 var gmFiber  = require('fibers');
 var gmFuture = require('fibers/future'), wait = gmFuture.wait;
 
+
 /*
 	my modules
 */
+var gmMisc = require('./misc.js');
 var gmDataBase = require('./my_modules/database/database.js');
+var gmHttpServer = require('./my_modules/webserver/webserver.js');
 
 /*
 	global variables
 */
 var gmainapp = {};
 var gval = {};
+
 
 /*
 	function prototype
@@ -39,12 +52,25 @@ gmainapp.main = function()
 	//show_process_attr();
 	//show_os_attr();
 
-	console.log('aaaaaa');
-	gmDataBase.init();
-	console.log('bbbbbb');
+	try {
+		// database
+		var option = { host:'localhost', user:'root', password:'convex1234!@' };
+		gmDataBase.init(option);
+		var ret = gmDataBase.makedefault_ipcam_database().wait();
+		if( 'fail' == ret.ret ) throw ret;
 
-	var ret = gmDataBase.makedefault_ipcam_database().wait();
-	console.log('cccccc ret:', ret);
+		// http-server
+		var cHttpServer = new gmHttpServer();
+		cHttpServer.Init('');
+
+
+	}
+	catch(err) {
+		console.log('main routine error ret:', err);
+	}
+	finally {
+		console.log('main routine finally...');
+	}
 
 /*
 	gval.test1 = 1;

@@ -1,27 +1,21 @@
 
-var gcThis = new myWebSocket();
-exports = module.exports = gcThis;
-
 /*
 	internal modules
 */
 var gmOS		= require('os');
 var gmUtil		= require('util');
 var gmFs		= require('fs');
-var gmBuffer	= require('buffer');
 
 /*
 	external modules
 */
 var gmWsIO = require('socket.io');
-var gcWsIO;
 
 /*
 	my modules
 */
 var gmMisc = require('../../misc.js');
 var gmDataBase = require('../../my_modules/database/database.js');
-gmDataBase.init();
 
 /*
 	global variable
@@ -31,39 +25,41 @@ var gszidevent_chatting = 'event_chatting';
 var gszidevent_configuration = 'event_configuration';
 var gszidevent_serveraction = 'event_serveraction';
 
-
 /*
-PUBLIC function definition 
+	multiple instance
 */
-function myWebSocket( _name )
+var myWebSocket = function( _name )
 {
-	this.self = this;		// gcThis
+	this.wsio = null;
 
-	this.event = new process.EventEmitter();
-	// setInterval( function() {
-	// 	gcThis.event.emit('tick', 'xxxxxx');
-	// }, 1000);
-}
+	/////////////////////////////////////////////////////////////////////
+	var ee = this.event = new process.EventEmitter();
+	setInterval( function() {
+		ee.emit('tick', 'xxxxxx');
+	}, 1000);
+	//
+	this.event.on('tick', function( _aaa ) {
+		console.log('websock test ontick:' + _aaa);
+	});
+};
+// export module
+module.exports = myWebSocket;
 
 myWebSocket.prototype.Listen = function( _cWebServer )
 {
-	gcWsIO = gmWsIO.listen(_cWebServer);
+	var wsio = gmWsIO.listen(_cWebServer);
+
+	//
+	wsio.set('log level', 2);
 	
 	//
-	gcWsIO.set('log level', 2);
-	
+	wsio.sockets.on( 'connection', this._onWsIOConnection );
+	wsio.sockets.on( 'message', this._onWsIOMessage );
+	wsio.sockets.on( 'anything', this._onWsIOAnything );
+	wsio.sockets.on( 'disconnect', this._onWsIODisconnect );
+
 	//
-	gcWsIO.sockets.on( 'connection', _onWsIOConnection );
-	gcWsIO.sockets.on( 'message', _onWsIOMessage );
-	gcWsIO.sockets.on( 'anything', _onWsIOAnything );
-	gcWsIO.sockets.on( 'disconnect', _onWsIODisconnect );
-	
-	//
-	gcThis.event.on('tick', function( _aaa ) {
-		console.log('aaa' + _aaa);
-	});
-	
-	return gcWsIO;
+	this.wsio = wsio;
 }
 
 myWebSocket.prototype.CloseListen = function()
@@ -73,6 +69,8 @@ myWebSocket.prototype.CloseListen = function()
 
 myWebSocket.prototype.FirmwareUpload = function( _req, _szuploadbasedir )
 {
+	var wsio = this.wsio;
+
 	var szuploadbasedir = _szuploadbasedir || gmOS.tmpDir();
 	//console.log(szuploadbasedir);
 
@@ -84,7 +82,7 @@ myWebSocket.prototype.FirmwareUpload = function( _req, _szuploadbasedir )
 		function(_bytesReceived, _bytesExpected) {
 			//console.log('on.progress ', bytesReceived, bytesExpected);
 
-			gcWsIO.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'progress', bytesReceived:_bytesReceived, bytesExpected:_bytesExpected } );
+			wsio.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'progress', bytesReceived:_bytesReceived, bytesExpected:_bytesExpected } );
 		} );
 
 	form.on( 'field', 
@@ -97,7 +95,7 @@ myWebSocket.prototype.FirmwareUpload = function( _req, _szuploadbasedir )
 		function(_tagname, _file) {
 			console.log('on.fileBegin', _tagname, _file);
 
-			gcWsIO.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'fileBegin', name:_file.name } );
+			wsio.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'fileBegin', name:_file.name } );
 		} );
 
 	form.on( 'file',
@@ -105,7 +103,7 @@ myWebSocket.prototype.FirmwareUpload = function( _req, _szuploadbasedir )
 			console.log('on.file', _tagname, _file);
 			files.push([_tagname, _file]);
 
-			gcWsIO.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'file', name:_file.name } );
+			wsio.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'file', name:_file.name } );
 		} );
 
 	form.on( 'error',
@@ -113,7 +111,7 @@ myWebSocket.prototype.FirmwareUpload = function( _req, _szuploadbasedir )
 			console.log('on.error', _err);
 
 			gmFs.unlinkSync( tmp_path );
-			gcWsIO.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'error' } );
+			wsio.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'error' } );
 		} );
 
 	form.on( 'aborted',
@@ -121,7 +119,7 @@ myWebSocket.prototype.FirmwareUpload = function( _req, _szuploadbasedir )
 			console.log('on.aborted');
 
 			gmFs.unlinkSync( tmp_path );
-			gcWsIO.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'aborted' } );
+			wsio.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'aborted' } );
 		} );
 
 	form.on( 'end',
@@ -143,7 +141,7 @@ myWebSocket.prototype.FirmwareUpload = function( _req, _szuploadbasedir )
 				gmFs.unlinkSync( tmp_path );
 			}
 
-			gcWsIO.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'end' } );
+			wsio.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'end' } );
 		} );
 		
 	form.on( 'field', 
@@ -156,8 +154,9 @@ myWebSocket.prototype.FirmwareUpload = function( _req, _szuploadbasedir )
 /*
 LOCAL function definition
 */
-function _onWsIOConnection( _socket )
+myWebSocket.prototype._onWsIOConnection = function( _socket )
 {
+	var wsio = this.wsio;
 	//console.log('onWsIOConnection - _socket : ');//console.log('onWsIOConnection - _socket : ', _socket);
 
 	_socket.on( '_mymsg',
@@ -170,7 +169,7 @@ function _onWsIOConnection( _socket )
 
 			if( 'private' == _data ) {
 				var id = _socket.id;
-				gcWsIO.sockets.sockets[id].emit( '_mymsgack', sz );
+				wsio.sockets.sockets[id].emit( '_mymsgack', sz );
 			}
 			else
 			if( 'broadcast' == _data ) {
@@ -178,7 +177,7 @@ function _onWsIOConnection( _socket )
 			}
 			else
 			if( 'public' == _data ) {
-				gcWsIO.sockets.emit( '_mymsgack', sz );
+				wsio.sockets.emit( '_mymsgack', sz );
 			}
 			else {
 				_socket.emit( '_mymsgack', _data );
@@ -203,7 +202,7 @@ function _onWsIOConnection( _socket )
 			ack.action = 'ready';
 			ack.query  = _data.query;
 			ack.result = ' ';
-			gcWsIO.sockets.sockets[id].emit( 'event_configuration', ack );
+			wsio.sockets.sockets[id].emit( 'event_configuration', ack );
 
 			switch(_data.action) {
 			case 'get':
@@ -213,13 +212,13 @@ function _onWsIOConnection( _socket )
 					ack.action = _data.action;
 					ack.query  = _data.query;
 					ack.result = _json;
-					gcWsIO.sockets.sockets[id].emit( 'event_configuration', ack );
+					wsio.sockets.sockets[id].emit( 'event_configuration', ack );
 
 					var ack = {};
 					ack.action = 'getdone';
 					ack.query  = _data.query;
 					ack.result = ' ';
-					gcWsIO.sockets.sockets[id].emit( 'event_configuration', ack );
+					wsio.sockets.sockets[id].emit( 'event_configuration', ack );
 				});
 				break;
 
@@ -230,14 +229,14 @@ function _onWsIOConnection( _socket )
 					ack.action = _data.action;
 					ack.query  = _data.query;
 					ack.result = 'ok';
-					gcWsIO.sockets.sockets[id].emit( 'event_configuration', ack );
+					wsio.sockets.sockets[id].emit( 'event_configuration', ack );
 
 					if( (++cnt) == _data.query.length ) {
 						var ack = {};
 						ack.action = 'setdone';
 						ack.query  = _data.query;
 						ack.result = ' ';
-						gcWsIO.sockets.sockets[id].emit( 'event_configuration', ack );
+						wsio.sockets.sockets[id].emit( 'event_configuration', ack );
 
 						//
 						var ack = {};
@@ -245,7 +244,7 @@ function _onWsIOConnection( _socket )
 						ack.action = 'onchange';
 						ack.query  = _data.query;
 						ack.result = ' ';
-						//gcWsIO.sockets.in(gszidevent_configuration).emit('event_configuration', ack);
+						//wsio.sockets.in(gszidevent_configuration).emit('event_configuration', ack);
 						_socket.broadcast.emit('event_configuration', ack);
 
 						//
@@ -269,7 +268,7 @@ function _onWsIOConnection( _socket )
 				ack.action = _data.action;
 				ack.query  = _data.query;
 				ack.result = 'ok';
-				gcWsIO.sockets.sockets[id].emit( 'event_configuration', ack );
+				wsio.sockets.sockets[id].emit( 'event_configuration', ack );
 				break;
 			}
 		}
@@ -284,7 +283,7 @@ function _onWsIOConnection( _socket )
 				var asznickname = [];
 				_socket.get('nickname', function(_err, _name) { asznickname.push(_name); } );
 
-				gcWsIO.sockets.in(gszidevent_chatting).emit('event_chatting', { action:'chatmessage', msg:_data.msg, nickname:asznickname } );
+				wsio.sockets.in(gszidevent_chatting).emit('event_chatting', { action:'chatmessage', msg:_data.msg, nickname:asznickname } );
 				break;
 
 			case 'join':
@@ -294,22 +293,22 @@ function _onWsIOConnection( _socket )
 				_socket.set('nickname', _data.nickname);
 				
 				var asznickname = [];
-				var objsocket = gcWsIO.sockets.clients(gszidevent_chatting);
+				var objsocket = wsio.sockets.clients(gszidevent_chatting);
 				for( var i=0; i<objsocket.length; i++ ) {
 					var socket = objsocket[i];
 					socket.get('nickname', function(_err, _name) { asznickname.push(_name); } );
 				}
 
-				gcWsIO.sockets.in(gszidevent_chatting).emit('event_chatting', { action:'subscriber_list', state:'ok', nickname:asznickname } );
+				wsio.sockets.in(gszidevent_chatting).emit('event_chatting', { action:'subscriber_list', state:'ok', nickname:asznickname } );
 				break;
 				
 			case 'subscriber_list':
-				//console.log('Getting All rooms :', gcWsIO.sockets.manager.rooms);
-				//console.log('Getting Clients in a room :', gcWsIO.sockets.clients(gszidevent_chatting));
-				//console.log('Getting Rooms a client has joined :', gcWsIO.sockets.manager.roomClients[_socket.id]);
+				//console.log('Getting All rooms :', wsio.sockets.manager.rooms);
+				//console.log('Getting Clients in a room :', wsio.sockets.clients(gszidevent_chatting));
+				//console.log('Getting Rooms a client has joined :', wsio.sockets.manager.roomClients[_socket.id]);
 				
 				var asznickname = [];
-				var objsocket = gcWsIO.sockets.clients(gszidevent_chatting);
+				var objsocket = wsio.sockets.clients(gszidevent_chatting);
 
 				if( 0 == objsocket.length ) {
 					asznickname.push('참여한 사용자가 없습니다.');
@@ -338,19 +337,19 @@ function _onWsIOConnection( _socket )
 				_socket.join(gszidevent_firmup);
 				_socket.set(gszidevent_firmup, gszidevent_firmup);
 
-				gcWsIO.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'subscribe', state:'ok' } );
+				wsio.sockets.in(gszidevent_firmup).emit('event_firmup', { action:'subscribe', state:'ok' } );
 				break;
 			}
 		}
 	);
 }
 
-function _onWsIODisconnect()
+myWebSocket.prototype._onWsIODisconnect = function()
 {
 	console.log('_onWsIODisconnect : ');
 }
 
-function _onWsIOMessage( _message, _callbackWsIOMessageACK )
+myWebSocket.prototype._onWsIOMessage = function( _message, _callbackWsIOMessageACK )
 {
 	console.log('_onWsIOMessage - _message : ', _message);
 	
@@ -360,12 +359,12 @@ function _onWsIOMessage( _message, _callbackWsIOMessageACK )
 	}
 }
 
-function _onWsIOAnything( _data )
+myWebSocket.prototype._onWsIOAnything = function( _data )
 {
 	console.log('_onWsIOAnything - _data : ', _data);
 }
 
-function _db_getconfiguration(_queryitem, _callback)
+myWebSocket.prototype._db_getconfiguration = function(_queryitem, _callback)
 {
 	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
 	gmDataBase.getquery_ipcam_config( query, function(_result) {
@@ -382,7 +381,7 @@ function _db_getconfiguration(_queryitem, _callback)
 	});
 }
 
-function _db_setconfiguration(_queryitem, _callback)
+myWebSocket.prototype._db_setconfiguration = function(_queryitem, _callback)
 {
 	var query = 'UPDATE configuration SET rvalue=? WHERE lvalue=?';
 	for( var i=0; i<_queryitem.length; i++ ) {
