@@ -101,7 +101,7 @@ myWebService.prototype.fireWebServiceMessage = function( _szwhat )
 myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 {
 	var self = this;
-	
+
 	var retcode = 0;
 
 	var xmlobj = {};

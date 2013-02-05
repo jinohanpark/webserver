@@ -53,16 +53,51 @@ gmainapp.main = function()
 	//show_os_attr();
 
 	try {
+		////////////////////////////////////////////////////////////////////////////////////////
 		// database
 		var option = { host:'localhost', user:'root', password:'convex1234!@' };
 		gmDataBase.init(option);
 		var ret = gmDataBase.makedefault_ipcam_database().wait();
 		if( 'fail' == ret.ret ) throw ret;
 
+		///////////////////////////////////////////////////////////////////////////////////////
 		// http-server
 		var cHttpServer = new gmHttpServer();
-		cHttpServer.Init('');
 
+		var szipaddr = '';
+		var netinterface = gmOs.getNetworkInterfaces();
+		var akeys = Object.keys(netinterface);
+		for(var i=0; i<akeys.length; i++) {
+			var nets = netinterface[akeys[i]][0];//console.log(nets);
+			if( (nets['family'] == 'IPv4') && (nets['internal'] == false) ) {
+				szipaddr = nets['address'];
+				break;
+			}
+		}
+		//console.log(szipaddr);
+
+		var option = {
+			ssl : 'no',
+			ipaddr : '',
+			port : '3000',
+			basedir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www',
+			uploaddir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload'
+		};
+		cHttpServer.Init(option);
+
+		//
+		// var cHttpsServer = new gmHttpServer();
+		// var option = {
+		// 	ssl : 'no',
+		// 	port : '3001',
+		// 	basedir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www',
+		// 	uploaddir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload'
+		// };
+		// cHttpsServer.Init(option);
+
+
+		///////////////////////////////////////////////////////////////////////////////////////
+		// ???
 
 	}
 	catch(err) {

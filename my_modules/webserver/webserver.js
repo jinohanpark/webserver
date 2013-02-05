@@ -4,6 +4,7 @@
 */
 var gmUtil = require('util');
 var gmHttp = require('http');
+var gmHttps = require('https');
 var gmFs   = require('fs');
 var gmUrl  = require('url');
 var gmQS   = require('querystring');
@@ -30,10 +31,22 @@ var gmWsIO = require('../socketio/socketio.js');
 */
 var myWebServer = function( _name )
 {
-	this.nhttpport = 3000;
-	this.szbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www';
-	this.szuploadbasedir = '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload';
+/*
+	var _option = {
+		ssl : 'no',
+		ipaddr : '192.168.0.2',
+		port : '3000',
+		basedir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www',
+		uploaddir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload'
+		authen : {
+			enable : 'yes',
+			type : 'diest'
+		}
+	}
+*/
+	this._option = {};
 
+	//
 	this.connect = null;
 	this.server = null;
 	this.wsio = null;
@@ -46,6 +59,8 @@ myWebServer.prototype.Init = function( _option )
 {
 	var self = this;
 
+	self._option = _option;	//console.log('_option :', _option);
+
 	/*
 	*/
 	var connect = gmConnect();
@@ -53,9 +68,9 @@ myWebServer.prototype.Init = function( _option )
 
 	connect.use( gmConnect.query() );
 	connect.use( gmConnect.basicAuth('digest') );//connect.use( gmConnect.basicAuth('basic') );
-	connect.use( gmConnect.favicon(self.szbasedir+'/images/favicon.ico') );
+	connect.use( gmConnect.favicon(self._option.basedir+'/images/favicon.ico') );
 	connect.use( gmConnect.logger('dev') );
-	connect.use( gmConnect.bodyParser({uploadDir:self.szuploadbasedir, defer:true}) );
+	connect.use( gmConnect.bodyParser({uploadDir:self._option.uploadbasedir, defer:true}) );
 	connect.use( gmConnect.cookieParser() );
 	connect.use( gmConnect.cookieSession( {secret:'some secret'/*, cookie: { maxAge: 60000 1min. }*/ }) );
 	connect.use( function( _req, _res ) {
@@ -66,6 +81,15 @@ myWebServer.prototype.Init = function( _option )
 	/*
 	*/
 	var server = gmHttp.createServer(connect);
+	/*
+	var option = {
+		key : gmFs.readFileSync('keyfile.pem'),
+		cert : gmFs.readFileSync('certfile.pem'),
+		//pfx : gmFs.readFileSync('pfxfile.pfx')
+	}
+	var server = gmHttps.createServer(option, connect);
+	*/
+
 	self.server = server;
 
 	//server.on( 'request', _onWebServerRequest );
@@ -81,7 +105,7 @@ myWebServer.prototype.Init = function( _option )
 		console.log('WebServer _oncheckContinue On');		
 	});
 
-	server.listen( self.nhttpport, function() {
+	server.listen( self._option.port, self._option.ipaddr, function() {
 		return self._callbackWebServerListen();
 	});
 
@@ -211,7 +235,7 @@ myWebServer.prototype._onWebServerRequest = function( _req, _res )
 		case '/cgi-bin/upload.node':
 			console.log('-> /cgi-bin/upload.node');
 
-			self.wsio.FirmwareUpload( _req, this.szuploadbasedir );
+			self.wsio.FirmwareUpload( _req, this._option.uploadbasedir );
 
 			if( 'referer' == _req.query.retpage ) {
 				_fnRedirectPage(_req, _res, gmUrl.parse(_req.form.headers.referer).path);
@@ -268,7 +292,7 @@ myWebServer.prototype._onWebServerRequest = function( _req, _res )
 	}
 	else {
 		// HTML,JS,CSS,...
-		var szpagefile = this.szbasedir + oUrl.pathname;
+		var szpagefile = this._option.basedir + oUrl.pathname;
 		gmFs.readFile( szpagefile, callbackReadPageFile );//gmFs.readFile( szpagefile, 'utf8', callbackReadPageFile );
 	}
 
@@ -307,9 +331,8 @@ myWebServer.prototype._onWebServerRequest = function( _req, _res )
 myWebServer.prototype._callbackWebServerListen = function()
 {
 	var self = this;
-
-	console.log('callbackWebServerListen 192.168.0.2:3000');
-	console.log('self.szbasedir:', self.szbasedir);
+	console.log('callbackWebServerListen:', self._option.ipaddr, ':', self._option.port);
+	//console.log('self._option.basedir:', self._option.basedir);
 	//console.log( gmHttp.STATUS_CODES );
 }
 
