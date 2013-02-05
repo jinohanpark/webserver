@@ -1,6 +1,6 @@
 
 /*
-	internal modules
+	native modules
 */
 var gmDgram		= require('dgram');
 var gmOS		= require('os');
@@ -32,46 +32,64 @@ var gmDataBase = require('../../my_modules/database/database.js');
 var myWebService = function( _name )
 {
 	this.server = null;
+
 	this.nport_udp = 3702;
 	this.szip_multicast ='239.255.255.250';
-
 }
 // export module
 module.exports = myWebService;
 
-
 myWebService.prototype.createSocket = function()
 {
-	this.server = gmDgram.createSocket('udp4');
+	var self = this;
 
-	this.server.on( 'message', this._onWebServiceMessage );
-	this.server.on( 'listening', this._onWebServiceListening );
-	this.server.on( 'close', this._onWebServiceClose );
-	this.server.on( 'error', this._onWebServiceError );
+	var server = gmDgram.createSocket('udp4');
+	self.server = server;
 
-	this.server.bind( this.nport_udp );
-	this.server.setBroadcast(1);
-	this.server.setTTL(1);
-	this.server.addMembership( this.szip_multicast );
+	server.on( 'message', function(_msg, _rinfo) {
+		return self._onWebServiceMessage(_msg, _rinfo);
+	});
+
+	server.on( 'listening', function() {
+		console.log('<_onWebServiceListening> - ', self.server.address());
+
+		self.fireWebServiceMessage('broad_hello');
+	});
+
+	server.on( 'close', _onWebServiceClose );
+	server.on( 'error', _onWebServiceError );
+
+	server.bind( self.nport_udp );
+	server.setBroadcast(1);
+	server.setTTL(1);
+	server.addMembership( self.szip_multicast );
+
+	function _onWebServiceClose() {
+		console.log('<onWebServiceClose>');
+	}
+
+	function _onWebServiceError() {
+		console.log('<onWebServiceError>');
+	}
 }
 
 myWebService.prototype.fireWebServiceMessage = function( _szwhat )
 {
-	var server = this.server;
+	var self = this;
 
 	var szbroadmsg = null;
 
 	switch( _szwhat) {
 	case 'broad_hello':
-		szbroadmsg = _makebroad_hello(); //console.log('this._makebroad_hello : \r\n', szbroadmsg, '\r\n');
+		szbroadmsg = _makebroad_hello(); //console.log('self._makebroad_hello : \r\n', szbroadmsg, '\r\n');
 		break;
 	}
 
 	if( null != szbroadmsg ) {
 		var data = new Buffer(szbroadmsg, 'utf8');
-		server.send( data, 0, data.length, this.nport_udp, this.szip_multicast,
+		self.server.send( data, 0, data.length, self.nport_udp, self.szip_multicast,
 			function(_err, _bytes) {
-				console.log('this.send broadpacket - %s:%d(len:%d)', this.szip_multicast, this.nport_udp, _bytes);
+				console.log('self.send broadpacket - %s:%d(len:%d)', self.szip_multicast, self.nport_udp, _bytes);
 				//console.log('- .send data :', data);
 				//console.log('- .send data.length :', data.length);
 			}
@@ -82,6 +100,8 @@ myWebService.prototype.fireWebServiceMessage = function( _szwhat )
 
 myWebService.prototype.onWebServiceHTTPMessage = function( _req, _res, _msg )
 {
+	var self = this;
+	
 	var retcode = 0;
 
 	var xmlobj = {};
@@ -157,6 +177,8 @@ LOCAL function definition
 */
 myWebService.prototype._onWebServiceMessage = function(_msg, _rinfo)
 {
+	var self = this;
+
 	console.log('<_onWebServiceMessage>');
 	//console.log('_msg:', _msg);
 	console.log('_rinfo:', _rinfo);
@@ -185,39 +207,21 @@ if(0) {
 
 	if( null != szresmsg ) {
 		var data = new Buffer(szresmsg, 'utf8');
-		this.server.send( data, 0, data.length, _rinfo.port, _rinfo.address,
-			function(_err, _bytes) {
-				console.log('this.server.send respacket - %s:%d(len:%d)', _rinfo.address, _rinfo.port, _bytes);
-				//console.log('- .send data :', data);
-				//console.log('- .send data.length :', data.length);
-			}
-		);
-		delete data;
+		self.server.send( data, 0, data.length, _rinfo.port, _rinfo.address, function(_err, _bytes) {
+			console.log('self.server.send respacket - %s:%d(len:%d)', _rinfo.address, _rinfo.port, _bytes);
+			//console.log('- .send data :', data);
+			//console.log('- .send data.length :', data.length);
+			delete data;
+		});
 	}
 }
 
-myWebService.prototype._onWebServiceClose = function()
-{
-	console.log('<onWebServiceClose>');
-}
-
-myWebService.prototype._onWebServiceError = function()
-{
-	console.log('<onWebServiceError>');
-}
-
-myWebService.prototype._onWebServiceListening = function()
-{
-	console.log('<_onWebServiceListening> - ', this.server.address());
-
-	this.fireWebServiceMessage('broad_hello');
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 	check WS-Discovery protocol
 */
-myWebService.prototype._is_probe = function(_xmlobj)
+function _is_probe(_xmlobj)
 {
 	var fret = false;
 	
@@ -236,7 +240,7 @@ myWebService.prototype._is_probe = function(_xmlobj)
 	return fret;
 }
 
-myWebService.prototype._makemsg_soap_envelope = function( _sz )
+function _makemsg_soap_envelope( _sz )
 {
 	_sz += 
 	'<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -290,7 +294,7 @@ myWebService.prototype._makemsg_soap_envelope = function( _sz )
 	return _sz;
 }
 
-myWebService.prototype._makemsg_soap_header = function( _objres, _sz, _szwhat )
+function _makemsg_soap_header( _objres, _sz, _szwhat )
 {
 	_sz +=
 	 '<SOAP-ENV:Header>'
@@ -321,7 +325,7 @@ myWebService.prototype._makemsg_soap_header = function( _objres, _sz, _szwhat )
 	return _sz;
 }	
 
-myWebService.prototype._makemsg_soap_body = function( _objres, _sz, _szwhat )
+function _makemsg_soap_body( _objres, _sz, _szwhat )
 {
 	_sz += 
 	'<SOAP-ENV:Body>'
@@ -392,7 +396,7 @@ myWebService.prototype._makemsg_soap_body = function( _objres, _sz, _szwhat )
 	return _sz;
 }
 
-myWebService.prototype._makeres_probematch = function(_xmlobj)
+function _makeres_probematch(_xmlobj)
 {
 	var objres = {};
 	
@@ -424,7 +428,7 @@ myWebService.prototype._makeres_probematch = function(_xmlobj)
 	return szresmsg;
 }
 
-myWebService.prototype._makebroad_hello = function()
+function _makebroad_hello()
 {
 	var objres = {};
 	
@@ -466,7 +470,7 @@ myWebService.prototype._makebroad_hello = function()
 	return szresmsg;
 }
 
-myWebService.prototype._makeres_getdeviceinformation = function(_xmlobj, _callback)
+function _makeres_getdeviceinformation(_xmlobj, _callback)
 {
 	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "system.deviceinfo.%"';
 	gmDataBase.getquery_ipcam_config( query, function(_result) {

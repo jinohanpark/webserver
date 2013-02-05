@@ -33,6 +33,7 @@ var myWebSocket = function( _name )
 	this.wsio = null;
 
 	/////////////////////////////////////////////////////////////////////
+	/*
 	var ee = this.event = new process.EventEmitter();
 	setInterval( function() {
 		ee.emit('tick', 'xxxxxx');
@@ -41,25 +42,40 @@ var myWebSocket = function( _name )
 	this.event.on('tick', function( _aaa ) {
 		console.log('websock test ontick:' + _aaa);
 	});
+	*/
 };
 // export module
 module.exports = myWebSocket;
 
 myWebSocket.prototype.Listen = function( _cWebServer )
 {
+	var self = this;
+
 	var wsio = gmWsIO.listen(_cWebServer);
+	self.wsio = wsio;
 
 	//
 	wsio.set('log level', 2);
-	
-	//
-	wsio.sockets.on( 'connection', this._onWsIOConnection );
-	wsio.sockets.on( 'message', this._onWsIOMessage );
-	wsio.sockets.on( 'anything', this._onWsIOAnything );
-	wsio.sockets.on( 'disconnect', this._onWsIODisconnect );
 
 	//
-	this.wsio = wsio;
+	wsio.sockets.on( 'connection', function( _socket ) {
+		return self._onWsIOConnection(_socket);
+	});
+
+	wsio.sockets.on( 'message', function( _message, _callbackWsIOMessageACK ) {
+		console.log('_onWsIOMessage - ############## _message ############ : ', _message);
+		// function _callbackWsIOMessageACK() {
+		// 	console.log('callbackWsIOMessageACK : ');
+		// }
+	});
+
+	wsio.sockets.on( 'anything', function( _data ) {
+		console.log('_onWsIOAnything - ############ _data ########### : ', _data);
+	});
+
+	wsio.sockets.on( 'disconnect', function() {
+		console.log('_onWsIODisconnect ############ ##############: ');
+	});
 }
 
 myWebSocket.prototype.CloseListen = function()
@@ -69,7 +85,8 @@ myWebSocket.prototype.CloseListen = function()
 
 myWebSocket.prototype.FirmwareUpload = function( _req, _szuploadbasedir )
 {
-	var wsio = this.wsio;
+	var self = this;
+	var wsio = self.wsio;
 
 	var szuploadbasedir = _szuploadbasedir || gmOS.tmpDir();
 	//console.log(szuploadbasedir);
@@ -156,7 +173,8 @@ LOCAL function definition
 */
 myWebSocket.prototype._onWsIOConnection = function( _socket )
 {
-	var wsio = this.wsio;
+	var self = this;
+	var wsio = self.wsio;
 	//console.log('onWsIOConnection - _socket : ');//console.log('onWsIOConnection - _socket : ', _socket);
 
 	_socket.on( '_mymsg',
@@ -344,27 +362,7 @@ myWebSocket.prototype._onWsIOConnection = function( _socket )
 	);
 }
 
-myWebSocket.prototype._onWsIODisconnect = function()
-{
-	console.log('_onWsIODisconnect : ');
-}
-
-myWebSocket.prototype._onWsIOMessage = function( _message, _callbackWsIOMessageACK )
-{
-	console.log('_onWsIOMessage - _message : ', _message);
-	
-	function _callbackWsIOMessageACK()
-	{
-		console.log('callbackWsIOMessageACK : ');
-	}
-}
-
-myWebSocket.prototype._onWsIOAnything = function( _data )
-{
-	console.log('_onWsIOAnything - _data : ', _data);
-}
-
-myWebSocket.prototype._db_getconfiguration = function(_queryitem, _callback)
+function _db_getconfiguration(_queryitem, _callback)
 {
 	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
 	gmDataBase.getquery_ipcam_config( query, function(_result) {
@@ -381,7 +379,7 @@ myWebSocket.prototype._db_getconfiguration = function(_queryitem, _callback)
 	});
 }
 
-myWebSocket.prototype._db_setconfiguration = function(_queryitem, _callback)
+function _db_setconfiguration(_queryitem, _callback)
 {
 	var query = 'UPDATE configuration SET rvalue=? WHERE lvalue=?';
 	for( var i=0; i<_queryitem.length; i++ ) {

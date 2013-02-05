@@ -28,7 +28,6 @@ var gmWsIO = require('../socketio/socketio.js');
 /*
 	multiple instance
 */
-// Constructor
 var myWebServer = function( _name )
 {
 	this.nhttpport = 3000;
@@ -40,48 +39,65 @@ var myWebServer = function( _name )
 	this.wsio = null;
 	this.webservice = null;
 }
-
 // export module
 module.exports = myWebServer;
 
 myWebServer.prototype.Init = function( _option )
 {
+	var self = this;
+
 	/*
 	*/
 	var connect = gmConnect();
+	self.connect = connect;
+
 	connect.use( gmConnect.query() );
-	//connect.use( gmConnect.basicAuth('basic') );
-	connect.use( gmConnect.basicAuth('digest') );
-	connect.use( gmConnect.favicon(this.szbasedir+'/images/favicon.ico') );
+	connect.use( gmConnect.basicAuth('digest') );//connect.use( gmConnect.basicAuth('basic') );
+	connect.use( gmConnect.favicon(self.szbasedir+'/images/favicon.ico') );
 	connect.use( gmConnect.logger('dev') );
-	connect.use( gmConnect.bodyParser({uploadDir:this.szuploadbasedir, defer:true}) );
+	connect.use( gmConnect.bodyParser({uploadDir:self.szuploadbasedir, defer:true}) );
 	connect.use( gmConnect.cookieParser() );
 	connect.use( gmConnect.cookieSession( {secret:'some secret'/*, cookie: { maxAge: 60000 1min. }*/ }) );
-	//connect.use( _onWebServerRequest() );
+	connect.use( function( _req, _res ) {
+		return self._onWebServerRequest(_req, _res);
+	});
 	connect.use( gmConnect.errorHandler({message:true}) );
-	this.connect = connect;
 
 	/*
 	*/
 	var server = gmHttp.createServer(connect);
+	self.server = server;
+
 	//server.on( 'request', _onWebServerRequest );
-	server.on( 'connection', _onWebServerConnection );
-	server.on( 'close', _onWebServerClose );
-	server.on( 'checkContinue', _oncheckContinue );
-	server.listen( this.nhttpport, _callbackWebServerListen );
-	this.server = server;
+	server.on( 'connection', function() {
+		console.log('Connection On');
+	});
+
+	server.on( 'close', function() { 
+		console.log('WebServer Close On');		
+	});
+
+	server.on( 'checkContinue', function() { 
+		console.log('WebServer _oncheckContinue On');		
+	});
+
+	server.listen( self.nhttpport, function() {
+		return self._callbackWebServerListen();
+	});
 
 	/*
 	*/
 	var wsio = new gmWsIO();
+	self.wsio = wsio;
+
 	wsio.Listen( server );
-	this.wsio = wsio;
 
 	/*
 	*/ 
 	var webservice = new gmWebService();
+	self.webservice = webservice;
+
 	webservice.createSocket();
-	this.webservice = webservice;
 }
 
 myWebServer.prototype.Deinit = function( _szhandler )
@@ -91,8 +107,10 @@ myWebServer.prototype.Deinit = function( _szhandler )
 
 /*
 */
-function _onWebServerRequest( _req, _res )
+myWebServer.prototype._onWebServerRequest = function( _req, _res )
 {
+	var self = this;
+
 	//console.log('_req.headers:', _req.headers);
 	//console.log('_req.headers.host:', _req.headers.host);
 	//console.log('_req.headers.content-type:', _req.headers['content-type']);
@@ -159,7 +177,7 @@ function _onWebServerRequest( _req, _res )
 			_req.on('data',
 				function(_data) {
 					//console.log('-> /onvif/device_service post data:', _data);
-					var retcode = gmWebService.onWebServiceHTTPMessage( _req, _res, _data );
+					var retcode = self.webservice.onWebServiceHTTPMessage( _req, _res, _data );
 				}
 			);
 			break;
@@ -193,7 +211,7 @@ function _onWebServerRequest( _req, _res )
 		case '/cgi-bin/upload.node':
 			console.log('-> /cgi-bin/upload.node');
 
-			gmWsIO.FirmwareUpload( _req, this.szuploadbasedir );
+			self.wsio.FirmwareUpload( _req, this.szuploadbasedir );
 
 			if( 'referer' == _req.query.retpage ) {
 				_fnRedirectPage(_req, _res, gmUrl.parse(_req.form.headers.referer).path);
@@ -286,25 +304,12 @@ function _onWebServerRequest( _req, _res )
 	return;
 }
 
-function _onWebServerConnection()
+myWebServer.prototype._callbackWebServerListen = function()
 {
-	console.log('Connection On');
-}
+	var self = this;
 
-function _onWebServerClose()
-{
-	console.log('WebServer Close On');
-}
-
-function _oncheckContinue()
-{
-	console.log('WebServer _oncheckContinue On');
-}
-
-function _callbackWebServerListen()
-{
 	console.log('callbackWebServerListen 192.168.0.2:3000');
-	//console.log( this );
+	console.log('self.szbasedir:', self.szbasedir);
 	//console.log( gmHttp.STATUS_CODES );
 }
 

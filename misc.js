@@ -17,10 +17,11 @@ myMisc.prototype.dbgerr = function( _sz )
 	console.log('\u001b[1m', '\u001b[30m', '\u001b[41m', _sz, '\u001b[0m');
 }
 
+
 /*
 // Constructor
 var myMisc = function(value1, value2) {
-  this.value1 = value1;
+  //this.value1 = value1;
 }
 // properties and methods
 myMisc.prototype = {
@@ -28,13 +29,15 @@ myMisc.prototype = {
   settest: function(_sz) {
     this.value2 = _sz;
   },
-  gettest: function() {
-    console.log(this.value2);
-  }
 };
 
 // node.js module export
 module.exports = myMisc;
+
+myMisc.prototype.gettest = function() {
+    console.log('this:', this);
+    //console.log(this.value2);
+}
 */
 
 /*
