@@ -33,7 +33,7 @@ var gmmyWsIO = require('./my_modules/socketio/socketio.js');
 */
 var gmDataBase = require('./my_modules/database/database.js');
 gmDataBase.init();
-gmDataBase.makedefault_ipcam_database();
+gmDataBase.makedefault_database();
 
 
 /*
@@ -341,7 +341,7 @@ function _fnGetRequestFileType( _req )
 function _db_getconfiguration(_queryitem, _callback)
 {
 	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
-	gmDataBase.getquery_ipcam_config( query, function(_result) {
+	gmDataBase.getquery_config( query, function(_result) {
 
 		var json = {};
 

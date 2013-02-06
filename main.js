@@ -57,32 +57,28 @@ gmainapp.main = function()
 		// database
 		var option = { host:'localhost', user:'root', password:'convex1234!@' };
 		gmDataBase.init(option);
-		var ret = gmDataBase.makedefault_ipcam_database().wait();
-		if( 'fail' == ret.ret ) throw ret;
+
+		var ret = gmDataBase.using().wait();
+		if( 'fail' == ret.ret ) {
+			var ret = gmDataBase.makedefault_database('factory-all').wait();
+			if( 'fail' == ret.ret ) throw ret;
+		}
+		else {
+			//console.log('db.revision:', gmDataBase.revision );
+			var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + 'framework.rev.db' + '"';
+			var ret = gmDataBase.sync_getquery_config(query).wait();
+			if( 'fail' == ret.ret ) throw ret;
+			
+			console.log('getquery - db.revision', ret.code);
+
+		}
 
 		///////////////////////////////////////////////////////////////////////////////////////
 		// http-server
+		var option = _getwebserveroption();
+		if( 'fail' == option.ret ) throw ret;
+
 		var cHttpServer = new gmHttpServer();
-
-		var szipaddr = '';
-		var netinterface = gmOs.getNetworkInterfaces();
-		var akeys = Object.keys(netinterface);
-		for(var i=0; i<akeys.length; i++) {
-			var nets = netinterface[akeys[i]][0];//console.log(nets);
-			if( (nets['family'] == 'IPv4') && (nets['internal'] == false) ) {
-				szipaddr = nets['address'];
-				break;
-			}
-		}
-		//console.log(szipaddr);
-
-		var option = {
-			ssl : 'no',
-			ipaddr : '',
-			port : '3000',
-			basedir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www',
-			uploaddir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload'
-		};
 		cHttpServer.Init(option);
 
 		//
@@ -107,20 +103,10 @@ gmainapp.main = function()
 		console.log('main routine finally...');
 	}
 
-/*
-	gval.test1 = 1;
-	console.log('before sync1 ');
-	var szret = _syncQuery1();
-	wait(szret);
-	console.log('after sync1, ret:', szret);
-
-	console.log('before sync2 ');
-	var szret = _syncQuery2().wait();
-	console.log('after sync2, ret:', szret);
-*/
-
 	return 'main_retvalue';
 }.future();
+
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,54 +171,30 @@ function show_process_attr()
 	return 0;
 }
 
-function _syncQuery3()
+function _getwebserveroption()
 {
-	var fiber = gmFiber.current;
+	//var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + 'framework.rev.db' + '"';
+	//var ret = gmDataBase.sync_getquery_config( query ).wait();
+	//if( 'fail' == ret.ret ) return ret;
 
-	gval.test2 = 2;
+	var szipaddr = '';
+	var netinterface = gmOs.getNetworkInterfaces();
+	var akeys = Object.keys(netinterface);
+	for(var i=0; i<akeys.length; i++) {
+		var nets = netinterface[akeys[i]][0];//console.log(nets);
+		if( (nets['family'] == 'IPv4') && (nets['internal'] == false) ) {
+			szipaddr = nets['address'];
+			break;
+		}
+	}
+	if( szipaddr ) { console.log('#### IPADDRESS:', szipaddr, 'applied.' ); }
+	else { console.log('## IPADDRESS:', ' depend on system default net-adapter'); }
 
-    setTimeout( function() {
-    	console.log('timer3');
-    	gval.test3 = 3;
-
-    	var szret = 'ok_sync3';
-    	fiber.run(szret);
-
-    }, 1000);
-
-    var szret = gmFiber.yield();
-	console.log('timer1-eeeee, szret:', szret);
-}
-
-function _syncQuery1()
-{
-	var future = new gmFuture;
-
-	gval.test2 = 2;
-
-    setTimeout( function() {
-    	console.log('timer1');
-    	gval.test3 = 3;
-    	var szret = 'ok_sync1';
-        future.return(szret);
-        console.log('timer1-ddddd');
-    }, 1000);
-
-	console.log('timer1-eeeee');
-	return future;
-}
-
-function _syncQuery2()
-{
-	var future = new gmFuture;
-
-	gval.test4 = 4;
-    setTimeout( function() {
-    	console.log('timer2');
-    	gval.test5 = 5;
-    	var szret = 'ok_sync2';
-        future.return(szret);
-    }, 500);
-
-	return future;
+	return {
+		ssl : 'no',
+		ipaddr : szipaddr,	// or ''
+		port : '3000',
+		basedir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www',
+		uploaddir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload'
+	};
 }

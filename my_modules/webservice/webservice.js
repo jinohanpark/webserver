@@ -473,11 +473,11 @@ function _makebroad_hello()
 function _makeres_getdeviceinformation(_xmlobj, _callback)
 {
 	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "system.deviceinfo.%"';
-	gmDataBase.getquery_ipcam_config( query, function(_result) {
+	gmDataBase.getquery_config( query, function(_result) {
 
 		var objres = {};
 		for( var i=0; i<_result.length; i++ ) {
-			console.log('getquery_ipcam_config result:', _result[i].lvalue);
+			console.log('getquery_config result:', _result[i].lvalue);
 			
 			switch(_result[i].lvalue) {
 			case 'system.deviceinfo.manufacturer':

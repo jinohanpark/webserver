@@ -36,7 +36,7 @@ var gsession_timeout = 60*60*1000;  // after one hour
 function _db_getconfiguration(_queryitem, _callback)
 {
   var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
-  gmDataBase.getquery_ipcam_config( query, function(_result) {
+  gmDataBase.getquery_config( query, function(_result) {
 
     var json = {};
 

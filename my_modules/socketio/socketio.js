@@ -365,7 +365,7 @@ myWebSocket.prototype._onWsIOConnection = function( _socket )
 function _db_getconfiguration(_queryitem, _callback)
 {
 	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
-	gmDataBase.getquery_ipcam_config( query, function(_result) {
+	gmDataBase.getquery_config( query, function(_result) {
 
 		var json = {};
 
@@ -385,7 +385,7 @@ function _db_setconfiguration(_queryitem, _callback)
 	for( var i=0; i<_queryitem.length; i++ ) {
 
 		var queryarray = [_queryitem[i].rvalue, _queryitem[i].lvalue];
-		gmDataBase.setquery_ipcam_config( query, queryarray, function(_result) {
+		gmDataBase.setquery_config( query, queryarray, function(_result) {
 			var json = {};
 			_callback(_result, json);
 		});
