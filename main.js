@@ -60,25 +60,19 @@ gmainapp.main = function()
 
 		var ret = gmDataBase.using().wait();
 		if( 'fail' == ret.ret ) {
-			var ret = gmDataBase.makedefault_database('factory-all').wait();
+			// 사용할 db가 없는 상태이므로 f/d상태로 만든다.
+			var ret = gmDataBase.makefactorydefault_database('factory-all').wait();
 			if( 'fail' == ret.ret ) throw ret;
 		}
 		else {
-			//console.log('db.revision:', gmDataBase.revision );
+			// 사용할 db가 있다. 리비전 및 무결성 검사를 한다. update가 필요하다면 한다.
 			var ret = gmDataBase.getconfig('framework.rev.db').wait();
 			if( 'ok' !== ret.ret.ret ) throw ret;
-			/*
-			ret: { result:
-			   [ { seqno: 1,
-			       lvalue: 'framework.rev.db',
-			       rvalue: '1',
-			       type: '{"type":"sz","min":1,"max":8,"def":"1"}',
-			       privilige: 'admin',
-			       syntax: 's___g|sz|8' } ],
-			  json: { 'framework.rev.db': [ '1', [Object] ] },
-			  ret: { ret: 'ok' } }			
-			*/
-			console.log('getquery - db.revision:', ret.result[0].rvalue);
+
+			console.log('db.revision on storage:', ret.result[0].rvalue, ', my db.revision on code:', gmDataBase.revision);
+			var ret = gmDataBase.makefactorydefault_database('factory-all').wait();
+
+
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////

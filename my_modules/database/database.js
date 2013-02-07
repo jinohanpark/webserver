@@ -80,9 +80,9 @@ myDataBase.prototype.using = function()
 /*
 	_szdefault : [string] factory-all
 */
-myDataBase.prototype.makedefault_database = function( _szdefault )
+myDataBase.prototype.makefactorydefault_database = function( _szdefault )
 {
-	//console.log('->> myDataBase.prototype.makedefault_database');
+	//console.log('->> myDataBase.prototype.makefactorydefault_database');
 	var future = new gmFuture;
 
 	var _szdefault = _szdefault || 'update';
@@ -96,13 +96,13 @@ myDataBase.prototype.makedefault_database = function( _szdefault )
 						// 이미 존재하는 경우, 모두 지우고 새로 만든다.
 						gcmyDataBase.db.query('DROP DATABASE '+gcmyDataBase.databasename, function(_err) {
 							if(_err) {
-								console.log('makedefault_database - error2 db_drop:', _err.code);
+								console.log('makefactorydefault_database - error2 db_drop:', _err.code);
 								future.return({'ret':'fail', 'code':_err.code});
 							}
 							else {
 								gcmyDataBase.db.query('CREATE DATABASE '+gcmyDataBase.databasename, function(_err) {
 									if(_err) {
-										console.log('makedefault_database - error3 db_create:', _err.code);
+										console.log('makefactorydefault_database - error3 db_create:', _err.code);
 										future.return({'ret':'fail', 'code':_err.code});
 									}
 									else {
@@ -114,6 +114,7 @@ myDataBase.prototype.makedefault_database = function( _szdefault )
 						});
 					}
 					else {
+						// 일부 보존해야할 데이터가 있는 경우... 
 						future.return({'ret':'fail', 'code':'is not factory-all???'});
 					}
 				}
@@ -121,7 +122,7 @@ myDataBase.prototype.makedefault_database = function( _szdefault )
 
 			default:
 				{
-					console.log('makedefault_database - error1 db_create:', _err.code);
+					console.log('makefactorydefault_database - error1 db_create:', _err.code);
 					future.return({'ret':'fail', 'code':_err.code});
 				}
 				break;
@@ -138,6 +139,7 @@ myDataBase.prototype.makedefault_database = function( _szdefault )
 }
 
 /*
+	_szlvalue : [string] lvalue
 	_callback(result, json, ret)
 
 	ex)
@@ -174,6 +176,55 @@ myDataBase.prototype.getconfig = function( _szlvalue, _callback )
 		// async mode
 		else _callback(_result, json, _ret);
 	});
+
+	// sync mode
+	if( !_callback ) return future;
+}
+
+/*
+	_queryitem : [{ lvalue:?, rvalue:?}, ...]
+	_callback(result, json, ret)
+
+	ex)
+	result= [ { seqno: 1,
+		  		 lvalue: 'framework.rev.db',
+		  		 rvalue: '1',
+		  		 type: '{"type":"sz","min":1,"max":8,"def":"1"}',
+		  		 privilige: 'admin',
+		  		 syntax: 's___g|sz|8' }, { }, ... ]
+	json= {}
+	ret= { _ret : 'ok' or errcode }
+*/
+myDataBase.prototype.setconfig = function( _queryitem, _callback )
+{
+	var future = null;
+
+	var query = 'UPDATE configuration SET rvalue=? WHERE lvalue=?';
+	// sync mode
+	if( !_callback ) future = new gmFuture;
+
+	var cnt = _queryitem.length;
+	for( var i=0; i<_queryitem.length; i++ ) {
+
+		var queryarray = [_queryitem[i].rvalue, _queryitem[i].lvalue];
+		_setquery_config( query, queryarray, function(_result, _ret) {
+			var json = {};
+			cnt = cnt - 1;
+			// sync mode
+			if( !_callback ) {
+				if( _ret.ret !== 'ok' ) {
+					future.return( {'result':_result, 'json':json, 'ret':_ret} );
+				}
+				else {
+					if( 0 == cnt ) {
+						future.return( {'result':_result, 'json':json, 'ret':_ret} );
+					}
+				}
+			}			
+			// async mode
+			else _callback(_result, json, _ret);
+		});
+	}
 
 	// sync mode
 	if( !_callback ) return future;
@@ -220,21 +271,24 @@ function _getquery_config( _query, _callback )
 	})
 }
 
-myDataBase.prototype.setquery_config = function( _query, _param, _callback )
+function _setquery_config( _query, _param, _callback )
 {
-	console.log('->> myDataBase.prototype.setquery_config _query:', _query);
-	console.log('    myDataBase.prototype.setquery_config _param:', _param);
+	console.log('->> _setquery_config _query:', _query);
+	console.log('    _setquery_config _param:', _param);
 	
+	var jret = { ret : 'ok' };
+
 	var ajresult = [];
 	var query = gcmyDataBase.db.query(_query, _param);
 	
 	query.on('error', function(_err) {
 		// Handle error, an 'end' event will be emitted after this as well
-		console.log('setquery_config error:', _err);
+		//console.log('setquery_config error:', _err);
+		jret.ret = _err;
 	})
 	.on('fields', function(_fields) {
 		// the field packets for the rows to follow
-		console.log('setquery_config fields:', _fields);
+		//console.log('setquery_config fields:', _fields);
 	})
 	.on('result', function(_row) {
 		// Pausing the connnection is useful if your processing involves I/O
@@ -247,8 +301,7 @@ myDataBase.prototype.setquery_config = function( _query, _param, _callback )
 	.on('end', function() {
 		// all rows have been received
 		console.log('setquery_config end:');
-		
-		_callback(ajresult);
+		_callback(ajresult, jret);
 	})
 }
 

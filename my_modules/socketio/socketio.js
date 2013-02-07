@@ -242,7 +242,7 @@ myWebSocket.prototype._onWsIOConnection = function( _socket )
 
 			case 'set':
 				var cnt = 0;
-				_db_setconfiguration( _data.query, function(_result, _json) {
+				gmDataBase.setconfig( _data.query, function(_result, _json) {
 					var ack = {};
 					ack.action = _data.action;
 					ack.query  = _data.query;
@@ -360,17 +360,4 @@ myWebSocket.prototype._onWsIOConnection = function( _socket )
 			}
 		}
 	);
-}
-
-function _db_setconfiguration(_queryitem, _callback)
-{
-	var query = 'UPDATE configuration SET rvalue=? WHERE lvalue=?';
-	for( var i=0; i<_queryitem.length; i++ ) {
-
-		var queryarray = [_queryitem[i].rvalue, _queryitem[i].lvalue];
-		gmDataBase.setquery_config( query, queryarray, function(_result) {
-			var json = {};
-			_callback(_result, json);
-		});
-	}
 }
