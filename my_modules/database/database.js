@@ -73,8 +73,12 @@ myDataBase.prototype.using = function()
 			future.return({'ret':'ok', 'code':''});
 		}
 	});
+	future.wait();
 
-	return future;
+	var ret;
+	future.resolve( function(_err, _ret) { ret = _ret; } );
+	delete future;
+	return ret;
 }
 
 /*
@@ -107,14 +111,59 @@ myDataBase.prototype.update_database = function( _szdefault )
 		if( 'ok' !== ret.ret ) { break; }
 
 		// NEW 대비 OLD에 추가되야 하는것들...
+
+		//var query = 'SELECT * FROM '+gcmyDataBase.tablename_config+' WHERE lvalue LIKE "' + _szlvalue + '"';
 		//mysql> select b.a, b.b from a right outer join b on a.a=b.a where a.a is null;
-		//gcmyDataBase.db.query( 'SELECT new_configuration', function(_err) {
-		//}
+
+		var query = 'SELECT new_configuration.lvalue new_configuration.rvalue FROM configuration RIGHT OUTER JOIN new_configuration ON configuration.lvalue=new_configuration.lvalue WHERE configuration.lvalue IS NULL';
+		_joinconfig( query );
+
+		function _joinconfig( _szquery, _callback )
+		{
+			var future = null;
+
+			// sync mode
+			if( !_callback ) future = new gmFuture;
+/*
+	obj.sql = 'seqno			tinyint not null auto_increment primary key' + ','
+			+ 'lvalue			varchar(64) not null' + ','
+			+ 'rvalue			varchar(2048) character set utf8 not null' + ','
+			+ 'type				varchar(128) not null' + ','
+			+ 'privilige		varchar(16) not null' + ','
+			+ 'syntax			varchar(128) not null';
+*/
+			_getquery_config( _szquery, function(_result, _ret) {
+				var json = {};
+				if( _ret.ret == 'ok' ) {
+					for( var i=0; i<_result.length; i++ ) {
+						json[ _result[i].lvalue ] = [];
+						json[ _result[i].lvalue ].push(_result[i].rvalue);
+						json[ _result[i].lvalue ].push(JSON.parse(_result[i].type));
+					}
+				}
+
+				// sync mode
+				if( !_callback ) future.return( {'result':_result, 'json':json, 'ret':_ret} );
+				// async mode
+				else _callback(_result, json, _ret);
+			});
+
+			// sync mode
+			if( !_callback ) {
+				future.wait();
+
+				var ret;
+				future.resolve( function(_err, _ret) { ret = _ret; } );
+				delete future;
+				return ret;
+			}
+		}
+
 
 
 	} while(0);
 
-	//
+	// 임시 생성한 table을 삭제한다.
 	var future = new gmFuture;
 	gcmyDataBase.db.query( 'DROP table new_configuration', function(_err) {
 		if(_err) { future.return({'ret':'fail', 'code':_err}); }
@@ -272,7 +321,12 @@ myDataBase.prototype.makefactorydefault_database = function( _szdefault )
 		}
 	});
 
-	return future;
+	future.wait();
+
+	var ret;
+	future.resolve( function(_err, _ret) { ret = _ret; } );
+	delete future;
+	return ret;
 }
 
 /*
@@ -479,8 +533,7 @@ function _sync_makedeftable_config( _tablename, _future )
 						_future.return({'ret':'fail', 'code':_err});
 					}
 					else {
-						console.log('>> insert db result:', _results);
-
+						//console.log('>> insert db result:', _results);
 						cnt = cnt - 1;
 						if(0 == cnt) {
 							_future.return({'ret':'ok', 'code':''});
@@ -613,8 +666,8 @@ function _gettable_configuration()
 	['account.viewer',						'',			'{"type":"usernamelist","def":""}',							'admin', 's__sg|usernamelist|0|30'],
 	['account.viewer.passwd',				'',			'{"type":"passwd","def":""}',								'admin', 's__sg|passwdlist|0|30'],
 	
-//	['http.enable',							'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
-//	['http.port',							'80',		'{"type":"port","min":1,"max":65535,"def":25}',				'admin', 's__sg|port|1|65535'],
+	['http.enable',							'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
+	['http.port',							'80',		'{"type":"port","min":1,"max":65535,"def":25}',				'admin', 's__sg|port|1|65535'],
 
 /*
 	webservice

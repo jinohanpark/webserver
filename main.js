@@ -58,12 +58,12 @@ gmainapp.main = function()
 		var option = { host:'localhost', user:'root', password:'convex1234!@' };
 		gmDataBase.init(option);
 
-		var ret = gmDataBase.using().wait();
+		var ret = gmDataBase.using();
 		if( 'fail' == ret.ret ) {
 			// 사용할 db가 없는 상태이므로 f/d상태로 만든다.
 			console.log('### make database with factory-all');
 
-			var ret = gmDataBase.makefactorydefault_database('factory-all').wait();
+			var ret = gmDataBase.makefactorydefault_database('factory-all');
 			if( 'fail' == ret.ret ) throw ret;
 		}
 		else {
