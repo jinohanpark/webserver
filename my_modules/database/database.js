@@ -78,6 +78,143 @@ myDataBase.prototype.using = function()
 }
 
 /*
+	_szdefault : [string] revision
+*/
+myDataBase.prototype.update_database = function( _szdefault )
+{
+	//console.log('->> myDataBase.prototype.update_database');	
+	var _szdefault = _szdefault || 'revision';
+
+	var ret;
+
+	// code에 있는 db로 임시 이름 table을 생성한다. 이미 있다면 삭제한다.
+	var future = new gmFuture;
+	gcmyDataBase.db.query( 'DROP table new_configuration', function(_err) {
+		if(_err) { future.return({'ret':'fail', 'code':_err}); }
+		else { future.return({'ret':'ok', 'code':''}); }
+	});
+	future.wait();
+	delete future;
+
+	// 임시 이름으로 생성
+	var future = new gmFuture;
+	ret = _sync_makedeftable_config( 'new_configuration', future );
+	future.wait();
+	future.resolve( function(_err, _ret) { ret = _ret; } );
+	delete future;
+
+	do {
+		if( 'ok' !== ret.ret ) { break; }
+
+		// NEW 대비 OLD에 추가되야 하는것들...
+		//mysql> select b.a, b.b from a right outer join b on a.a=b.a where a.a is null;
+		//gcmyDataBase.db.query( 'SELECT new_configuration', function(_err) {
+		//}
+
+
+	} while(0);
+
+	//
+	var future = new gmFuture;
+	gcmyDataBase.db.query( 'DROP table new_configuration', function(_err) {
+		if(_err) { future.return({'ret':'fail', 'code':_err}); }
+		else { future.return({'ret':'ok', 'code':''}); }
+	});
+	future.wait();
+	delete future;
+
+	return ret;
+
+/*
+function _sync_makeupdate_config( _future )
+{
+	var val = _gettable_configuration();	//console.log('val.length :', val.length);
+	var table    = val[0];
+	var tableval = val[1];
+
+	table.tablename = 'new_configuration';
+	var sql = 'CREATE TABLE ' + table.tablename + '(' + table.sql + ')';//console.log('sql :', sql);
+
+	gcmyDataBase.db.query( sql, function(_err) {
+		if(_err) {
+			_future.return({'ret':'fail', 'code':_err});
+		}
+		else {
+			// JOIN
+
+NEW와 비교해 OLD에서 삭제되야 하는것
+mysql> select a.** from a left outer join b on a.a=b.a where b.a is null;
++------+------+
+| a    | b    |
++------+------+
+| 5    | e    |
++------+------+
+1 row in set (0.00 sec)
+
+NEW와 비교해 OLD에서 추가되야 하는것
+mysql> select b.a, b.b from a right outer join b on a.a=b.a where a.a is null;
++------+------+
+| a    | b    |
++------+------+
+| 4    | d    |
++------+------+
+1 row in set (0.00 sec)
+
+NEW와 비교해 OLD와 동일한것
+mysql> select a.a, a.b from a inner join b on a.a=b.a;
++------+------+
+| a    | b    |
++------+------+
+| 1    | a    |
+| 2    | b    |
+| 3    | c    |
++------+------+
+3 rows in set (0.00 sec)
+
+drop table a;
+drop table b;
+
+create table a (a char(2), b char(2), c char(2), d char(2));
+create table b (a char(2), b char(2), c char(2), d char(2), e char(2));
+
+insert into a values(1, 'b', 'c', 'd');
+insert into a values(2, 'b', 'c', 'd');
+insert into a values(3, 'b', 'c', 'd');
+insert into a values(5, 'b', 'c', 'd');
+
+insert into b values(1, 'b', 'c', 'd', 'e');
+insert into b values(2, 'bb', 'cc', 'dd', 'ee');
+insert into b values(3, 'b3', 'c3', 'dd', 'ee');
+insert into b values(4, 'b4', 'cc', 'd4', 'ee');
+
+update a, (select a.a, a.b from a inner join b on a.a=b.a) set a.c=b.c, a.d=b.d, a.e=b.e
+set t1.field_id_60 = t2.field_id_46,
+    t1.field_id_61 = t2.field_id_47
+where t1.entry_id = 45
+
+			var sql = 'INSERT INTO configuration (lvalue, rvalue, type, privilige, syntax) VALUES (?,?,?,?,?)';
+			var cnt = tableval.length;
+			for( var i=0; i<tableval.length; i++ ) {
+				gcmyDataBase.db.query( sql, tableval[i], function(_err, _results, _fields) {
+					if(_err) { 
+						console.log(_err);
+						_future.return({'ret':'fail', 'code':_err});
+					}
+					else {
+						cnt = cnt - 1;
+						if(0 == cnt) {
+							_future.return({'ret':'ok', 'code':''});
+						}
+					}
+				});
+			}
+		}
+	});
+}
+*/
+}
+
+/*
 	_szdefault : [string] factory-all
 */
 myDataBase.prototype.makefactorydefault_database = function( _szdefault )
@@ -85,7 +222,7 @@ myDataBase.prototype.makefactorydefault_database = function( _szdefault )
 	//console.log('->> myDataBase.prototype.makefactorydefault_database');
 	var future = new gmFuture;
 
-	var _szdefault = _szdefault || 'update';
+	var _szdefault = _szdefault || 'factory-all';
 
 	gcmyDataBase.db.query('CREATE DATABASE '+gcmyDataBase.databasename, function(_err) {
 		if( _err ) {
@@ -107,7 +244,7 @@ myDataBase.prototype.makefactorydefault_database = function( _szdefault )
 									}
 									else {
 										gcmyDataBase.db.query('USE '+gcmyDataBase.databasename);
-										_sync_makedefault_config( future );
+										_sync_makedeftable_config( '', future );
 									}
 								});
 							}
@@ -131,7 +268,7 @@ myDataBase.prototype.makefactorydefault_database = function( _szdefault )
 		else {
 			// Creates a new space because it is empty
 			gcmyDataBase.db.query('USE '+gcmyDataBase.databasename);
-			_sync_makedefault_config( future );
+			_sync_makedeftable_config( '', future );
 		}
 	});
 
@@ -155,12 +292,11 @@ myDataBase.prototype.makefactorydefault_database = function( _szdefault )
 myDataBase.prototype.getconfig = function( _szlvalue, _callback )
 {
 	var future = null;
-
-	var query = 'SELECT * FROM '+gcmyDataBase.tablename_config+' WHERE lvalue LIKE "' + _szlvalue + '"';
+	
 	// sync mode
 	if( !_callback ) future = new gmFuture;
 
-	var future = new gmFuture;
+	var query = 'SELECT * FROM '+gcmyDataBase.tablename_config+' WHERE lvalue LIKE "' + _szlvalue + '"';
 	_getquery_config( query, function(_result, _ret) {
 		var json = {};
 		if( _ret.ret == 'ok' ) {
@@ -178,7 +314,14 @@ myDataBase.prototype.getconfig = function( _szlvalue, _callback )
 	});
 
 	// sync mode
-	if( !_callback ) return future;
+	if( !_callback ) {
+		future.wait();
+
+		var ret;
+		future.resolve( function(_err, _ret) { ret = _ret; } );
+		delete future;
+		return ret;
+	}
 }
 
 /*
@@ -199,10 +342,10 @@ myDataBase.prototype.setconfig = function( _queryitem, _callback )
 {
 	var future = null;
 
-	var query = 'UPDATE configuration SET rvalue=? WHERE lvalue=?';
 	// sync mode
 	if( !_callback ) future = new gmFuture;
 
+	var query = 'UPDATE configuration SET rvalue=? WHERE lvalue=?';
 	var cnt = _queryitem.length;
 	for( var i=0; i<_queryitem.length; i++ ) {
 
@@ -227,7 +370,14 @@ myDataBase.prototype.setconfig = function( _queryitem, _callback )
 	}
 
 	// sync mode
-	if( !_callback ) return future;
+	if( !_callback ) {
+		future.wait();
+
+		var ret;
+		future.resolve( function(_err, _ret) { ret = _ret; } );
+		delete future;
+		return ret;
+	}
 }
 
 function _getquery_config( _query, _callback )
@@ -305,102 +455,13 @@ function _setquery_config( _query, _param, _callback )
 	})
 }
 
-function _sync_makeupdate_config( _future )
+function _sync_makedeftable_config( _tablename, _future )
 {
 	var val = _gettable_configuration();	//console.log('val.length :', val.length);
 	var table    = val[0];
 	var tableval = val[1];
 
-	table.tablename = 'new_configuration';
-	var sql = 'CREATE TABLE ' + table.tablename + '(' + table.sql + ')';//console.log('sql :', sql);
-
-	gcmyDataBase.db.query( sql, function(_err) {
-		if(_err) {
-			_future.return({'ret':'fail', 'code':_err});
-		}
-		else {
-			// JOIN
-
-/*
-NEW와 비교해 OLD에서 삭제되야 하는것
-mysql> select a.** from a left outer join b on a.a=b.a where b.a is null;
-+------+------+
-| a    | b    |
-+------+------+
-| 5    | e    |
-+------+------+
-1 row in set (0.00 sec)
-
-NEW와 비교해 OLD에서 추가되야 하는것
-mysql> select b.a, b.b from a right outer join b on a.a=b.a where a.a is null;
-+------+------+
-| a    | b    |
-+------+------+
-| 4    | d    |
-+------+------+
-1 row in set (0.00 sec)
-
-NEW와 비교해 OLD와 동일한것
-mysql> select a.a, a.b from a inner join b on a.a=b.a;
-+------+------+
-| a    | b    |
-+------+------+
-| 1    | a    |
-| 2    | b    |
-| 3    | c    |
-+------+------+
-3 rows in set (0.00 sec)
-*/
-
-/*
-drop table a;
-drop table b;
-
-create table a (a char(2), b char(2), c char(2), d char(2));
-create table b (a char(2), b char(2), c char(2), d char(2), e char(2));
-
-insert into a values(1, 'b', 'c', 'd');
-insert into a values(2, 'b', 'c', 'd');
-insert into a values(3, 'b', 'c', 'd');
-insert into a values(5, 'b', 'c', 'd');
-
-insert into b values(1, 'b', 'c', 'd', 'e');
-insert into b values(2, 'bb', 'cc', 'dd', 'ee');
-insert into b values(3, 'b3', 'c3', 'dd', 'ee');
-insert into b values(4, 'b4', 'cc', 'd4', 'ee');
-
-update a, (select a.a, a.b from a inner join b on a.a=b.a) set a.c=b.c, a.d=b.d, a.e=b.e
-set t1.field_id_60 = t2.field_id_46,
-    t1.field_id_61 = t2.field_id_47
-where t1.entry_id = 45
-*/
-			/*
-			var sql = 'INSERT INTO configuration (lvalue, rvalue, type, privilige, syntax) VALUES (?,?,?,?,?)';
-			var cnt = tableval.length;
-			for( var i=0; i<tableval.length; i++ ) {
-				gcmyDataBase.db.query( sql, tableval[i], function(_err, _results, _fields) {
-					if(_err) { 
-						console.log(_err);
-						_future.return({'ret':'fail', 'code':_err});
-					}
-					else {
-						cnt = cnt - 1;
-						if(0 == cnt) {
-							_future.return({'ret':'ok', 'code':''});
-						}
-					}
-				});
-			}
-			*/
-		}
-	});
-}
-
-function _sync_makedefault_config( _future )
-{
-	var val = _gettable_configuration();	//console.log('val.length :', val.length);
-	var table    = val[0];
-	var tableval = val[1];
+	if( _tablename ) table.tablename = _tablename;
 
 	var sql = 'CREATE TABLE ' + table.tablename + '(' + table.sql + ')';//console.log('sql :', sql);
 	gcmyDataBase.db.query( sql, function(_err) {
@@ -409,7 +470,7 @@ function _sync_makedefault_config( _future )
 		}
 		else {
 
-			var sql = 'INSERT INTO '+gcmyDataBase.tablename_config+' (lvalue, rvalue, type, privilige, syntax) VALUES (?,?,?,?,?)';
+			var sql = 'INSERT INTO '+table.tablename+' (lvalue, rvalue, type, privilige, syntax) VALUES (?,?,?,?,?)';
 			var cnt = tableval.length;
 			for( var i=0; i<tableval.length; i++ ) {
 				gcmyDataBase.db.query( sql, tableval[i], function(_err, _results, _fields) {
@@ -418,6 +479,8 @@ function _sync_makedefault_config( _future )
 						_future.return({'ret':'fail', 'code':_err});
 					}
 					else {
+						console.log('>> insert db result:', _results);
+
 						cnt = cnt - 1;
 						if(0 == cnt) {
 							_future.return({'ret':'ok', 'code':''});
@@ -550,8 +613,8 @@ function _gettable_configuration()
 	['account.viewer',						'',			'{"type":"usernamelist","def":""}',							'admin', 's__sg|usernamelist|0|30'],
 	['account.viewer.passwd',				'',			'{"type":"passwd","def":""}',								'admin', 's__sg|passwdlist|0|30'],
 	
-	['http.enable',							'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
-	['http.port',							'80',		'{"type":"port","min":1,"max":65535,"def":25}',				'admin', 's__sg|port|1|65535'],
+//	['http.enable',							'yes',		'{"type":"yesno","def":"yes"}',								'admin', 's__sg|yesno'],
+//	['http.port',							'80',		'{"type":"port","min":1,"max":65535,"def":25}',				'admin', 's__sg|port|1|65535'],
 
 /*
 	webservice
