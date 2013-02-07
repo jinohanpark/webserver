@@ -279,7 +279,7 @@ myWebServer.prototype._onWebServerRequest = function( _req, _res )
 		//GET /submenu/configuration.ssi?action=query&lvalue=system.deviceinfo.%&var=gserverform_deviceinfo
 		//console.log('ssi query:', _req.query);
 		
-		_db_getconfiguration( _req.query.lvalue, function(_result, _json) {
+		gmDataBase.getconfig( _req.query.lvalue, function(_result, _json, _ret) {
 			//console.log('from DB _result ', _json);
 			var sz = 'var ' + _req.query.var + ' = ';
 			sz += 'JSON.parse(';
@@ -375,20 +375,3 @@ function _fnGetRequestFileType( _req )
 	
 	return { 'szreqfiletype' : szretfiletype, 'sztype' : szrettype };
 }	
-
-function _db_getconfiguration(_queryitem, _callback)
-{
-	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
-	gmDataBase.getquery_config( query, function(_result) {
-
-		var json = {};
-
-		for( var i=0; i<_result.length; i++ ) {
-			json[_result[i].lvalue] = [];
-			json[_result[i].lvalue].push(_result[i].rvalue);
-			json[_result[i].lvalue].push(JSON.parse(_result[i].type));
-		}
-
-		_callback(_result, json);
-	});
-}

@@ -224,7 +224,7 @@ myWebSocket.prototype._onWsIOConnection = function( _socket )
 
 			switch(_data.action) {
 			case 'get':
-				_db_getconfiguration( _data.query, function(_result, _json) {
+				gmDataBase.getconfig( _data.query, function(_result, _json, _ret) {
 					//console.log('from DB _result ', _result);
 					var ack = {};
 					ack.action = _data.action;
@@ -360,23 +360,6 @@ myWebSocket.prototype._onWsIOConnection = function( _socket )
 			}
 		}
 	);
-}
-
-function _db_getconfiguration(_queryitem, _callback)
-{
-	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
-	gmDataBase.getquery_config( query, function(_result) {
-
-		var json = {};
-
-		for( var i=0; i<_result.length; i++ ) {
-			json[_result[i].lvalue] = [];
-			json[_result[i].lvalue].push(_result[i].rvalue);
-			json[_result[i].lvalue].push(JSON.parse(_result[i].type));
-		}
-
-		_callback(_result, json);
-	});
 }
 
 function _db_setconfiguration(_queryitem, _callback)

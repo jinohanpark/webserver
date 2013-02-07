@@ -472,8 +472,7 @@ function _makebroad_hello()
 
 function _makeres_getdeviceinformation(_xmlobj, _callback)
 {
-	var query = 'SELECT * FROM configuration WHERE lvalue LIKE "system.deviceinfo.%"';
-	gmDataBase.getquery_config( query, function(_result) {
+	gmDataBase.getconfig( 'system.deviceinfo.%', function(_result, _json, _ret) {
 
 		var objres = {};
 		for( var i=0; i<_result.length; i++ ) {

@@ -27,6 +27,7 @@ PUBLIC function definition
 function myDataBase( _name )
 {
 	this.databasename = 'ipcam';
+	this.tablename_config = 'configuration';
 
 	/////////////////////////////////////////////////
 	this.revision = '1';
@@ -136,59 +137,77 @@ myDataBase.prototype.makedefault_database = function( _szdefault )
 	return future;
 }
 
-myDataBase.prototype.sync_getquery_config = function( _query )
+/*
+	_callback(result, json, ret)
+
+	ex)
+	result= [ { seqno: 1,
+		  		 lvalue: 'framework.rev.db',
+		  		 rvalue: '1',
+		  		 type: '{"type":"sz","min":1,"max":8,"def":"1"}',
+		  		 privilige: 'admin',
+		  		 syntax: 's___g|sz|8' }, { }, ... ]
+	json= { 'framework.rev.db' : [ '1', '{"type":"sz","min":1,"max":8,"def":"1"}' ], ... }
+	ret= { _ret : 'ok' or errcode }
+*/
+myDataBase.prototype.getconfig = function( _szlvalue, _callback )
 {
-	console.log('->> myDataBase.prototype.sync_getquery_config');
+	var future = null;
+
+	var query = 'SELECT * FROM '+gcmyDataBase.tablename_config+' WHERE lvalue LIKE "' + _szlvalue + '"';
+	// sync mode
+	if( !_callback ) future = new gmFuture;
 
 	var future = new gmFuture;
-	
-	var ajresult = [];
-	var query = gcmyDataBase.db.query(_query);
-	
-	query.on('error', function(_err) {
-		// Handle error, an 'end' event will be emitted after this as well
-		//console.log('getquery_config error:', _err);
-		future.return({'ret':'fail', 'code':_err.code});
-	})
-	.on('fields', function(_fields) {
-		// the field packets for the rows to follow
-		//console.log('getquery_config fields:', _fields);
-	})
-	.on('result', function(_row) {
-		// Pausing the connnection is useful if your processing involves I/O
-		//console.log('getquery_config result:', _row);
+	_getquery_config( query, function(_result, _ret) {
+		var json = {};
+		if( _ret.ret == 'ok' ) {
+			for( var i=0; i<_result.length; i++ ) {
+				json[ _result[i].lvalue ] = [];
+				json[ _result[i].lvalue ].push(_result[i].rvalue);
+				json[ _result[i].lvalue ].push(JSON.parse(_result[i].type));
+			}
+		}
 
-		//var json = eval('(' + _row.type + ')');
-		//console.log('json:', json);
-		ajresult.push(_row);
-	})
-	.on('end', function() {
-		// all rows have been received
-		//console.log('getquery_config end:');
-		future.return({'ret':'ok', 'code':ajresult});
-	})
+		// sync mode
+		if( !_callback ) future.return( {'result':_result, 'json':json, 'ret':_ret} );
+		// async mode
+		else _callback(_result, json, _ret);
+	});
 
-	return future;
+	// sync mode
+	if( !_callback ) return future;
 }
 
-myDataBase.prototype.getquery_config = function( _query, _callback )
+function _getquery_config( _query, _callback )
 {
-	console.log('->> myDataBase.prototype.getquery_config');
+	console.log('->> _getquery_config');
 	
+	var jret = { ret : 'ok' };
+
 	var ajresult = [];
 	var query = gcmyDataBase.db.query(_query);
-	
+
 	query.on('error', function(_err) {
 		// Handle error, an 'end' event will be emitted after this as well
-		//console.log('getquery_config error:', _err);
+		//console.log('_getquery_config error:', _err);
+		jret.ret = _err;
 	})
 	.on('fields', function(_fields) {
 		// the field packets for the rows to follow
-		//console.log('getquery_config fields:', _fields);
+		//console.log('_getquery_config fields:', _fields);
 	})
 	.on('result', function(_row) {
 		// Pausing the connnection is useful if your processing involves I/O
-		//console.log('getquery_config result:', _row);
+		/*
+		_getquery_config result: { seqno: 1,
+		  lvalue: 'framework.rev.db',
+		  rvalue: '1',
+		  type: '{"type":"sz","min":1,"max":8,"def":"1"}',
+		  privilige: 'admin',
+		  syntax: 's___g|sz|8' }		
+		*/
+		//console.log('_getquery_config result:', _row);
 
 		//var json = eval('(' + _row.type + ')');
 		//console.log('json:', json);
@@ -196,8 +215,8 @@ myDataBase.prototype.getquery_config = function( _query, _callback )
 	})
 	.on('end', function() {
 		// all rows have been received
-		//console.log('getquery_config end:');
-		_callback(ajresult);
+		//console.log('_getquery_config end:');
+		_callback(ajresult, jret);
 	})
 }
 
@@ -336,7 +355,8 @@ function _sync_makedefault_config( _future )
 			_future.return({'ret':'fail', 'code':_err});
 		}
 		else {
-			var sql = 'INSERT INTO configuration (lvalue, rvalue, type, privilige, syntax) VALUES (?,?,?,?,?)';
+
+			var sql = 'INSERT INTO '+gcmyDataBase.tablename_config+' (lvalue, rvalue, type, privilige, syntax) VALUES (?,?,?,?,?)';
 			var cnt = tableval.length;
 			for( var i=0; i<tableval.length; i++ ) {
 				gcmyDataBase.db.query( sql, tableval[i], function(_err, _results, _fields) {
@@ -359,7 +379,7 @@ function _sync_makedefault_config( _future )
 function _gettable_configuration()
 {
 	var obj = {};
-	obj.tablename = 'configuration';
+	obj.tablename = gcmyDataBase.tablename_config;
 	obj.sql = 'seqno			tinyint not null auto_increment primary key' + ','
 			+ 'lvalue			varchar(64) not null' + ','
 			+ 'rvalue			varchar(2048) character set utf8 not null' + ','

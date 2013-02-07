@@ -31,25 +31,6 @@ var gmDataBase = require('../../../../my_modules/database/database.js');
 var ganonces = {};  // keep sessions info.
 var gsession_timeout = 60*60*1000;  // after one hour
 
-/*
-*/
-function _db_getconfiguration(_queryitem, _callback)
-{
-  var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + _queryitem + '"';
-  gmDataBase.getquery_config( query, function(_result) {
-
-    var json = {};
-
-    for( var i=0; i<_result.length; i++ ) {
-      json[_result[i].lvalue] = [];
-      json[_result[i].lvalue].push(_result[i].rvalue);
-      json[_result[i].lvalue].push(JSON.parse(_result[i].type));
-    }
-
-    _callback(_result, json);
-  });
-}
-
 function _getpasswordhash( _realm, _username, _password ) {
   var sz = _username+':'+_realm+':'+_password;
   return utils.md5(sz, 'hex');
@@ -179,12 +160,10 @@ module.exports = function basicAuth(_method)
     //
     function _checkall( _user, _pass, _fncallback ) {
 
-      var isauthen_enable;
       var users = {};
 
-      _db_getconfiguration( 'account.%', function(_result, _json) {
+      gmDataBase.getconfig( 'account.%', function(_result, _json, _ret) {
         //console.log('from DB _result._json:', _json);
-        isauthen_enable = _json['account.enable'][0];
 
         function _add( _szprivilege, _aname, _apasswd ) {
           var cnt = ( '' == _aname[0] ) ? 0 : _aname.length;
@@ -260,12 +239,10 @@ module.exports = function basicAuth(_method)
 
       var fauthen_error = true;
 
-      var isauthen_enable;
       var users = {};
 
-      _db_getconfiguration( 'account.%', function(_result, _json) {
+      gmDataBase.getconfig( 'account.%', function(_result, _json, _ret) {
         //console.log('from DB _result._json:', _json);
-        isauthen_enable = _json['account.enable'][0];
 
         function _add( _szprivilege, _aname, _apasswd ) {
           var cnt = ( '' == _aname[0] ) ? 0 : _aname.length;

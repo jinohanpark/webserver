@@ -65,12 +65,20 @@ gmainapp.main = function()
 		}
 		else {
 			//console.log('db.revision:', gmDataBase.revision );
-			var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + 'framework.rev.db' + '"';
-			var ret = gmDataBase.sync_getquery_config(query).wait();
-			if( 'fail' == ret.ret ) throw ret;
-			
-			console.log('getquery - db.revision', ret.code);
-
+			var ret = gmDataBase.getconfig('framework.rev.db').wait();
+			if( 'ok' !== ret.ret.ret ) throw ret;
+			/*
+			ret: { result:
+			   [ { seqno: 1,
+			       lvalue: 'framework.rev.db',
+			       rvalue: '1',
+			       type: '{"type":"sz","min":1,"max":8,"def":"1"}',
+			       privilige: 'admin',
+			       syntax: 's___g|sz|8' } ],
+			  json: { 'framework.rev.db': [ '1', [Object] ] },
+			  ret: { ret: 'ok' } }			
+			*/
+			console.log('getquery - db.revision:', ret.result[0].rvalue);
 		}
 
 		///////////////////////////////////////////////////////////////////////////////////////
@@ -174,8 +182,8 @@ function show_process_attr()
 function _getwebserveroption()
 {
 	//var query = 'SELECT * FROM configuration WHERE lvalue LIKE "' + 'framework.rev.db' + '"';
-	//var ret = gmDataBase.sync_getquery_config( query ).wait();
-	//if( 'fail' == ret.ret ) return ret;
+	//var ret = gmDataBase.getconfig( 'framework.rev.db' ).wait();
+	//if( 'ok' !== ret.ret.ret ) return ret;
 
 	var szipaddr = '';
 	var netinterface = gmOs.getNetworkInterfaces();
