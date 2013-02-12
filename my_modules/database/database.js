@@ -91,6 +91,8 @@ myDataBase.prototype.update_database = function( _szdefault )
 
 	var ret;
 
+	console.log('11111111111');
+
 	// code에 있는 db로 임시 이름 table을 생성한다. 이미 있다면 삭제한다.
 	var future = new gmFuture;
 	gcmyDataBase.db.query( 'DROP table new_configuration', function(_err) {
@@ -100,6 +102,8 @@ myDataBase.prototype.update_database = function( _szdefault )
 	future.wait();
 	delete future;
 
+	console.log('222222222222');
+
 	// 임시 이름으로 생성
 	var future = new gmFuture;
 	ret = _sync_makedeftable_config( 'new_configuration', future );
@@ -107,15 +111,20 @@ myDataBase.prototype.update_database = function( _szdefault )
 	future.resolve( function(_err, _ret) { ret = _ret; } );
 	delete future;
 
+	console.log('333333333333');
+
 	do {
 		if( 'ok' !== ret.ret ) { break; }
 
+		var told = gcmyDataBase.tablename_config;
+		var tnew = 'new_' + gcmyDataBase.tablename_config;
+
 		// NEW 대비 OLD에 추가되야 하는것들...
-
-		//var query = 'SELECT * FROM '+gcmyDataBase.tablename_config+' WHERE lvalue LIKE "' + _szlvalue + '"';
-		//mysql> select b.a, b.b from a right outer join b on a.a=b.a where a.a is null;
-
-		var query = 'SELECT new_configuration.lvalue new_configuration.rvalue FROM configuration RIGHT OUTER JOIN new_configuration ON configuration.lvalue=new_configuration.lvalue WHERE configuration.lvalue IS NULL';
+		var query = 'SELECT b.* '+
+					'FROM '+told+' AS a '+
+					'RIGHT OUTER JOIN '+tnew+' AS b '+
+					'ON a.lvalue=b.lvalue '+
+					'WHERE a.lvalue IS NULL';
 		_joinconfig( query );
 
 		function _joinconfig( _szquery, _callback )
@@ -135,11 +144,12 @@ myDataBase.prototype.update_database = function( _szdefault )
 			_getquery_config( _szquery, function(_result, _ret) {
 				var json = {};
 				if( _ret.ret == 'ok' ) {
-					for( var i=0; i<_result.length; i++ ) {
-						json[ _result[i].lvalue ] = [];
-						json[ _result[i].lvalue ].push(_result[i].rvalue);
-						json[ _result[i].lvalue ].push(JSON.parse(_result[i].type));
-					}
+					console.log('>>>>>>>> _result:\r\n', _result);
+					// for( var i=0; i<_result.length; i++ ) {
+					// 	json[ _result[i].lvalue ] = [];
+					// 	json[ _result[i].lvalue ].push(_result[i].rvalue);
+					// 	json[ _result[i].lvalue ].push(JSON.parse(_result[i].type));
+					// }
 				}
 
 				// sync mode
@@ -164,6 +174,7 @@ myDataBase.prototype.update_database = function( _szdefault )
 	} while(0);
 
 	// 임시 생성한 table을 삭제한다.
+	/*
 	var future = new gmFuture;
 	gcmyDataBase.db.query( 'DROP table new_configuration', function(_err) {
 		if(_err) { future.return({'ret':'fail', 'code':_err}); }
@@ -171,6 +182,7 @@ myDataBase.prototype.update_database = function( _szdefault )
 	});
 	future.wait();
 	delete future;
+	*/
 
 	return ret;
 
