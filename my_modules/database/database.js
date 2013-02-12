@@ -82,42 +82,35 @@ myDataBase.prototype.using = function()
 }
 
 /*
-	_szdefault : [string] revision
+	_szdefault : [string] 'revision'
 */
 myDataBase.prototype.update_database = function( _szdefault )
 {
 	//console.log('->> myDataBase.prototype.update_database');	
 	var _szdefault = _szdefault || 'revision';
-
 	var ret;
 
-	console.log('11111111111');
+	var told = gcmyDataBase.tablename_config;
+	var tnew = 'new_' + gcmyDataBase.tablename_config;
 
 	// code에 있는 db로 임시 이름 table을 생성한다. 이미 있다면 삭제한다.
 	var future = new gmFuture;
-	gcmyDataBase.db.query( 'DROP table new_configuration', function(_err) {
+	gcmyDataBase.db.query( 'DROP table '+tnew, function(_err) {
 		if(_err) { future.return({'ret':'fail', 'code':_err}); }
 		else { future.return({'ret':'ok', 'code':''}); }
 	});
 	future.wait();
 	delete future;
 
-	console.log('222222222222');
-
 	// 임시 이름으로 생성
 	var future = new gmFuture;
-	ret = _sync_makedeftable_config( 'new_configuration', future );
+	ret = _sync_makedeftable_config( tnew, future );
 	future.wait();
 	future.resolve( function(_err, _ret) { ret = _ret; } );
 	delete future;
 
-	console.log('333333333333');
-
 	do {
 		if( 'ok' !== ret.ret ) { break; }
-
-		var told = gcmyDataBase.tablename_config;
-		var tnew = 'new_' + gcmyDataBase.tablename_config;
 
 		// NEW 대비 OLD에 추가되야 하는것들...
 		var query = 'SELECT b.* '+
@@ -125,84 +118,63 @@ myDataBase.prototype.update_database = function( _szdefault )
 					'RIGHT OUTER JOIN '+tnew+' AS b '+
 					'ON a.lvalue=b.lvalue '+
 					'WHERE a.lvalue IS NULL';
-		_joinconfig( query );
+		var diffjoinret = _joinconfig( query );
+		//console.log('>>>>>>>> diff old and new diffjoinret.ret:%s, diffjoinret:\r\n', diffjoinret.ret.ret, diffjoinret.result);
+		if( diffjoinret.ret.ret !== 'ok' ) { break; }
 
-		function _joinconfig( _szquery, _callback )
-		{
-			var future = null;
+		//NEW와 비교해 OLD와 동일한것은 OLD의 rvalue를 살리고 나머지는 NEW에서 가져와 갱신한다.
+		var query = 'SELECT b.lvalue, a.rvalue, b.type, b.privilige, b.syntax '+
+					'FROM '+told+' AS a '+
+					'INNER JOIN '+tnew+' AS b '+
+					'ON a.lvalue=b.lvalue ';
+		var samejoinret = _joinconfig( query );
+		//console.log('>>>>>>>> same old and new samejoinret.ret:%s, samejoinret:\r\n', samejoinret.ret.ret, samejoinret.result);
+		if( samejoinret.ret.ret !== 'ok' ) { break; }
 
-			// sync mode
-			if( !_callback ) future = new gmFuture;
-/*
-	obj.sql = 'seqno			tinyint not null auto_increment primary key' + ','
-			+ 'lvalue			varchar(64) not null' + ','
-			+ 'rvalue			varchar(2048) character set utf8 not null' + ','
-			+ 'type				varchar(128) not null' + ','
-			+ 'privilige		varchar(16) not null' + ','
-			+ 'syntax			varchar(128) not null';
-*/
-			_getquery_config( _szquery, function(_result, _ret) {
-				var json = {};
-				if( _ret.ret == 'ok' ) {
-					console.log('>>>>>>>> _result:\r\n', _result);
-					// for( var i=0; i<_result.length; i++ ) {
-					// 	json[ _result[i].lvalue ] = [];
-					// 	json[ _result[i].lvalue ].push(_result[i].rvalue);
-					// 	json[ _result[i].lvalue ].push(JSON.parse(_result[i].type));
-					// }
-				}
-
-				// sync mode
-				if( !_callback ) future.return( {'result':_result, 'json':json, 'ret':_ret} );
-				// async mode
-				else _callback(_result, json, _ret);
-			});
-
-			// sync mode
-			if( !_callback ) {
-				future.wait();
-
-				var ret;
-				future.resolve( function(_err, _ret) { ret = _ret; } );
-				delete future;
-				return ret;
-			}
+		//
+		//  [ { seqno: 94,
+		//     lvalue: 'http.enable',
+		//     rvalue: 'yes',
+		//     type: '{"type":"yesno","def":"yes"}',
+		//     privilige: 'admin',
+		//     syntax: 's__sg|yesno' },
+		//   { seqno: 95,
+		//     lvalue: 'http.port',
+		//     rvalue: '80',
+		//     type: '{"type":"port","min":1,"max":65535,"def":25}',
+		//     privilige: 'admin',
+		//     syntax: 's__sg|port|1|65535' } ]
+		var adiffvalue = [];
+		for( var i=0; i<diffjoinret.result.length; i++ ) {
+			var val = [];
+			val.push(diffjoinret.result[i].lvalue);
+			val.push(diffjoinret.result[i].rvalue);
+			val.push(diffjoinret.result[i].type);
+			val.push(diffjoinret.result[i].privilige);
+			val.push(diffjoinret.result[i].syntax);
+			adiffvalue.push(val);
 		}
+		if( adiffvalue.length ) gcmyDataBase.insertconfig(adiffvalue);
 
+		//
+		if( samejoinret.result.length ) gcmyDataBase.updateconfig( samejoinret.result );
 
 
 	} while(0);
 
 	// 임시 생성한 table을 삭제한다.
-	/*
 	var future = new gmFuture;
-	gcmyDataBase.db.query( 'DROP table new_configuration', function(_err) {
+	gcmyDataBase.db.query( 'DROP table '+tnew, function(_err) {
 		if(_err) { future.return({'ret':'fail', 'code':_err}); }
 		else { future.return({'ret':'ok', 'code':''}); }
 	});
 	future.wait();
 	delete future;
-	*/
 
 	return ret;
+}
 
 /*
-function _sync_makeupdate_config( _future )
-{
-	var val = _gettable_configuration();	//console.log('val.length :', val.length);
-	var table    = val[0];
-	var tableval = val[1];
-
-	table.tablename = 'new_configuration';
-	var sql = 'CREATE TABLE ' + table.tablename + '(' + table.sql + ')';//console.log('sql :', sql);
-
-	gcmyDataBase.db.query( sql, function(_err) {
-		if(_err) {
-			_future.return({'ret':'fail', 'code':_err});
-		}
-		else {
-			// JOIN
-
 NEW와 비교해 OLD에서 삭제되야 하는것
 mysql> select a.** from a left outer join b on a.a=b.a where b.a is null;
 +------+------+
@@ -252,28 +224,8 @@ update a, (select a.a, a.b from a inner join b on a.a=b.a) set a.c=b.c, a.d=b.d,
 set t1.field_id_60 = t2.field_id_46,
     t1.field_id_61 = t2.field_id_47
 where t1.entry_id = 45
-
-			var sql = 'INSERT INTO configuration (lvalue, rvalue, type, privilige, syntax) VALUES (?,?,?,?,?)';
-			var cnt = tableval.length;
-			for( var i=0; i<tableval.length; i++ ) {
-				gcmyDataBase.db.query( sql, tableval[i], function(_err, _results, _fields) {
-					if(_err) { 
-						console.log(_err);
-						_future.return({'ret':'fail', 'code':_err});
-					}
-					else {
-						cnt = cnt - 1;
-						if(0 == cnt) {
-							_future.return({'ret':'ok', 'code':''});
-						}
-					}
-				});
-			}
-		}
-	});
-}
 */
-}
+
 
 /*
 	_szdefault : [string] factory-all
@@ -390,6 +342,144 @@ myDataBase.prototype.getconfig = function( _szlvalue, _callback )
 	}
 }
 
+function _joinconfig( _szquery, _callback )
+{
+	var future = null;
+
+	// sync mode
+	if( !_callback ) future = new gmFuture;
+
+	_getquery_config( _szquery, function(_result, _ret) {
+		var json = {};
+		if( _ret.ret == 'ok' ) {
+			;
+			//console.log('>>>>>>>> _result:\r\n', _result);
+		}
+		
+		// sync mode
+		if( !_callback ) future.return( {'result':_result, 'json':json, 'ret':_ret} );
+		// async mode
+		else _callback(_result, json, _ret);
+	});
+
+	// sync mode
+	if( !_callback ) {
+		future.wait();
+
+		var ret;
+		future.resolve( function(_err, _ret) { ret = _ret; } );
+		delete future;
+		return ret;
+	}
+}
+
+/*
+	_callback(ret)
+
+	ex)
+	ret= { ret : 'ok' or errcode }
+*/	
+myDataBase.prototype.updateconfig = function( _avalue, _callback )
+{
+	var future = null;
+
+	// sync mode
+	if( !_callback ) future = new gmFuture;
+
+	var ret = { ret : 'ok' };
+
+	var cnt = _avalue.length;
+	for( var i=0; i<_avalue.length; i++ ) {
+		var sql = "UPDATE "+gcmyDataBase.tablename_config+
+				  " SET rvalue='"+_avalue[i].rvalue+"', type='"+_avalue[i].type+"', privilige='"+_avalue[i].privilige+"', syntax='"+_avalue[i].syntax+"'"+
+				  " WHERE lvalue='"+_avalue[i].lvalue+"'";
+		gcmyDataBase.db.query( sql, function(_err, _results, _fields) {
+			if(_err) { 
+				console.log(_err);
+
+				ret.ret = _err;
+				// sync mode
+				if( !_callback ) future.return(ret);
+				// async mode
+				else _callback(ret);
+			}
+			else {
+				//console.log('>>>>> updatedb result:', _results);
+				cnt = cnt - 1;
+				if(0 == cnt) {
+					// sync mode
+					if( !_callback ) future.return(ret);
+					// async mode
+					else _callback(ret);
+				}
+			}
+		});
+	}
+
+	// sync mode
+	if( !_callback ) {
+		future.wait();
+
+		var ret;
+		future.resolve( function(_err, _ret) { ret = _ret; } );
+		delete future;
+		return ret;
+	}
+}
+
+/*
+	_callback(ret)
+
+	ex)
+	ret= { ret : 'ok' or errcode }
+*/	
+myDataBase.prototype.insertconfig = function( _avalue, _callback )
+{
+	var future = null;
+
+	// sync mode
+	if( !_callback ) future = new gmFuture;
+
+	var ret = { ret : 'ok' };
+
+	var sql = 'INSERT INTO '+gcmyDataBase.tablename_config+' (lvalue, rvalue, type, privilige, syntax) VALUES (?,?,?,?,?)';
+	var cnt = _avalue.length;
+	for( var i=0; i<_avalue.length; i++ ) {
+		gcmyDataBase.db.query( sql, _avalue[i], function(_err, _results, _fields) {
+			if(_err) { 
+				console.log(_err);
+
+				ret.ret = _err;
+				// sync mode
+				if( !_callback ) future.return(ret);
+				// async mode
+				else _callback(ret);
+			}
+			else {
+				//console.log('>> insert db result:', _results);
+
+				cnt = cnt - 1;
+				if(0 == cnt) {
+					// sync mode
+					if( !_callback ) future.return(ret);
+					// async mode
+					else _callback(ret);
+				}
+			}
+		});
+	}
+
+	// sync mode
+	if( !_callback ) {
+		future.wait();
+
+		var ret;
+		future.resolve( function(_err, _ret) { ret = _ret; } );
+		delete future;
+		return ret;
+	}
+}
+
 /*
 	_queryitem : [{ lvalue:?, rvalue:?}, ...]
 	_callback(result, json, ret)
@@ -411,7 +501,7 @@ myDataBase.prototype.setconfig = function( _queryitem, _callback )
 	// sync mode
 	if( !_callback ) future = new gmFuture;
 
-	var query = 'UPDATE configuration SET rvalue=? WHERE lvalue=?';
+	var query = 'UPDATE '+gcmyDataBase.tablename_config+' SET rvalue=? WHERE lvalue=?';
 	var cnt = _queryitem.length;
 	for( var i=0; i<_queryitem.length; i++ ) {
 

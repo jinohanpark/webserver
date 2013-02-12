@@ -77,9 +77,9 @@ gmainapp.main = function()
 			var code = gmDataBase.revision;
 			console.log('db.revision on storage:', storage, ', my db.revision on code:', code);
 			var ret = { ret:'ok' };
-			//if( storage !== code ) {
+			if( storage !== code ) {
 				ret = gmDataBase.update_database('revision');
-			//}
+			}
 			//if( 'ok' !== ret.ret.ret ) throw ret;
 		}
 
