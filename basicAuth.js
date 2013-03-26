@@ -266,13 +266,19 @@ module.exports = function basicAuth(_method)
         var apasswd = _json['account.viewer.passwd'][0].split(',');
         _add( 'viewer', aname, apasswd );
 
-        //console.log('users:', users);
+        // console.log('-------------------------------');
+        // console.log('users:', users);
+        // console.log('-------------------------------');
 
         _gogogo();
       });
 
       function _gogogo() {
-        //console.log('>>>>>>>>> _tauth:', _tauth);
+        
+        // console.log('-------------------------------');
+        // console.log('>>>>>>>>> _tauth:', _tauth);
+        // console.log('-------------------------------');
+
         do {
           // check realm!
           if( _tauth.realm != realm ) {
@@ -282,8 +288,8 @@ module.exports = function basicAuth(_method)
             break;
           }
 
-          // check username!
-          if( !users[_tauth.username][0] ) {
+          // check username! 
+          if( !users[_tauth.username] ) {
             console.log('ffffffffffffff');
             req.authentication = null;
             _fncallback(true, _tauth.username, 'Unauthorized.');

@@ -55,7 +55,7 @@ gmainapp.main = function()
 	try {
 		////////////////////////////////////////////////////////////////////////////////////////
 		// database
-		var option = { host:'localhost', user:'root', password:'convex1234!@' };
+		var option = { host:'localhost', user:'root', password:'pass' };
 		gmDataBase.init(option);
 
 		var ret = gmDataBase.using();
@@ -88,6 +88,7 @@ gmainapp.main = function()
 		var option = _getwebserveroption();
 		if( 'fail' == option.ret ) throw ret;
 
+		console.log('### starting http-webserver');
 		var cHttpServer = new gmHttpServer();
 		cHttpServer.Init(option);
 
@@ -96,8 +97,8 @@ gmainapp.main = function()
 		// var option = {
 		// 	ssl : 'no',
 		// 	port : '3001',
-		// 	basedir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www',
-		// 	uploaddir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload'
+		// 	basedir : '/home/jinohan/workdir/_svn/linux/server/nodejs/src/www',
+		// 	uploaddir : '/home/jinohan/workdir/_svn/linux/server/nodejs/src/www/upload'
 		// };
 		// cHttpsServer.Init(option);
 
@@ -145,6 +146,9 @@ process.on('exit', function () {
 	console.log('process.uptime:', process.uptime());
 	console.log('********************************************************************************************************');
 });
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
@@ -204,7 +208,7 @@ function _getwebserveroption()
 		ssl : 'no',
 		ipaddr : szipaddr,	// or ''
 		port : '3000',
-		basedir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www',
-		uploaddir : '/home/jopark/workdir/_SVN1/linux/server/node.js/testcode/webserver/www/upload'
+		basedir : '/home/jinohan/workdir/_svn/linux/server/nodejs/src/www',
+		uploaddir : '/home/jinohan/workdir/_svn/linux/server/nodejs/src/www/upload'
 	};
 }

@@ -12,9 +12,9 @@ exports = module.exports = gcmyDataBase;
 /*
 	external modules
 */
-var gmFiber 	= require('fibers');
-var gmFuture 	= require('fibers/future'), wait = gmFuture.wait;
-var gmSql		= require('mysql');
+var gmFiber  = require('fibers');
+var gmFuture = require('fibers/future'), wait = gmFuture.wait;
+var gmSql	 = require('mysql');
 
 /*
 	my modules
